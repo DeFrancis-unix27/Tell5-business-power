@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tell5 — WhatsApp Operations Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0a0c0f;
+      --surface: #0f1318;
+      --border:  #1e2530;
+      --muted:   #2a3340;
+      --text:    #e2e8f0;
+      --sub:     #64748b;
+      --accent:  #00e5b0;
+      --accent2: #3b82f6;
+      --accent3: #f97316;
+      --danger:  #ef4444;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid texture ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,176,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,176,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Page router ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ═══════════════════════════════════════
+       SHARED COMPONENTS
+    ═══════════════════════════════════════ */
+
+    /* Nav */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,12,15,0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-brand {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 8px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.18s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .nav-btn-ghost {
+      background: transparent;
+      color: var(--sub);
+      border: 1px solid transparent;
+    }
+
+    .nav-btn-ghost:hover {
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .nav-btn-solid {
+      background: var(--accent);
+      color: #0a0c0f;
+    }
+
+    .nav-btn-solid:hover {
+      background: #00ffca;
+      box-shadow: 0 0 20px rgba(0,229,176,0.3);
+    }
+
+    /* Input / Form base */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--sub);
+    }
+
+    .field input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 11px 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      width: 100%;
+    }
+
+    .field input::placeholder { color: var(--sub); }
+
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,229,176,0.1);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      color: #0a0c0f;
+      border: none;
+      border-radius: 7px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+
+    .btn-primary:hover {
+      background: #00ffca;
+      box-shadow: 0 0 24px rgba(0,229,176,0.35);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .form-switch {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--sub);
+      margin-top: 4px;
+    }
+
+    .form-switch a {
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .form-switch a:hover { text-decoration: underline; }
+
+    .form-error {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--danger);
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: none;
+    }
+
+    .form-error.show { display: block; }
+
+    /* Auth card shell */
+    .auth-shell {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 20px 40px;
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 420px;
+      animation: cardIn 0.4s cubic-bezier(.16,1,.3,1) both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .auth-logo {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .auth-tagline {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 32px;
+    }
+
+    .auth-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .auth-sub {
+      font-size: 0.82rem;
+      color: var(--sub);
+      margin-bottom: 28px;
+    }
+
+    .auth-form { display: flex; flex-direction: column; gap: 16px; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 4px 0;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .divider span {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--sub);
+    }
+
+    /* ═══════════════════════════════════════
+       LANDING PAGE
+    ═══════════════════════════════════════ */
+
+    #page-landing {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 160px 40px 100px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 24px;
+      background: rgba(0,229,176,0.06);
+      border: 1px solid rgba(0,229,176,0.15);
+      padding: 6px 14px;
+      border-radius: 100px;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.5; transform:scale(.85); }
+    }
+
+    .hero-h1 {
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      max-width: 780px;
+      margin-bottom: 28px;
+    }
+
+    .hero-h1 span {
+      color: var(--accent);
+      position: relative;
+    }
+
+    .hero-p {
+      font-size: 1.05rem;
+      color: var(--sub);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 44px;
+    }
+
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .cta-primary {
+      padding: 14px 32px;
+      background: var(--accent);
+      color: #0a0c0f;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: inline-block;
+      text-decoration: none;
+    }
+
+    .cta-primary:hover {
+      background: #00ffca;
+      box-shadow: 0 0 32px rgba(0,229,176,0.4);
+      transform: translateY(-1px);
+    }
+
+    .cta-ghost {
+      padding: 14px 28px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .cta-ghost:hover {
+      border-color: var(--sub);
+      transform: translateY(-1px);
+    }
+
+    /* Hero stats bar */
+    .stats-bar {
+      display: flex;
+      gap: 48px;
+      margin-top: 72px;
+      padding-top: 48px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .stat-item { display: flex; flex-direction: column; gap: 4px; }
+
+    .stat-num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Dashboard preview mockup */
+    .preview-wrap {
+      max-width: 1100px;
+      margin: 0 auto 100px;
+      padding: 0 40px;
+    }
+
+    .preview-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .preview-label::before {
+      content: '';
+      width: 20px; height: 1px;
+      background: var(--sub);
+    }
+
+    .mockup {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px var(--border);
+    }
+
+    .mockup-bar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mock-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    .mockup-body {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mock-kpi {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .mock-kpi-n {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.03em;
+    }
+
+    .mock-kpi-l {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--sub);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .mock-chart-row {
+      grid-column: span 4;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 10px;
+    }
+
+    .mock-panel {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 100px;
+    }
+
+    .mock-panel-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mock-panel-title::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .mock-row {
+      height: 8px;
+      background: var(--muted);
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .mock-row:last-child { width: 60%; }
+
+    /* Features */
+    .features {
+      padding: 80px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 60px;
+      max-width: 500px;
+      line-height: 1.15;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(0,229,176,0.3);
+      transform: translateY(-3px);
+    }
+
+    .feature-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      background: rgba(0,229,176,0.08);
+      border: 1px solid rgba(0,229,176,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      margin-bottom: 18px;
+    }
+
+    .feature-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 0.82rem;
+      color: var(--sub);
+      line-height: 1.65;
+    }
+
+    /* Pricing */
+    .pricing {
+      padding: 80px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .pricing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transition: border-color 0.2s;
+    }
+
+    .pricing-card.featured {
+      border-color: rgba(0,229,176,0.4);
+      background: linear-gradient(145deg, rgba(0,229,176,0.05), var(--surface));
+      position: relative;
+    }
+
+    .pricing-card.featured::before {
+      content: 'Most Popular';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #0a0c0f;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 14px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .pricing-tier {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+
+    .pricing-price {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .pricing-period {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--sub);
+      margin-bottom: 24px;
+    }
+
+    .pricing-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 28px;
+      flex: 1;
+    }
+
+    .pricing-features li {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pricing-features li::before {
+      content: '✓';
+      color: var(--accent);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .pricing-cta {
+      width: 100%;
+      padding: 12px;
+      border-radius: 7px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+    }
+
+    .pricing-cta:hover { border-color: var(--sub); }
+
+    .pricing-cta.accent-btn {
+      background: var(--accent);
+      color: #0a0c0f;
+      border-color: transparent;
+    }
+
+    .pricing-cta.accent-btn:hover {
+      background: #00ffca;
+      box-shadow: 0 0 20px rgba(0,229,176,0.3);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-brand {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+
+    .footer-copy {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--sub);
+    }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════ */
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px; }
+      .hero { padding: 120px 20px 60px; }
+      .stats-bar { gap: 28px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .preview-wrap { padding: 0 20px; }
+      .features, .pricing { padding: 60px 20px; }
+      footer { flex-direction: column; gap: 12px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ NAV ══ -->
+  <nav id="main-nav">
+    <a class="nav-brand" onclick="showPage('landing')">Tell5</a>
+    <div class="nav-links">
+      <button class="nav-btn nav-btn-ghost" onclick="showPage('login')">Log in</button>
+      <button class="nav-btn nav-btn-solid" onclick="showPage('signup')">Get Started</button>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════
+       LANDING PAGE
+  ══════════════════════════════════════════ -->
+  <div id="page-landing" class="page active">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-eyebrow">WhatsApp Operations Platform</div>
+      <h1 class="hero-h1">
+        Your business on<br>
+        <span>WhatsApp</span>,<br>
+        fully automated.
+      </h1>
+      <p class="hero-p">
+        Tell5 turns every customer message into an actionable conversation.
+        Track orders, resolve complaints, and respond instantly — all from one dashboard.
+      </p>
+      <div class="hero-ctas">
+        <button class="cta-primary" onclick="showPage('signup')">Start for free →</button>
+        <button class="cta-ghost" onclick="window.location.href='/dashboard'">See the dashboard</button>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-num">12k+</span>
+          <span class="stat-label">Active Businesses</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">98%</span>
+          <span class="stat-label">Uptime SLA</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">&lt;2s</span>
+          <span class="stat-label">Avg. Response Time</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">4.9★</span>
+          <span class="stat-label">Customer Rating</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard preview -->
+    <div class="preview-wrap">
+      <div class="preview-label">Dashboard Preview</div>
+      <div class="mockup">
+        <div class="mockup-bar">
+          <div class="mock-dot" style="background:#ef4444"></div>
+          <div class="mock-dot" style="background:#f59e0b"></div>
+          <div class="mock-dot" style="background:#22c55e"></div>
+        </div>
+        <div class="mockup-body">
+          <div class="mock-kpi"><div class="mock-kpi-n">248</div><div class="mock-kpi-l">Conversations</div></div>
+          <div class="mock-kpi" style="border-left-color:#3b82f6"><div class="mock-kpi-n" style="color:#3b82f6">91</div><div class="mock-kpi-l">Orders</div></div>
+          <div class="mock-kpi" style="border-left-color:#f97316"><div class="mock-kpi-n" style="color:#f97316">14</div><div class="mock-kpi-l">Pending</div></div>
+          <div class="mock-kpi" style="border-left-color:#ef4444"><div class="mock-kpi-n" style="color:#ef4444">3</div><div class="mock-kpi-l">Complaints</div></div>
+          <div class="mock-chart-row">
+            <div class="mock-panel">
+              <div class="mock-panel-title">Recent Conversations</div>
+              <div class="mock-row"></div>
+              <div class="mock-row" style="width:80%"></div>
+              <div class="mock-row" style="width:90%"></div>
+              <div class="mock-row" style="width:70%"></div>
+            </div>
+            <div class="mock-panel">
+              <div class="mock-panel-title">Categories</div>
+              <div style="display:flex;justify-content:center;align-items:center;height:80px">
+                <svg viewBox="0 0 80 80" width="80" height="80">
+                  <circle cx="40" cy="40" r="28" fill="none" stroke="#1e2530" stroke-width="12"/>
+                  <circle cx="40" cy="40" r="28" fill="none" stroke="#00e5b0" stroke-width="12"
+                    stroke-dasharray="70 106" stroke-dashoffset="0" transform="rotate(-90 40 40)"/>
+                  <circle cx="40" cy="40" r="28" fill="none" stroke="#3b82f6" stroke-width="12"
+                    stroke-dasharray="40 136" stroke-dashoffset="-70" transform="rotate(-90 40 40)"/>
+                  <circle cx="40" cy="40" r="28" fill="none" stroke="#f97316" stroke-width="12"
+                    stroke-dasharray="26 150" stroke-dashoffset="-110" transform="rotate(-90 40 40)"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <section class="features">
+      <div class="section-eyebrow">Features</div>
+      <h2 class="section-title">Everything your team needs</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <div class="feature-title">Conversation Inbox</div>
+          <div class="feature-desc">All WhatsApp messages in one unified inbox. Filter by category, status, or agent assignment in real time.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📦</div>
+          <div class="feature-title">Order Tracking</div>
+          <div class="feature-desc">Auto-parse orders from conversations and track them from placement to delivery — no manual entry.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Live Analytics</div>
+          <div class="feature-desc">Real-time charts showing conversation volume, category breakdown, and order funnel metrics.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-title">AI Auto-Categorise</div>
+          <div class="feature-desc">Messages are instantly tagged as orders, complaints, inquiries, or support — no rules to write.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Instant Alerts</div>
+          <div class="feature-desc">Get notified the moment a high-priority complaint or failed order lands in your queue.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <div class="feature-title">Webhook API</div>
+          <div class="feature-desc">Connect Tell5 to your existing tools — Shopify, Notion, Slack, and more — via webhooks and REST.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing">
+      <div class="section-eyebrow">Pricing</div>
+      <h2 class="section-title">Simple, honest pricing</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="pricing-tier">Starter</div>
+          <div class="pricing-price">Free</div>
+          <div class="pricing-period">forever</div>
+          <ul class="pricing-features">
+            <li>Up to 500 messages/mo</li>
+            <li>1 WhatsApp number</li>
+            <li>Basic dashboard</li>
+            <li>Order tracking</li>
+          </ul>
+          <button class="pricing-cta" onclick="showPage('signup')">Get started</button>
+        </div>
+        <div class="pricing-card featured">
+          <div class="pricing-tier">Growth</div>
+          <div class="pricing-price">₦9,900</div>
+          <div class="pricing-period">per month</div>
+          <ul class="pricing-features">
+            <li>Unlimited messages</li>
+            <li>3 WhatsApp numbers</li>
+            <li>Full analytics suite</li>
+            <li>AI categorisation</li>
+            <li>Priority support</li>
+          </ul>
+          <button class="pricing-cta accent-btn" onclick="showPage('signup')">Start free trial</button>
+        </div>
+        <div class="pricing-card">
+          <div class="pricing-tier">Enterprise</div>
+          <div class="pricing-price">Custom</div>
+          <div class="pricing-period">contact us</div>
+          <ul class="pricing-features">
+            <li>Unlimited everything</li>
+            <li>Unlimited numbers</li>
+            <li>Dedicated agent</li>
+            <li>Custom integrations</li>
+            <li>SLA guarantee</li>
+          </ul>
+          <button class="pricing-cta" onclick="showPage('signup')">Talk to sales</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-brand">Tell5</div>
+      <div class="footer-copy">© 2025 Tell5. Built for African businesses.</div>
+    </footer>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       LOGIN PAGE
+  ══════════════════════════════════════════ -->
+  <div id="page-login" class="page">
+    <div class="auth-shell">
+      <div class="auth-card">
+        <div class="auth-logo">Tell5</div>
+        <div class="auth-tagline">Operations Dashboard</div>
+        <div class="auth-title">Welcome back</div>
+        <div class="auth-sub">Log in to your workspace</div>
+
+        <div class="form-error" id="login-error">Invalid email or password. Please try again.</div>
+
+        <div class="auth-form">
+          <div class="field">
+            <label>Email address</label>
+            <input type="email" id="login-email" placeholder="you@company.com" autocomplete="email" />
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
+          </div>
+
+          <div style="text-align:right;margin-top:-4px">
+            <a style="font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--sub);cursor:pointer;text-decoration:none"
+               onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--sub)'">
+              Forgot password?
+            </a>
+          </div>
+
+          <button class="btn-primary" id="login-btn" onclick="handleLogin()">Log in</button>
+
+          <div class="divider"><span>or</span></div>
+
+          <div class="form-switch">
+            Don't have an account?
+            <a onclick="showPage('signup')">Sign up free</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SIGNUP PAGE
+  ══════════════════════════════════════════ -->
+  <div id="page-signup" class="page">
+    <div class="auth-shell">
+      <div class="auth-card">
+        <div class="auth-logo">Tell5</div>
+        <div class="auth-tagline">Operations Dashboard</div>
+        <div class="auth-title">Create your account</div>
+        <div class="auth-sub">Free forever. No credit card required.</div>
+
+        <div class="form-error" id="signup-error">Please fill in all fields correctly.</div>
+
+        <div class="auth-form">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="field">
+              <label>First name</label>
+              <input type="text" id="signup-first" placeholder="Ada" autocomplete="given-name" />
+            </div>
+            <div class="field">
+              <label>Last name</label>
+              <input type="text" id="signup-last" placeholder="Okafor" autocomplete="family-name" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Business / WhatsApp phone</label>
+            <input type="tel" id="signup-phone" placeholder="+234 800 000 0000" autocomplete="tel" />
+          </div>
+
+          <div class="field">
+            <label>Work email</label>
+            <input type="email" id="signup-email" placeholder="you@company.com" autocomplete="email" />
+          </div>
+
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="signup-pass" placeholder="Min. 8 characters" autocomplete="new-password"
+              oninput="checkPasswordStrength(this.value)" />
+          </div>
+
+          <!-- Password strength bar -->
+          <div style="display:flex;gap:4px;margin-top:-8px" id="pw-bars">
+            <div class="pw-bar" style="flex:1;height:3px;border-radius:4px;background:var(--muted);transition:background .2s"></div>
+            <div class="pw-bar" style="flex:1;height:3px;border-radius:4px;background:var(--muted);transition:background .2s"></div>
+            <div class="pw-bar" style="flex:1;height:3px;border-radius:4px;background:var(--muted);transition:background .2s"></div>
+            <div class="pw-bar" style="flex:1;height:3px;border-radius:4px;background:var(--muted);transition:background .2s"></div>
+          </div>
+
+          <button class="btn-primary" id="signup-btn" onclick="handleSignup()">Create account →</button>
+
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--sub);text-align:center;line-height:1.6">
+            By signing up you agree to our
+            <a href="/terms" style="color:var(--accent);text-decoration:none;cursor:pointer">Terms of Service</a>
+            and
+            <a href="/privacy" style="color:var(--accent);text-decoration:none;cursor:pointer">Privacy Policy</a>.
+          </div>
+
+          <div class="divider"><span>already have an account?</span></div>
+
+          <div class="form-switch">
+            <a onclick="showPage('login')">Log in instead</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SCRIPT
+  ══════════════════════════════════════════ -->
+  <script>
+    async function apiRequest(url, payload) {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload || {})
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.detail || 'Request failed. Please try again.');
+      }
+      return data;
+    }
+
+    /* ── Router ── */
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const target = id;
+      const el = document.getElementById('page-' + target);
+      if (el) {
+        el.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      // Hide nav sign-up button on auth pages
+      const navSolid = document.querySelector('.nav-btn-solid');
+      if (target === 'login' || target === 'signup') {
+        navSolid && (navSolid.style.display = 'none');
+      } else {
+        navSolid && (navSolid.style.display = '');
+      }
+    }
+
+    /* ── Login ── */
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const pass  = document.getElementById('login-pass').value;
+      const errEl = document.getElementById('login-error');
+      const btn   = document.getElementById('login-btn');
+
+      errEl.classList.remove('show');
+
+      if (!email || !pass) {
+        errEl.textContent = 'Please enter your email and password.';
+        errEl.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Logging in…';
+
+      try {
+        await apiRequest('/api/auth/login', { email, password: pass });
+        window.location.href = '/dashboard';
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Log in';
+      }
+    }
+
+    /* ── Signup ── */
+    async function handleSignup() {
+      const first = document.getElementById('signup-first').value.trim();
+      const last  = document.getElementById('signup-last').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const phone = document.getElementById('signup-phone').value.trim();
+      const pass  = document.getElementById('signup-pass').value;
+      const errEl = document.getElementById('signup-error');
+      const btn   = document.getElementById('signup-btn');
+
+      errEl.classList.remove('show');
+
+      if (!first || !last || !email || !phone || !pass) {
+        errEl.textContent = 'Please fill in all fields.';
+        errEl.classList.add('show');
+        return;
+      }
+
+      if (pass.length < 8) {
+        errEl.textContent = 'Password must be at least 8 characters.';
+        errEl.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Creating account…';
+
+      try {
+        await apiRequest('/api/auth/signup', {
+          first_name: first,
+          last_name: last,
+          email,
+          phone,
+          password: pass
+        });
+        window.location.href = '/dashboard';
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create account →';
+      }
+    }
+
+    /* ── Password strength ── */
+    function checkPasswordStrength(val) {
+      let score = 0;
+      if (val.length >= 8)  score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const colors = ['#ef4444','#f97316','#facc15','#00e5b0'];
+      const bars = document.querySelectorAll('.pw-bar');
+      bars.forEach((b, i) => {
+        b.style.background = i < score ? colors[score - 1] : 'var(--muted)';
+      });
+    }
+
+    /* ── Enter key triggers login/signup ── */
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      const loginActive  = document.getElementById('page-login').classList.contains('active');
+      const signupActive = document.getElementById('page-signup').classList.contains('active');
+      if (loginActive)  handleLogin();
+      if (signupActive) handleSignup();
+    });
+  </script>
+</body>
+</html>
