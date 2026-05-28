@@ -26,12 +26,15 @@ services:
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-whatsapp:+14155238886}
       SESSION_SECRET: ${SESSION_SECRET:-replace_with_a_long_random_secret}
       COOKIE_SECURE: ${COOKIE_SECURE:-False}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash-lite}
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn api.index:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   postgres_data:

@@ -72,6 +72,6 @@ echo API Docs: http://localhost:8000/docs
 echo Press Ctrl+C to stop
 echo.
 
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn api.index:app --reload --host 0.0.0.0 --port 8000
 
 pause

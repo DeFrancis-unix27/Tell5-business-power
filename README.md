@@ -43,6 +43,9 @@ TWILIO_PHONE_NUMBER=whatsapp:+1234567890
 DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/tell5
 SESSION_SECRET=replace_with_a_long_random_secret
 COOKIE_SECURE=False
+ADMIN_EMAIL=owner@example.com
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash-lite
 ```
 
 ### 3. Setup Database
@@ -58,7 +61,7 @@ docker run -d --name postgres-tell5 -e POSTGRES_PASSWORD=password -e POSTGRES_DB
 ### 4. Run Locally
 
 ```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn api.index:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Visit: `http://localhost:8000/dashboard`
@@ -71,11 +74,14 @@ Visit: `http://localhost:8000/dashboard`
 | POST | `/api/auth/login` | Log in and set the secure session cookie |
 | POST | `/api/auth/logout` | Clear the session cookie |
 | GET | `/api/auth/me` | Return the current logged-in user |
+| POST | `/api/ai/draft-reply` | Draft a customer reply with Gemini when configured |
+| GET | `/api/admin/summary` | Admin-only production and business health summary |
 | POST | `/webhook/whatsapp` | Receive messages from Twilio |
 | GET | `/api/conversations` | List all conversations |
 | GET | `/api/orders` | List all orders |
 | GET | `/api/stats` | Get category distribution & order count |
 | GET | `/dashboard` | Real-time dashboard |
+| GET | `/admin` | Admin setup and production checklist |
 
 ## Database Schema
 
@@ -118,7 +124,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "api.index:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 ### Production Environment
@@ -130,6 +136,9 @@ TWILIO_PHONE_NUMBER=whatsapp:+...
 DATABASE_URL=postgresql+asyncpg://prod-user:pass@prod-db:5432/tell5
 SESSION_SECRET=generate-a-long-random-secret
 COOKIE_SECURE=True
+ADMIN_EMAIL=owner@example.com
+GEMINI_API_KEY=your_google_ai_studio_key
+GEMINI_MODEL=gemini-2.5-flash-lite
 DEBUG=False
 ```
 
@@ -141,7 +150,8 @@ Recommended hosting: Heroku, Railway, Render, AWS Lambda + RDS
 
 ```
 Tell5/
-├── main.py              # FastAPI app, routes
+├── api/index.py         # FastAPI app, routes
+├── main.py              # Compatibility import for api.index:app
 ├── models.py            # Database models
 ├── schemas.py           # Pydantic schemas
 ├── crud.py              # Database operations
@@ -165,12 +175,12 @@ Tell5/
 ### Enable Debug Logging
 
 ```bash
-uvicorn main:app --reload --log-level debug
+uvicorn api.index:app --reload --log-level debug
 ```
 
 ### Add Custom Categories
 
-Edit `categorize_message()` in `main.py` and add your keywords.
+Edit `categorize_message()` in `api/index.py` and add your keywords. If `GEMINI_API_KEY` is set, Gemini is used first and keyword matching becomes the fallback.
 
 ### Database Migrations
 

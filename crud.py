@@ -61,6 +61,7 @@ async def create_user(
     last_name: str,
     phone: str,
     password_hash: str,
+    is_admin: bool = False,
 ) -> User:
     user = User(
         email=email.lower(),
@@ -68,7 +69,18 @@ async def create_user(
         last_name=last_name,
         phone=phone,
         password_hash=password_hash,
+        is_admin=is_admin,
     )
     db.add(user)
     await db.flush()
     return user
+
+
+async def count_users(db: AsyncSession) -> int:
+    q = await db.execute(select(func.count(User.id)))
+    return q.scalar() or 0
+
+
+async def list_users(db: AsyncSession) -> List[User]:
+    q = await db.execute(select(User).order_by(User.created_at.desc()))
+    return q.scalars().all()
