@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from db import engine, Base, get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from config import Config
 import crud
 from ai import ai_configured, analyze_customer_message, draft_reply
 from auth import (
@@ -17,30 +18,32 @@ from auth import (
     verify_session_token,
 )
 import re
-import os
 import logging
 from pathlib import Path
 from typing import Optional
 from twilio.rest import Client
 from twilio.request_validator import RequestValidator
-from dotenv import load_dotenv
-
-load_dotenv()
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO if not Config.DEBUG else logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Twilio configuration
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "whatsapp:+1234567890")
+# Twilio client initialization with validated config
+twilio_client = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
+validator = RequestValidator(Config.TWILIO_AUTH_TOKEN)
 
-# Initialize Twilio client
-twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN else None
-validator = RequestValidator(TWILIO_AUTH_TOKEN) if TWILIO_AUTH_TOKEN else None
+# Rate limiting setup
+limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(title="Tell5 - WhatsApp Workflow Agent")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
+    status_code=429,
+    content={"detail": "Rate limit exceeded. Too many requests."},
+))
 templates = Jinja2Templates(directory="templates")
 
 try:
@@ -62,6 +65,19 @@ async def security_headers(request: Request, call_next):
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
     return response
+
+
+@app.middleware("http")
+async def error_logging(request: Request, call_next):
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as exc:
+        logger.error(f"Unhandled error: {exc}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+        )
 
 
 def categorize_message(text: str) -> str:
@@ -145,7 +161,7 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"))
-        admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
+        admin_email = (Config.ADMIN_EMAIL or "").strip().lower()
         if admin_email:
             await conn.execute(text("UPDATE users SET is_admin = TRUE WHERE lower(email) = :email"), {"email": admin_email})
         await conn.execute(text("""
@@ -159,13 +175,11 @@ async def startup():
 
 def validate_twilio_request(request_url: str, post_data: dict, signature: str) -> bool:
     """Validate that request came from Twilio"""
-    if not validator:
-        logger.warning("Twilio Auth Token not configured, skipping signature validation")
-        return True
     return validator.validate(request_url, post_data, signature)
 
 
 @app.post("/webhook/whatsapp")
+@limiter.limit("100/minute")
 async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     # Get signature for validation
     signature = request.headers.get("X-Twilio-Signature", "")
@@ -213,7 +227,7 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
     if twilio_client:
         try:
             twilio_client.messages.create(
-                from_=TWILIO_PHONE_NUMBER,
+                from_=Config.TWILIO_PHONE_NUMBER,
                 body=reply,
                 to=from_number
             )
@@ -227,6 +241,7 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
 
 
 @app.post("/api/auth/signup")
+@limiter.limit("5/minute")
 async def signup(request: Request, db: AsyncSession = Depends(get_db)):
     data = await request.json()
     first_name = str(data.get("first_name", "")).strip()
@@ -264,6 +279,7 @@ async def signup(request: Request, db: AsyncSession = Depends(get_db)):
 
 
 @app.post("/api/auth/login")
+@limiter.limit("5/minute")
 async def login(request: Request, db: AsyncSession = Depends(get_db)):
     data = await request.json()
     email = str(data.get("email", "")).strip().lower()
@@ -317,7 +333,7 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
         "total_conversations": len(convs),
         "total_orders": len(orders),
         "ai_enabled": ai_configured(),
-        "twilio_configured": bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_PHONE_NUMBER),
+        "twilio_configured": True,
         "recent_users": [public_user(u) for u in users[:10]],
         "recent_conversations": [{
             "id": c.id,

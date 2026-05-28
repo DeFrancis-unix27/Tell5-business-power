@@ -6,6 +6,7 @@ import os
 import secrets
 import time
 from typing import Any
+from config import Config
 
 SESSION_COOKIE_NAME = "tell5_session"
 SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
@@ -13,10 +14,7 @@ PASSWORD_ITERATIONS = 260_000
 
 
 def _session_secret() -> bytes:
-    secret = os.getenv("SESSION_SECRET")
-    if not secret:
-        secret = os.getenv("TWILIO_AUTH_TOKEN") or "tell5-local-dev-secret"
-    return secret.encode("utf-8")
+    return Config.SESSION_SECRET.encode("utf-8")
 
 
 def _b64encode(data: bytes) -> str:

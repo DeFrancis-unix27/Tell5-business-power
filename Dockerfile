@@ -23,9 +23,9 @@ USER tell5user
 # Expose port
 EXPOSE 8000
 
-# Health check
+# Health check endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/healthz').raise_for_status()"
 
-# Run the application
-CMD ["sh", "-c", "uvicorn api.index:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Run the application (no --reload in production)
+CMD ["sh", "-c", "uvicorn api.index:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${WORKERS:-1}"]
