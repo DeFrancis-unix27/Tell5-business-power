@@ -34,7 +34,6 @@
       overflow-x: hidden;
     }
 
-    /* Subtle grid background */
     body::before {
       content: '';
       position: fixed;
@@ -52,7 +51,7 @@
       z-index: 1;
       max-width: 1280px;
       margin: 0 auto;
-      padding: 28px 24px;
+      padding: 24px 20px;
     }
 
     /* ── Header ── */
@@ -60,19 +59,22 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 32px;
-      padding-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
       border-bottom: 1px solid var(--border);
     }
 
     .brand {
       display: flex;
       align-items: baseline;
-      gap: 12px;
+      gap: 10px;
+      flex-shrink: 0;
     }
 
     .brand-name {
-      font-size: 1.75rem;
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
       font-weight: 800;
       letter-spacing: -0.03em;
       color: var(--accent);
@@ -80,16 +82,22 @@
 
     .brand-tag {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.7rem;
+      font-size: clamp(0.6rem, 1.5vw, 0.7rem);
       color: var(--sub);
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
 
+    /* hide on very small screens */
+    @media (max-width: 380px) {
+      .brand-tag { display: none; }
+    }
+
     .header-right {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .live-badge {
@@ -101,15 +109,16 @@
       color: var(--accent);
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .live-dot {
-      width: 7px;
-      height: 7px;
+      width: 7px; height: 7px;
       border-radius: 50%;
       background: var(--accent);
       box-shadow: 0 0 8px var(--accent);
       animation: pulse 2s ease-in-out infinite;
+      flex-shrink: 0;
     }
 
     @keyframes pulse {
@@ -121,9 +130,15 @@
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.75rem;
       color: var(--sub);
+      white-space: nowrap;
     }
 
-    .logout-btn {
+    /* hide clock on tiny screens */
+    @media (max-width: 480px) {
+      .clock { display: none; }
+    }
+
+    .header-btn {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.68rem;
       font-weight: 600;
@@ -133,12 +148,14 @@
       background: transparent;
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 8px 12px;
+      padding: 7px 11px;
       cursor: pointer;
+      text-decoration: none;
       transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
     }
 
-    .logout-btn:hover {
+    .header-btn:hover {
       border-color: var(--accent);
       color: var(--accent);
     }
@@ -147,15 +164,23 @@
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 24px;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 860px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 400px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; }
     }
 
     .kpi {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px 18px;
+      padding: 14px 16px;
       position: relative;
       overflow: hidden;
       transition: border-color 0.2s;
@@ -165,8 +190,7 @@
       content: '';
       position: absolute;
       top: 0; left: 0;
-      width: 3px;
-      height: 100%;
+      width: 3px; height: 100%;
       background: var(--kpi-color, var(--accent));
     }
 
@@ -174,15 +198,15 @@
 
     .kpi-label {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.65rem;
+      font-size: clamp(0.58rem, 1.2vw, 0.65rem);
       color: var(--sub);
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .kpi-value {
-      font-size: 1.9rem;
+      font-size: clamp(1.4rem, 3.5vw, 1.9rem);
       font-weight: 800;
       letter-spacing: -0.04em;
       color: var(--kpi-color, var(--accent));
@@ -191,16 +215,22 @@
 
     .kpi-sub {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.65rem;
+      font-size: clamp(0.58rem, 1.1vw, 0.65rem);
       color: var(--sub);
-      margin-top: 6px;
+      margin-top: 5px;
     }
 
     /* ── Main Grid ── */
     .main-grid {
       display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 16px;
+      grid-template-columns: 1fr 360px;
+      gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* ── Panel ── */
@@ -215,19 +245,19 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
     }
 
     .panel-title {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--sub);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
     }
 
     .panel-title::before {
@@ -235,6 +265,7 @@
       width: 6px; height: 6px;
       border-radius: 50%;
       background: var(--accent);
+      flex-shrink: 0;
     }
 
     .panel-count {
@@ -248,8 +279,12 @@
 
     /* ── Conversation List ── */
     .conv-list {
-      max-height: 440px;
+      max-height: 460px;
       overflow-y: auto;
+    }
+
+    @media (max-width: 900px) {
+      .conv-list { max-height: 380px; }
     }
 
     .conv-list::-webkit-scrollbar { width: 4px; }
@@ -257,11 +292,11 @@
     .conv-list::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 4px; }
 
     .conv-item {
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
       display: grid;
       grid-template-columns: auto 1fr auto;
-      gap: 0 12px;
+      gap: 0 10px;
       align-items: start;
       transition: background 0.15s;
       animation: fadeSlideIn 0.3s ease both;
@@ -276,19 +311,18 @@
     .conv-item:last-child { border-bottom: none; }
 
     .conv-avatar {
-      width: 34px;
-      height: 34px;
+      width: 32px; height: 32px;
       border-radius: 6px;
       background: var(--muted);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 600;
       color: var(--accent);
       flex-shrink: 0;
-      margin-top: 1px;
+      margin-top: 2px;
     }
 
     .conv-body { min-width: 0; }
@@ -296,25 +330,26 @@
     .conv-meta {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
+      gap: 7px;
+      margin-bottom: 3px;
+      flex-wrap: wrap;
     }
 
     .conv-phone {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--text);
       font-weight: 500;
     }
 
     .conv-time {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.62rem;
+      font-size: 0.6rem;
       color: var(--sub);
     }
 
     .conv-msg {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: #94a3b8;
       white-space: nowrap;
       overflow: hidden;
@@ -324,40 +359,67 @@
 
     .conv-category {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.07em;
-      padding: 3px 8px;
+      padding: 3px 7px;
       border-radius: 4px;
       white-space: nowrap;
       flex-shrink: 0;
-      margin-top: 2px;
+      margin-top: 3px;
+      align-self: start;
+    }
+
+    /* hide category badge on very small screens */
+    @media (max-width: 360px) {
+      .conv-category { display: none; }
+      .conv-item { grid-template-columns: auto 1fr; }
     }
 
     /* ── Right Column ── */
-    .right-col { display: flex; flex-direction: column; gap: 16px; }
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* On mobile, reorder so orders come before chart */
+    @media (max-width: 900px) {
+      .right-col {
+        flex-direction: column-reverse;
+      }
+    }
 
     /* ── Chart Panel ── */
     .chart-wrap {
-      padding: 18px;
+      padding: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    #pieChart { max-height: 180px; }
+    #pieChart { max-height: 200px; width: 100% !important; }
+
+    /* On mobile, chart takes less height */
+    @media (max-width: 600px) {
+      #pieChart { max-height: 160px; }
+    }
 
     /* ── Orders Panel ── */
     .orders-list {
-      max-height: 280px;
+      max-height: 300px;
       overflow-y: auto;
+    }
+
+    @media (max-width: 900px) {
+      .orders-list { max-height: 260px; }
     }
 
     .orders-list::-webkit-scrollbar { width: 4px; }
     .orders-list::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 4px; }
 
     .order-item {
-      padding: 12px 18px;
+      padding: 11px 16px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -369,10 +431,10 @@
     .order-item:hover { background: rgba(255,255,255,0.02); }
     .order-item:last-child { border-bottom: none; }
 
-    .order-left { min-width: 0; }
+    .order-left { min-width: 0; flex: 1; }
 
     .order-name {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       color: var(--text);
       white-space: nowrap;
@@ -382,24 +444,20 @@
 
     .order-item-name {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       color: var(--sub);
       margin-top: 2px;
-    }
-
-    .order-qty {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--sub);
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .status-badge {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      padding: 3px 8px;
+      padding: 3px 7px;
       border-radius: 4px;
       white-space: nowrap;
       flex-shrink: 0;
@@ -420,17 +478,63 @@
 
     /* ── Empty state ── */
     .empty {
-      padding: 40px 18px;
+      padding: 36px 18px;
       text-align: center;
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.72rem;
       color: var(--sub);
     }
 
-    /* ── Responsive ── */
+    /* ── Mobile tab switcher for right column panels ── */
+    /* On ≤900px, collapse chart behind a toggle */
+    .chart-toggle {
+      display: none;
+    }
+
     @media (max-width: 900px) {
-      .kpi-row { grid-template-columns: repeat(2, 1fr); }
-      .main-grid { grid-template-columns: 1fr; }
+      .chart-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        width: 100%;
+        background: none;
+        border: none;
+        color: inherit;
+        font-family: inherit;
+        padding: 0;
+      }
+
+      .chart-toggle-icon {
+        font-size: 0.7rem;
+        color: var(--sub);
+        transition: transform 0.2s;
+      }
+
+      .chart-collapsible {
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.3s ease;
+      }
+
+      .chart-collapsible.open {
+        max-height: 300px;
+      }
+    }
+
+    /* Larger screens always show chart */
+    @media (min-width: 901px) {
+      .chart-collapsible {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+    }
+
+    /* ── Safe area padding (notch phones) ── */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .shell {
+        padding-bottom: calc(24px + env(safe-area-inset-bottom));
+      }
     }
   </style>
 </head>
@@ -446,8 +550,8 @@
       <div class="header-right">
         <div class="live-badge"><span class="live-dot"></span>Live</div>
         <div class="clock" id="clock">--:--:--</div>
-        <a class="logout-btn" href="/admin">Admin</a>
-        <button class="logout-btn" onclick="logout()">Logout</button>
+        <a class="header-btn" href="/admin">Admin</a>
+        <button class="header-btn" onclick="logout()">Logout</button>
       </div>
     </header>
 
@@ -492,12 +596,17 @@
       <!-- Right Column -->
       <div class="right-col">
 
-        <!-- Chart Panel -->
+        <!-- Chart Panel (collapsible on mobile) -->
         <div class="panel">
           <div class="panel-header">
-            <span class="panel-title">Category Breakdown</span>
+            <button class="chart-toggle" onclick="toggleChart()" aria-expanded="false" id="chart-toggle-btn">
+              <span class="panel-title">Category Breakdown</span>
+              <span class="chart-toggle-icon" id="chart-icon">▼</span>
+            </button>
+            <!-- Static title on desktop (hidden on mobile via CSS) -->
+            <span class="panel-title desktop-chart-title" style="display:none">Category Breakdown</span>
           </div>
-          <div class="chart-wrap">
+          <div class="chart-wrap chart-collapsible" id="chart-collapsible">
             <canvas id="pieChart"></canvas>
           </div>
         </div>
@@ -526,6 +635,34 @@
     tickClock();
     setInterval(tickClock, 1000);
 
+    // ── Chart toggle (mobile) ──
+    let chartOpen = false;
+    function toggleChart() {
+      chartOpen = !chartOpen;
+      const c = document.getElementById('chart-collapsible');
+      const icon = document.getElementById('chart-icon');
+      const btn = document.getElementById('chart-toggle-btn');
+      c.classList.toggle('open', chartOpen);
+      icon.textContent = chartOpen ? '▲' : '▼';
+      btn.setAttribute('aria-expanded', chartOpen);
+    }
+
+    // Handle resize: on desktop, ensure chart visible; swap title element visibility
+    function syncChartLayout() {
+      const isDesktop = window.innerWidth > 900;
+      const desktopTitle = document.querySelector('.desktop-chart-title');
+      const toggleBtn = document.getElementById('chart-toggle-btn');
+      if (isDesktop) {
+        desktopTitle.style.display = 'flex';
+        toggleBtn.style.display = 'none';
+      } else {
+        desktopTitle.style.display = 'none';
+        toggleBtn.style.display = 'flex';
+      }
+    }
+    syncChartLayout();
+    window.addEventListener('resize', syncChartLayout);
+
     // ── Helpers ──
     function initials(phone) {
       if (!phone) return '??';
@@ -535,19 +672,12 @@
 
     function escapeHtml(value) {
       return String(value ?? '').replace(/[&<>"']/g, ch => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
       }[ch]));
     }
 
     async function logout() {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'same-origin'
-      }).catch(() => {});
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
       window.location.href = '/';
     }
 
@@ -562,10 +692,10 @@
 
     function statusClass(s = '') {
       const k = s.toLowerCase();
-      if (k.includes('pending'))   return 's-pending';
-      if (k.includes('confirm'))   return 's-confirmed';
-      if (k.includes('deliver'))   return 's-delivered';
-      if (k.includes('cancel'))    return 's-cancelled';
+      if (k.includes('pending'))  return 's-pending';
+      if (k.includes('confirm'))  return 's-confirmed';
+      if (k.includes('deliver'))  return 's-delivered';
+      if (k.includes('cancel'))   return 's-cancelled';
       return 's-other';
     }
 
@@ -607,6 +737,8 @@
         },
         options: {
           cutout: '62%',
+          responsive: true,
+          maintainAspectRatio: true,
           plugins: {
             legend: {
               position: 'bottom',
@@ -614,7 +746,7 @@
                 color: '#64748b',
                 font: { family: 'IBM Plex Mono', size: 10 },
                 boxWidth: 10,
-                padding: 12,
+                padding: 10,
               }
             },
             tooltip: {
@@ -637,10 +769,10 @@
       try {
         const [convsRes, ordersRes, statsRes] = await Promise.all([
           fetch('/api/conversations', { credentials: 'same-origin' }),
-          fetch('/api/orders', { credentials: 'same-origin' }),
-          fetch('/api/stats', { credentials: 'same-origin' })
+          fetch('/api/orders',        { credentials: 'same-origin' }),
+          fetch('/api/stats',         { credentials: 'same-origin' })
         ]);
-        if ([convsRes, ordersRes, statsRes].some(res => res.status === 401)) {
+        if ([convsRes, ordersRes, statsRes].some(r => r.status === 401)) {
           window.location.href = '/';
           return;
         }
@@ -649,10 +781,8 @@
         const stats  = await statsRes.json();
 
         // KPIs
-        const complaints = (convs || []).filter(c =>
-          (c.category || '').toLowerCase().includes('complaint')).length;
-        const pending = (orders || []).filter(o =>
-          (o.status || '').toLowerCase().includes('pending')).length;
+        const complaints = (convs  || []).filter(c => (c.category || '').toLowerCase().includes('complaint')).length;
+        const pending    = (orders || []).filter(o => (o.status   || '').toLowerCase().includes('pending')).length;
 
         document.getElementById('kpi-convs').textContent      = (convs  || []).length;
         document.getElementById('kpi-orders').textContent     = (orders || []).length;

@@ -5,126 +5,433 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tell5 Admin</title>
   <link rel="icon" href="static/tell5-icon.svg" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: #0a0c0f;
-      color: #e2e8f0;
-      font-family: Arial, sans-serif;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0a0c0f;
+      --surface: #0f1318;
+      --border:  #1e2530;
+      --muted:   #2a3340;
+      --text:    #e2e8f0;
+      --sub:     #64748b;
+      --accent:  #00e5b0;
+      --accent2: #3b82f6;
+      --accent3: #f97316;
+      --danger:  #ef4444;
     }
-    .shell { max-width: 1180px; margin: 0 auto; padding: 28px 22px 48px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,176,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,176,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
+    }
+
+    /* ── Header ── */
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      flex-wrap: wrap;
+      gap: 14px;
       padding-bottom: 18px;
-      border-bottom: 1px solid #1e2530;
+      border-bottom: 1px solid var(--border);
       margin-bottom: 24px;
     }
-    h1 { margin: 0; color: #00e5b0; font-size: 1.7rem; }
-    a, button {
-      border: 1px solid #1e2530;
-      color: #e2e8f0;
-      background: #0f1318;
-      border-radius: 7px;
-      padding: 9px 12px;
+
+    .brand-name {
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .brand-sub {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--sub);
+      margin-top: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .header-btn {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
       text-decoration: none;
       cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
     }
-    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
-    .card {
-      background: #0f1318;
-      border: 1px solid #1e2530;
+
+    .header-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── KPI Grid ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 860px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 400px) { .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; } }
+
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
+      padding: 14px 16px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
     }
-    .label { color: #64748b; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
-    .value { font-size: 1.8rem; font-weight: 800; margin-top: 8px; }
-    .ok { color: #00e5b0; }
-    .warn { color: #f97316; }
-    .layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 14px; }
-    h2 { margin: 0 0 12px; font-size: 1rem; }
-    ul { margin: 0; padding-left: 18px; color: #94a3b8; line-height: 1.8; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #1e2530; font-size: 0.9rem; }
-    th { color: #64748b; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; }
-    .muted { color: #64748b; }
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid #1e2530;
+
+    .kpi::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--kpi-color, var(--accent));
+    }
+
+    .kpi:hover { border-color: var(--kpi-color, var(--accent)); }
+
+    .kpi-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: clamp(0.58rem, 1.2vw, 0.65rem);
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--kpi-color, var(--accent));
+      line-height: 1;
+    }
+
+    .kpi-value.ok   { color: var(--accent); }
+    .kpi-value.warn { color: var(--accent3); }
+
+    /* ── Panel ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--sub);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .panel-title::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .panel-body { padding: 16px; }
+
+    /* ── Info Grid (setup + checks) ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 760px) { .info-grid { grid-template-columns: 1fr; } }
+
+    /* ── Checklist ── */
+    .checklist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .checklist li {
+      font-size: 0.83rem;
       color: #94a3b8;
-      font-size: 0.75rem;
+      line-height: 1.55;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
     }
-    @media (max-width: 850px) {
-      .grid, .layout { grid-template-columns: 1fr; }
-      header { align-items: flex-start; flex-direction: column; }
+
+    .badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2px;
+      background: var(--muted);
+      color: var(--sub);
+      border: 1px solid var(--border);
+    }
+
+    .badge.ok   { background: rgba(0,229,176,0.1);  color: var(--accent);  border-color: rgba(0,229,176,0.25); }
+    .badge.warn { background: rgba(249,115,22,0.1); color: var(--accent3); border-color: rgba(249,115,22,0.25); }
+
+    code {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78em;
+      background: var(--muted);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--text);
+    }
+
+    /* ── Table Grid ── */
+    .table-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 760px) { .table-grid { grid-template-columns: 1fr; } }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    table { width: 100%; border-collapse: collapse; min-width: 280px; }
+
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--sub);
+      white-space: nowrap;
+    }
+
+    td {
+      text-align: left;
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .role-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(59,130,246,0.1);
+      color: #60a5fa;
+    }
+
+    .role-badge.admin {
+      background: rgba(0,229,176,0.1);
+      color: var(--accent);
+    }
+
+    .cat-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--muted);
+      color: var(--sub);
+    }
+
+    .muted-cell { color: var(--sub); font-style: italic; }
+
+    /* ── Responsive: stack tables vertically with scroll ── */
+    @media (max-width: 540px) {
+      .panel-body { padding: 12px; }
+      td, th { padding: 8px 8px; }
+    }
+
+    /* safe area */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .shell { padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
     }
   </style>
 </head>
 <body>
   <div class="shell">
+
+    <!-- Header -->
     <header>
       <div>
-        <h1>Tell5 Admin</h1>
-        <div class="muted">Business setup, users, AI, and message health</div>
+        <div class="brand-name">Tell5 Admin</div>
+        <div class="brand-sub">Business setup, users, AI &amp; message health</div>
       </div>
-      <div>
-        <a href="/dashboard">Dashboard</a>
-        <button onclick="logout()">Logout</button>
+      <div class="header-actions">
+        <a class="header-btn" href="/dashboard">Dashboard</a>
+        <button class="header-btn" onclick="logout()">Logout</button>
       </div>
     </header>
 
-    <div class="grid">
-      <div class="card"><div class="label">Users</div><div class="value" id="users">0</div></div>
-      <div class="card"><div class="label">Conversations</div><div class="value" id="convs">0</div></div>
-      <div class="card"><div class="label">Orders</div><div class="value" id="orders">0</div></div>
-      <div class="card"><div class="label">AI Assistant</div><div class="value" id="ai">--</div></div>
-    </div>
-
-    <div class="layout">
-      <div class="card">
-        <h2>Business-Ready Setup</h2>
-        <ul>
-          <li><span id="whatsapp-status" class="badge">Checking</span> WhatsApp connection is managed in the background so business owners do not need Twilio screens.</li>
-          <li><span id="ai-status" class="badge">Checking</span> Gemini can help classify messages and draft better replies.</li>
-          <li>Use the public landing page for signup, then send owners straight to the dashboard.</li>
-          <li>Before launch, replace the placeholder Terms and Privacy pages with reviewed documents.</li>
-          <li>For paid onboarding, connect each approved WhatsApp sender to this webhook: <strong>/webhook/whatsapp</strong>.</li>
-        </ul>
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi" style="--kpi-color: var(--accent)">
+        <div class="kpi-label">Users</div>
+        <div class="kpi-value" id="users">—</div>
       </div>
-
-      <div class="card">
-        <h2>Production Checks</h2>
-        <ul>
-          <li>Set <strong>SESSION_SECRET</strong> to a long random value.</li>
-          <li>Use <strong>COOKIE_SECURE=True</strong> on HTTPS hosting.</li>
-          <li>Use Aiven CA certificate with <strong>AIVEN_CA_CERT_PATH</strong> for strict SSL.</li>
-          <li>Deploy online before connecting real business WhatsApp traffic.</li>
-        </ul>
+      <div class="kpi" style="--kpi-color: var(--accent2)">
+        <div class="kpi-label">Conversations</div>
+        <div class="kpi-value" id="convs">—</div>
+      </div>
+      <div class="kpi" style="--kpi-color: var(--accent3)">
+        <div class="kpi-label">Orders</div>
+        <div class="kpi-value" id="orders">—</div>
+      </div>
+      <div class="kpi" style="--kpi-color: var(--accent)">
+        <div class="kpi-label">AI Assistant</div>
+        <div class="kpi-value" id="ai">—</div>
       </div>
     </div>
 
-    <div class="layout" style="margin-top:14px">
-      <div class="card">
-        <h2>Recent Users</h2>
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
-          <tbody id="user-list"></tbody>
-        </table>
+    <!-- Info Panels -->
+    <div class="info-grid">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Business-Ready Setup</span></div>
+        <div class="panel-body">
+          <ul class="checklist">
+            <li>
+              <span id="whatsapp-status" class="badge">Checking</span>
+              <span>WhatsApp connection is managed in the background so business owners do not need Twilio screens.</span>
+            </li>
+            <li>
+              <span id="ai-status" class="badge">Checking</span>
+              <span>Gemini can help classify messages and draft better replies.</span>
+            </li>
+            <li>Use the public landing page for signup, then send owners straight to the dashboard.</li>
+            <li>Before launch, replace placeholder Terms and Privacy pages with reviewed documents.</li>
+            <li>For paid onboarding, connect each approved WhatsApp sender to this webhook: <code>/webhook/whatsapp</code></li>
+          </ul>
+        </div>
       </div>
-      <div class="card">
-        <h2>Recent Conversations</h2>
-        <table>
-          <thead><tr><th>Phone</th><th>Category</th></tr></thead>
-          <tbody id="conv-list"></tbody>
-        </table>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Production Checks</span></div>
+        <div class="panel-body">
+          <ul class="checklist">
+            <li>Set <code>SESSION_SECRET</code> to a long random value.</li>
+            <li>Use <code>COOKIE_SECURE=True</code> on HTTPS hosting.</li>
+            <li>Use Aiven CA cert with <code>AIVEN_CA_CERT_PATH</code> for strict SSL.</li>
+            <li>Deploy online before connecting real business WhatsApp traffic.</li>
+          </ul>
+        </div>
       </div>
     </div>
+
+    <!-- Table Panels -->
+    <div class="table-grid">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Recent Users</span></div>
+        <div class="panel-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Email</th><th>Role</th></tr>
+              </thead>
+              <tbody id="user-list">
+                <tr><td colspan="3" class="muted-cell" style="padding:20px 16px;text-align:center">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Recent Conversations</span></div>
+        <div class="panel-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Phone</th><th>Category</th></tr>
+              </thead>
+              <tbody id="conv-list">
+                <tr><td colspan="2" class="muted-cell" style="padding:20px 16px;text-align:center">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -145,31 +452,40 @@
       if (res.status === 403) return window.location.href = '/dashboard';
       const data = await res.json();
 
-      document.getElementById('users').textContent = data.total_users || 0;
-      document.getElementById('convs').textContent = data.total_conversations || 0;
-      document.getElementById('orders').textContent = data.total_orders || 0;
-      document.getElementById('ai').textContent = data.ai_enabled ? 'On' : 'Off';
-      document.getElementById('ai').className = data.ai_enabled ? 'value ok' : 'value warn';
+      document.getElementById('users').textContent  = data.total_users         || 0;
+      document.getElementById('convs').textContent  = data.total_conversations || 0;
+      document.getElementById('orders').textContent = data.total_orders        || 0;
 
-      document.getElementById('whatsapp-status').textContent = data.twilio_configured ? 'Connected' : 'Needs setup';
-      document.getElementById('whatsapp-status').className = data.twilio_configured ? 'badge ok' : 'badge warn';
-      document.getElementById('ai-status').textContent = data.ai_enabled ? 'Enabled' : 'Fallback mode';
-      document.getElementById('ai-status').className = data.ai_enabled ? 'badge ok' : 'badge warn';
+      const aiEl = document.getElementById('ai');
+      aiEl.textContent  = data.ai_enabled ? 'On' : 'Off';
+      aiEl.className    = 'kpi-value ' + (data.ai_enabled ? 'ok' : 'warn');
 
-      document.getElementById('user-list').innerHTML = (data.recent_users || []).map(user => `
-        <tr>
-          <td>${esc(user.first_name)} ${esc(user.last_name)}</td>
-          <td>${esc(user.email)}</td>
-          <td>${user.is_admin ? 'Admin' : 'Staff'}</td>
-        </tr>
-      `).join('') || '<tr><td colspan="3" class="muted">No users yet</td></tr>';
+      const waEl = document.getElementById('whatsapp-status');
+      waEl.textContent  = data.twilio_configured ? 'Connected' : 'Needs setup';
+      waEl.className    = 'badge ' + (data.twilio_configured ? 'ok' : 'warn');
 
-      document.getElementById('conv-list').innerHTML = (data.recent_conversations || []).map(conv => `
-        <tr>
-          <td>${esc(conv.phone)}</td>
-          <td>${esc(conv.category)}</td>
-        </tr>
-      `).join('') || '<tr><td colspan="2" class="muted">No conversations yet</td></tr>';
+      const aiSt = document.getElementById('ai-status');
+      aiSt.textContent  = data.ai_enabled ? 'Enabled' : 'Fallback mode';
+      aiSt.className    = 'badge ' + (data.ai_enabled ? 'ok' : 'warn');
+
+      document.getElementById('user-list').innerHTML =
+        (data.recent_users || []).map(u => `
+          <tr>
+            <td>${esc(u.first_name)} ${esc(u.last_name)}</td>
+            <td>${esc(u.email)}</td>
+            <td><span class="role-badge ${u.is_admin ? 'admin' : ''}">${u.is_admin ? 'Admin' : 'Staff'}</span></td>
+          </tr>
+        `).join('') ||
+        '<tr><td colspan="3" class="muted-cell" style="padding:18px 16px;text-align:center">No users yet</td></tr>';
+
+      document.getElementById('conv-list').innerHTML =
+        (data.recent_conversations || []).map(c => `
+          <tr>
+            <td>${esc(c.phone)}</td>
+            <td><span class="cat-badge">${esc(c.category)}</span></td>
+          </tr>
+        `).join('') ||
+        '<tr><td colspan="2" class="muted-cell" style="padding:18px 16px;text-align:center">No conversations yet</td></tr>';
     }
 
     loadAdmin();
