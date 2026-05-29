@@ -17,6 +17,15 @@ from auth import (
     verify_password,
     verify_session_token,
 )
+from csrf import (
+    generate_csrf_token,
+    create_csrf_token_with_expiry,
+    verify_csrf_token,
+    extract_csrf_token_from_request,
+    extract_csrf_token_from_headers,
+    CSRF_COOKIE_NAME,
+    CSRF_HEADER_NAME,
+)
 import re
 import logging
 from pathlib import Path
@@ -80,6 +89,27 @@ async def error_logging(request: Request, call_next):
         )
 
 
+@app.middleware("http")
+async def csrf_middleware(request: Request, call_next):
+    """CSRF protection middleware for form submissions"""
+    response = await call_next(request)
+
+    # Add CSRF token to GET requests that return HTML
+    if request.method == "GET" and "text/html" in response.headers.get("content-type", ""):
+        _, signed_token = create_csrf_token_with_expiry()
+        response.set_cookie(
+            key=CSRF_COOKIE_NAME,
+            value=signed_token,
+            max_age=60 * 60 * 24,
+            httponly=True,
+            secure=cookie_secure(),
+            samesite="lax",
+            path="/",
+        )
+
+    return response
+
+
 def categorize_message(text: str) -> str:
     t = text.lower()
     if any(w in t for w in ["order", "buy", "purchase"]):
@@ -118,6 +148,31 @@ def public_user(user) -> dict:
 
 def is_valid_email(email: str) -> bool:
     return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
+
+
+async def validate_csrf(request: Request) -> bool:
+    """Validate CSRF token from request
+
+    Checks both form data and headers for CSRF token.
+    """
+    csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
+    if not csrf_cookie:
+        return False
+
+    try:
+        form = await request.form()
+        csrf_token = extract_csrf_token_from_request(dict(form))
+
+        if not csrf_token:
+            csrf_token = extract_csrf_token_from_headers(dict(request.headers))
+
+        if not csrf_token:
+            return False
+
+        return verify_csrf_token(csrf_token, csrf_cookie)
+    except Exception as e:
+        logger.warning(f"CSRF validation error: {e}")
+        return False
 
 
 async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)):
@@ -238,6 +293,20 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
     # Respond with empty TwiML (Twilio messages sent via API)
     twiml = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>'
     return Response(content=twiml, media_type="application/xml")
+
+
+@app.get("/api/csrf-token")
+async def get_csrf_token(request: Request):
+    """Get a CSRF token for form submissions
+
+    Returns a CSRF token that should be included in form submissions
+    or as X-CSRF-Token header in POST requests.
+    """
+    token, _ = create_csrf_token_with_expiry()
+    return {
+        "csrf_token": token,
+        "header_name": CSRF_HEADER_NAME,
+    }
 
 
 @app.post("/api/auth/signup")
