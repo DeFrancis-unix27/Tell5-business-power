@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Connect WhatsApp — Tell5</title>
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/x-icon">
+  <style>
+    body { margin:0; min-height:100vh; font-family:'Syne',sans-serif; background:#0a0c0f; color:#e2e8f0; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .card { max-width:520px; width:100%; background:#121821; border:1px solid #1e2530; border-radius:18px; padding:32px; box-shadow:0 24px 80px rgba(0,0,0,0.25); }
+    h1 { margin:0 0 12px; font-size:2rem; color:#00e5b0; }
+    p { margin:0 0 20px; color:#94a3b8; line-height:1.7; }
+    .status { margin-bottom:24px; padding:16px; border-radius:14px; background:#11171f; border:1px solid #1e2530; font-family:'IBM Plex Mono',monospace; color:#cbd5e1; }
+    .qr-shell { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+    .qr-image { max-width:320px; width:100%; height:auto; border-radius:18px; background:#081116; padding:18px; }
+    .note { color:#94a3b8; font-size:0.9rem; text-align:center; line-height:1.6; }
+    .link-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; margin-top:24px; width:100%; padding:14px 16px; border-radius:12px; color:#0a0c0f; background:#00e5b0; border:none; font-weight:700; text-decoration:none; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Connect WhatsApp</h1>
+    <p>The app detected that you are not using a Twilio WhatsApp sender. Scan the QR code below with WhatsApp to connect your account via Baileys. Once connected, you will be redirected to your dashboard.</p>
+
+    <div id="status" class="status">Preparing connection...</div>
+
+    <div class="qr-shell">
+      <img id="qr-image" class="qr-image" src="" alt="WhatsApp QR code" hidden />
+      <div id="qr-text" class="note"></div>
+    </div>
+
+    <button class="link-btn" type="button" onclick="refresh()">Refresh status</button>
+    <div class="note">If the QR code does not appear, the WhatsApp connect service must be running in <code>services/whatsapp</code> so it can generate the login QR.</div>
+  </div>
+
+  <script>
+    async function refresh() {
+      const statusEl = document.getElementById('status');
+      const imgEl = document.getElementById('qr-image');
+      const textEl = document.getElementById('qr-text');
+
+      try {
+        const res = await fetch('/api/whatsapp/qr', { credentials: 'same-origin' });
+        const data = await res.json();
+        if (data.connected) {
+          statusEl.textContent = 'WhatsApp is connected. Redirecting to dashboard…';
+          imgEl.hidden = true;
+          textEl.textContent = '';
+          window.setTimeout(() => window.location.href = '/dashboard', 800);
+          return;
+        }
+
+        statusEl.textContent = data.message || 'Scan the QR code with WhatsApp to connect.';
+        if (data.qr_image) {
+          imgEl.src = data.qr_image;
+          imgEl.hidden = false;
+          textEl.textContent = 'Open WhatsApp on your phone and scan this QR code.';
+        } else {
+          imgEl.hidden = true;
+          textEl.textContent = 'Waiting for the WhatsApp service to generate a QR code...';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Unable to load WhatsApp status. Check the service and refresh.';
+        imgEl.hidden = true;
+        textEl.textContent = '';
+      }
+    }
+
+    refresh();
+    window.setInterval(refresh, 5000);
+  </script>
+</body>
+</html>

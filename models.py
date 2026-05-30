@@ -8,6 +8,7 @@ class Conversation(Base):
     __tablename__ = "conversations"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True, index=True)
     phone = Column(String(50), index=True, nullable=False)
     message = Column(Text, nullable=False)
     category = Column(String(50), nullable=False, index=True)
@@ -18,6 +19,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True, index=True)
     phone = Column(String(50), index=True, nullable=False)
     customer_name = Column(String(200), nullable=True)
     item = Column(String(200), nullable=False)
@@ -42,7 +44,7 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
-    phone = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=True)
     password_hash = Column(Text, nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
     is_admin = Column(Boolean, nullable=False, default=False)

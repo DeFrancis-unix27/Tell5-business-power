@@ -5,15 +5,15 @@ from datetime import datetime
 from typing import List
 
 
-async def create_conversation(db: AsyncSession, phone: str, message: str, category: str):
-    conv = Conversation(phone=phone, message=message, category=category)
+async def create_conversation(db: AsyncSession, phone: str, message: str, category: str, user_id: int | None = None):
+    conv = Conversation(phone=phone, message=message, category=category, user_id=user_id)
     db.add(conv)
     await db.flush()
     return conv
 
 
-async def create_order(db: AsyncSession, phone: str, item: str, quantity: int = 1, customer_name: str | None = None):
-    order = Order(phone=phone, item=item, quantity=quantity, customer_name=customer_name, status="pending")
+async def create_order(db: AsyncSession, phone: str, item: str, quantity: int = 1, customer_name: str | None = None, user_id: int | None = None):
+    order = Order(phone=phone, item=item, quantity=quantity, customer_name=customer_name, status="pending", user_id=user_id)
     db.add(order)
     await db.flush()
     return order
@@ -26,26 +26,45 @@ async def create_notification(db: AsyncSession, ntype: str, payload: str | None 
     return n
 
 
-async def list_conversations(db: AsyncSession) -> List[Conversation]:
-    q = await db.execute(select(Conversation).order_by(Conversation.timestamp.desc()))
+async def list_conversations(db: AsyncSession, user_id: int | None = None) -> List[Conversation]:
+    stmt = select(Conversation).order_by(Conversation.timestamp.desc())
+    if user_id is not None:
+        stmt = stmt.where(Conversation.user_id == user_id)
+    q = await db.execute(stmt)
     return q.scalars().all()
 
 
-async def list_orders(db: AsyncSession) -> List[Order]:
-    q = await db.execute(select(Order).order_by(Order.timestamp.desc()))
+async def list_orders(db: AsyncSession, user_id: int | None = None) -> List[Order]:
+    stmt = select(Order).order_by(Order.timestamp.desc())
+    if user_id is not None:
+        stmt = stmt.where(Order.user_id == user_id)
+    q = await db.execute(stmt)
     return q.scalars().all()
 
 
-async def stats(db: AsyncSession):
-    q = await db.execute(select(Conversation.category, func.count(Conversation.id)).group_by(Conversation.category))
+async def stats(db: AsyncSession, user_id: int | None = None):
+    stmt = select(Conversation.category, func.count(Conversation.id)).group_by(Conversation.category)
+    if user_id is not None:
+        stmt = stmt.where(Conversation.user_id == user_id)
+    q = await db.execute(stmt)
     categories = {row[0]: row[1] for row in q.all()}
-    q2 = await db.execute(select(func.count(Order.id)))
+
+    if user_id is not None:
+        q2 = await db.execute(select(func.count(Order.id)).where(Order.user_id == user_id))
+    else:
+        q2 = await db.execute(select(func.count(Order.id)))
     total_orders = q2.scalar() or 0
     return {"categories": categories, "total_orders": total_orders}
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     q = await db.execute(select(User).where(User.email == email.lower()))
+    return q.scalar_one_or_none()
+
+
+async def get_user_by_phone(db: AsyncSession, phone: str) -> User | None:
+    normalized = phone.replace("whatsapp:", "").replace(" ", "").strip()
+    q = await db.execute(select(User).where(User.phone.in_([phone, normalized])))
     return q.scalar_one_or_none()
 
 

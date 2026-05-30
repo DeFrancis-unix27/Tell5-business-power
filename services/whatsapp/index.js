@@ -1,5 +1,17 @@
+const fs = require("fs");
+const path = require("path");
 const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys");
 const qrcode = require("qrcode-terminal");
+
+const statePath = path.join(__dirname, "qr-state.json");
+
+function writeState(state) {
+    try {
+        fs.writeFileSync(statePath, JSON.stringify({ ...state, updated_at: new Date().toISOString() }, null, 2));
+    } catch (err) {
+        console.error("Failed to write WhatsApp QR state:", err);
+    }
+}
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState("auth");
@@ -9,19 +21,24 @@ async function startBot() {
         printQRInTerminal: false
     });
 
+    writeState({ connected: false, qr: null, message: "Waiting for WhatsApp QR code..." });
+
     sock.ev.on("connection.update", (update) => {
         const { connection, qr } = update;
 
         if (qr) {
             qrcode.generate(qr, { small: true });
+            writeState({ connected: false, qr, message: "Scan this code with WhatsApp to connect." });
         }
 
         if (connection === "open") {
             console.log("✅ WhatsApp connected!");
+            writeState({ connected: true, qr: null, message: "WhatsApp is connected." });
         }
 
         if (connection === "close") {
             console.log("❌ Connection closed. Restarting...");
+            writeState({ connected: false, qr: null, message: "Connection closed. Restart the service to reconnect." });
             startBot();
         }
     });

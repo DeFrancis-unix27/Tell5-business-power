@@ -1035,8 +1035,11 @@
           </div>
 
           <div class="field">
-            <label>Business / WhatsApp phone</label>
+            <label>Business / WhatsApp phone <span style="font-size:0.72rem;color:var(--sub);font-weight:500">(optional)</span></label>
             <input type="tel" id="signup-phone" placeholder="+234 800 000 0000" autocomplete="tel" />
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--sub);line-height:1.4">
+            Leave this blank if you want to connect WhatsApp via QR code instead of Twilio.
           </div>
 
           <div class="field">
@@ -1155,8 +1158,8 @@
 
       errEl.classList.remove('show');
 
-      if (!first || !last || !email || !phone || !pass) {
-        errEl.textContent = 'Please fill in all fields.';
+      if (!first || !last || !email || !pass) {
+        errEl.textContent = 'Please fill in all required fields.';
         errEl.classList.add('show');
         return;
       }

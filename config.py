@@ -11,7 +11,7 @@ class Config:
     # Required in production
     TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
     TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
-    TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "whatsapp:+1234567890").strip()
+    TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "").strip()
     DATABASE_URL: str = os.getenv("DATABASE_URL", "").strip()
     SESSION_SECRET: str = os.getenv("SESSION_SECRET", "").strip()
 
@@ -30,10 +30,13 @@ class Config:
         """Validate required configuration. Returns list of errors."""
         errors = []
 
-        if not cls.TWILIO_ACCOUNT_SID:
-            errors.append("TWILIO_ACCOUNT_SID is required")
-        if not cls.TWILIO_AUTH_TOKEN:
-            errors.append("TWILIO_AUTH_TOKEN is required")
+        if cls.TWILIO_ACCOUNT_SID or cls.TWILIO_AUTH_TOKEN or cls.TWILIO_PHONE_NUMBER:
+            if not cls.TWILIO_ACCOUNT_SID:
+                errors.append("TWILIO_ACCOUNT_SID is required when using Twilio")
+            if not cls.TWILIO_AUTH_TOKEN:
+                errors.append("TWILIO_AUTH_TOKEN is required when using Twilio")
+            if not cls.TWILIO_PHONE_NUMBER:
+                errors.append("TWILIO_PHONE_NUMBER is required when using Twilio")
         if not cls.DATABASE_URL:
             errors.append("DATABASE_URL is required")
         if not cls.SESSION_SECRET:

@@ -28,8 +28,12 @@ from csrf import (
 )
 import re
 import logging
+import base64
+import io
+import json
 from pathlib import Path
 from typing import Optional
+import qrcode
 from twilio.rest import Client
 from twilio.request_validator import RequestValidator
 from slowapi import Limiter
@@ -41,8 +45,12 @@ logging.basicConfig(level=logging.INFO if not Config.DEBUG else logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Twilio client initialization with validated config
-twilio_client = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
-validator = RequestValidator(Config.TWILIO_AUTH_TOKEN)
+if Config.TWILIO_ACCOUNT_SID and Config.TWILIO_AUTH_TOKEN:
+    twilio_client = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
+    validator = RequestValidator(Config.TWILIO_AUTH_TOKEN)
+else:
+    twilio_client = None
+    validator = None
 
 # Rate limiting setup
 limiter = Limiter(key_func=get_remote_address)
@@ -121,6 +129,44 @@ def categorize_message(text: str) -> str:
     if any(w in t for w in ["thanks", "thank", "love", "good", "great", "feedback"]):
         return "feedback"
     return "inquiry"
+
+
+WA_QR_STATE_FILE = Path("services/whatsapp/qr-state.json")
+
+
+def is_twilio_enabled() -> bool:
+    return bool(Config.TWILIO_ACCOUNT_SID and Config.TWILIO_AUTH_TOKEN and Config.TWILIO_PHONE_NUMBER)
+
+
+def _load_whatsapp_state() -> dict:
+    if not WA_QR_STATE_FILE.exists():
+        return {}
+    try:
+        return json.loads(WA_QR_STATE_FILE.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning(f"Unable to read WhatsApp QR state: {exc}")
+        return {}
+
+
+def is_baileys_connected() -> bool:
+    state = _load_whatsapp_state()
+    return bool(state.get("connected"))
+
+
+def get_whatsapp_qr_state() -> dict:
+    state = _load_whatsapp_state()
+    return {
+        "connected": bool(state.get("connected")),
+        "qr": state.get("qr"),
+        "message": state.get("message", "Scan the QR code with WhatsApp to connect."),
+    }
+
+
+def generate_qr_data_url(qr_text: str) -> str:
+    img = qrcode.make(qr_text)
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
 
 
 def parse_order(text: str) -> tuple[str, int]:
@@ -216,6 +262,8 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"))
+        await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS user_id INTEGER"))
+        await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER"))
         admin_email = (Config.ADMIN_EMAIL or "").strip().lower()
         if admin_email:
             await conn.execute(text("UPDATE users SET is_admin = TRUE WHERE lower(email) = :email"), {"email": admin_email})
@@ -250,22 +298,30 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=403, detail="Invalid Twilio signature")
 
     from_number: Optional[str] = form.get("From")
+    to_number: Optional[str] = form.get("To")
     body: Optional[str] = form.get("Body")
 
     if not from_number or not body:
         raise HTTPException(status_code=400, detail="Missing From or Body")
 
-    logger.info(f"Received message from {from_number}: {body}")
+    logger.info(f"Received message from {from_number} to {to_number}: {body}")
+
+    target_user_id = None
+    if to_number:
+        normalized_to = str(to_number).replace("whatsapp:", "").replace(" ", "").strip()
+        target_user = await crud.get_user_by_phone(db, normalized_to)
+        if target_user:
+            target_user_id = target_user.id
 
     phone = from_number
     ai_result = await analyze_customer_message(body)
     category = ai_result["category"] if ai_result else categorize_message(body)
-    conv = await crud.create_conversation(db, phone=phone, message=body, category=category)
+    conv = await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id)
 
     reply = ""
     if category == "order":
         item, qty = parse_order(body)
-        order = await crud.create_order(db, phone=phone, item=item, quantity=qty)
+        order = await crud.create_order(db, phone=phone, item=item, quantity=qty, user_id=target_user_id)
         await crud.create_notification(db, ntype="new_order", payload=f"order:{order.id}")
         reply = ai_result["reply"] if ai_result else "We've received your order. We'll confirm shortly."
         logger.info(f"Order created: {order.id} from {phone}")
@@ -278,8 +334,8 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
 
     await db.commit()
 
-    # Send auto-reply via Twilio if client is available
-    if twilio_client:
+    # Send auto-reply via Twilio if client is available and a Twilio sender is configured
+    if twilio_client and Config.TWILIO_PHONE_NUMBER:
         try:
             twilio_client.messages.create(
                 from_=Config.TWILIO_PHONE_NUMBER,
@@ -319,8 +375,8 @@ async def signup(request: Request, db: AsyncSession = Depends(get_db)):
     email = str(data.get("email", "")).strip().lower()
     password = str(data.get("password", ""))
 
-    if not first_name or not last_name or not phone or not email or not password:
-        raise HTTPException(status_code=400, detail="Please fill in all fields.")
+    if not first_name or not last_name or not email or not password:
+        raise HTTPException(status_code=400, detail="Please fill in all required fields.")
     if not is_valid_email(email):
         raise HTTPException(status_code=400, detail="Please enter a valid email address.")
     if len(password) < 8:
@@ -402,7 +458,7 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
         "total_conversations": len(convs),
         "total_orders": len(orders),
         "ai_enabled": ai_configured(),
-        "twilio_configured": True,
+        "twilio_configured": is_twilio_enabled(),
         "recent_users": [public_user(u) for u in users[:10]],
         "recent_conversations": [{
             "id": c.id,
@@ -416,7 +472,7 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
 
 @app.get("/api/conversations")
 async def get_conversations(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
-    convs = await crud.list_conversations(db)
+    convs = await crud.list_conversations(db, user.id)
     return JSONResponse(content=[{
         "id": c.id,
         "phone": c.phone,
@@ -428,7 +484,7 @@ async def get_conversations(db: AsyncSession = Depends(get_db), user=Depends(get
 
 @app.get("/api/orders")
 async def get_orders(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
-    orders = await crud.list_orders(db)
+    orders = await crud.list_orders(db, user.id)
     return JSONResponse(content=[{
         "id": o.id,
         "phone": o.phone,
@@ -442,7 +498,7 @@ async def get_orders(db: AsyncSession = Depends(get_db), user=Depends(get_curren
 
 @app.get("/api/stats")
 async def get_stats(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
-    s = await crud.stats(db)
+    s = await crud.stats(db, user.id)
     return s
 
 
@@ -452,8 +508,41 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     user_id = verify_session_token(token) if token else None
     if not user_id or not await crud.get_user_by_id(db, user_id):
         return RedirectResponse(url="/")
+    if not is_twilio_enabled() and not is_baileys_connected():
+        return RedirectResponse(url="/whatsapp-connect")
     dashboard_html = Path("templates/dashboard.html").read_text(encoding="utf-8")
     return HTMLResponse(content=dashboard_html)
+
+
+@app.get("/api/whatsapp/qr")
+async def whatsapp_qr():
+    if is_twilio_enabled():
+        raise HTTPException(status_code=404, detail="Twilio is configured")
+    state = get_whatsapp_qr_state()
+    if state["connected"]:
+        return {"connected": True, "message": "WhatsApp is connected."}
+    if not state["qr"]:
+        return {"connected": False, "qr_image": None, "message": state["message"]}
+    return {
+        "connected": False,
+        "qr_image": generate_qr_data_url(state["qr"]),
+        "message": state["message"],
+    }
+
+
+@app.get("/whatsapp-connect", response_class=HTMLResponse)
+async def whatsapp_connect(request: Request, db: AsyncSession = Depends(get_db)):
+    token = request.cookies.get(SESSION_COOKIE_NAME)
+    user_id = verify_session_token(token) if token else None
+    user = await crud.get_user_by_id(db, user_id) if user_id else None
+    if not user:
+        return RedirectResponse(url="/")
+    if is_twilio_enabled():
+        return RedirectResponse(url="/dashboard")
+    if is_baileys_connected():
+        return RedirectResponse(url="/dashboard")
+    connect_html = Path("templates/connect.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=connect_html)
 
 
 @app.get("/admin", response_class=HTMLResponse)
