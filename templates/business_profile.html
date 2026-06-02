@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Business Profile — Tell5</title>
+  <link rel="icon" href="/static/tell5-icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0c0f; --surface: #0f1318; --border: #1e2530;
+      --muted: #2a3340; --text: #e2e8f0; --sub: #64748b;
+      --accent: #00e5b0; --danger: #ef4444;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+    .shell { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px; margin-bottom: 20px; }
+    h1 { font-size: 1.8rem; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
+    .tag { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; }
+    .desc { color: #94a3b8; line-height: 1.7; margin-bottom: 20px; }
+    .meta { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
+    .meta-item { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--sub); }
+    .meta-item span { color: var(--text); }
+    h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--accent); }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .product { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+    .product-name { font-weight: 600; margin-bottom: 4px; }
+    .product-desc { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--sub); margin-bottom: 8px; }
+    .product-price { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: var(--accent); font-weight: 600; }
+    .empty { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--sub); padding: 20px 0; }
+    .nav-link { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--accent); text-decoration: none; }
+    .nav-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <a href="/discover" class="nav-link">&larr; Back to discover</a>
+    <div class="card" id="profile-card">
+      <div class="tag">Business Profile</div>
+      <h1 id="business-name">—</h1>
+      <div class="meta">
+        <div class="meta-item">Category: <span id="category">—</span></div>
+        <div class="meta-item">Location: <span id="address">—</span></div>
+      </div>
+      <p class="desc" id="description">—</p>
+      <h2>Products & Services</h2>
+      <div class="product-grid" id="products">
+        <div class="empty">Loading products…</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const pathMatch = window.location.pathname.match(/\/business-profile\/(\d+)/);
+    const profileId = params.get('id') || (pathMatch ? pathMatch[1] : null);
+    if (profileId) {
+      fetch(`/api/business/${profileId}/public`)
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('business-name').textContent = data.business_name || '—';
+          document.getElementById('category').textContent = data.category || '—';
+          document.getElementById('address').textContent = data.address || '—';
+          document.getElementById('description').textContent = data.description || '—';
+          const productsEl = document.getElementById('products');
+          if (data.products && data.products.length > 0) {
+            productsEl.innerHTML = data.products.map(p => `
+              <div class="product">
+                <div class="product-name">${p.name}</div>
+                <div class="product-desc">${p.description || ''}</div>
+                <div class="product-price">${p.price ? p.currency + ' ' + p.price : '—'}</div>
+              </div>
+            `).join('');
+          } else {
+            productsEl.innerHTML = '<div class="empty">No products listed yet.</div>';
+          }
+        })
+        .catch(() => {
+          document.getElementById('business-name').textContent = 'Profile not found';
+        });
+    }
+  </script>
+</body>
+</html>

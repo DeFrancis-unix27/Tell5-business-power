@@ -1,3 +1,5 @@
+import sentry_sdk
+
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import Response, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -7,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from config import Config
 import crud
-from ai import ai_configured, analyze_customer_message, draft_reply
+from ai import ai_configured, analyze_customer_message, draft_reply, ai_categorize_message
 from auth import (
     SESSION_COOKIE_NAME,
     SESSION_MAX_AGE_SECONDS,
@@ -31,6 +33,10 @@ import logging
 import base64
 import io
 import json
+<<<<<<< HEAD
+=======
+import uuid
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 from pathlib import Path
 from typing import Optional
 import qrcode
@@ -51,6 +57,18 @@ if Config.TWILIO_ACCOUNT_SID and Config.TWILIO_AUTH_TOKEN:
 else:
     twilio_client = None
     validator = None
+<<<<<<< HEAD
+=======
+
+# Sentry error tracking (only in production)
+if Config.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=Config.SENTRY_DSN,
+        environment=Config.ENVIRONMENT,
+        traces_sample_rate=0.25,
+        send_default_pii=False,
+    )
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 
 # Rate limiting setup
 limiter = Limiter(key_func=get_remote_address)
@@ -117,8 +135,9 @@ async def csrf_middleware(request: Request, call_next):
 
     return response
 
-
 def categorize_message(text: str) -> str:
+    if not text or len(text) < 1:
+        return None
     t = text.lower()
     if any(w in t for w in ["order", "buy", "purchase"]):
         return "order"
@@ -263,7 +282,13 @@ async def startup():
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"))
         await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS user_id INTEGER"))
+<<<<<<< HEAD
         await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER"))
+=======
+        await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS channel VARCHAR(50) DEFAULT 'whatsapp'"))
+        await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER"))
+        await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS channel VARCHAR(50) DEFAULT 'whatsapp'"))
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
         admin_email = (Config.ADMIN_EMAIL or "").strip().lower()
         if admin_email:
             await conn.execute(text("UPDATE users SET is_admin = TRUE WHERE lower(email) = :email"), {"email": admin_email})
@@ -281,6 +306,7 @@ def validate_twilio_request(request_url: str, post_data: dict, signature: str) -
     return validator.validate(request_url, post_data, signature)
 
 
+<<<<<<< HEAD
 @app.post("/webhook/whatsapp")
 @limiter.limit("100/minute")
 async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db)):
@@ -306,6 +332,16 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
 
     logger.info(f"Received message from {from_number} to {to_number}: {body}")
 
+=======
+async def _process_incoming_message(
+    db: AsyncSession,
+    from_number: str,
+    body: str,
+    to_number: str | None = None,
+    channel: str = "whatsapp",
+) -> dict:
+    """Shared message processing for both Twilio and Baileys"""
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     target_user_id = None
     if to_number:
         normalized_to = str(to_number).replace("whatsapp:", "").replace(" ", "").strip()
@@ -314,8 +350,33 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
             target_user_id = target_user.id
 
     phone = from_number
+<<<<<<< HEAD
     ai_result = await analyze_customer_message(body)
     category = ai_result["category"] if ai_result else categorize_message(body)
+=======
+
+    from services.ai.pipeline import run_pipeline
+    import uuid
+    message_id = str(uuid.uuid4())
+    pipeline_result = await run_pipeline(body, message_id=message_id)
+    category = pipeline_result.category or categorize_message(body)
+    ai_reply = pipeline_result.reply
+
+    if pipeline_result.tier_outputs:
+        await crud.create_pipeline_log(
+            db,
+            message=body,
+            category=category,
+            gemini_output=str(pipeline_result.tier_outputs.get(1)),
+            groq_output=str(pipeline_result.tier_outputs.get(2)),
+            mistral_output=str(pipeline_result.tier_outputs.get(3)),
+            final_reply=ai_reply,
+            errors="; ".join(pipeline_result.errors) if pipeline_result.errors else None,
+            success=pipeline_result.success,
+        )
+
+    ai_result = {"category": category, "reply": ai_reply} if ai_reply else None
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     conv = await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id)
 
     reply = ""
@@ -324,7 +385,6 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
         order = await crud.create_order(db, phone=phone, item=item, quantity=qty, user_id=target_user_id)
         await crud.create_notification(db, ntype="new_order", payload=f"order:{order.id}")
         reply = ai_result["reply"] if ai_result else "We've received your order. We'll confirm shortly."
-        logger.info(f"Order created: {order.id} from {phone}")
     elif category == "inquiry":
         reply = ai_result["reply"] if ai_result else "Thanks for reaching out. A team member will respond soon."
     elif category == "complaint":
@@ -333,22 +393,102 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
         reply = ai_result["reply"] if ai_result else "Thanks for your message. We'll get back to you."
 
     await db.commit()
+    return {"reply": reply, "category": category, "conv_id": conv.id, "pipeline_success": pipeline_result.success}
 
+<<<<<<< HEAD
     # Send auto-reply via Twilio if client is available and a Twilio sender is configured
+=======
+
+@app.post("/webhook/whatsapp")
+@limiter.limit("100/minute")
+async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db)):
+    signature = request.headers.get("X-Twilio-Signature", "")
+    form = await request.form()
+    form_dict = dict(form)
+    request_url = str(request.url)
+
+    if not validate_twilio_request(request_url, form_dict, signature):
+        logger.warning(f"Invalid Twilio signature from {form.get('From')}")
+        raise HTTPException(status_code=403, detail="Invalid Twilio signature")
+
+    from_number: Optional[str] = form.get("From")
+    to_number: Optional[str] = form.get("To")
+    body: Optional[str] = form.get("Body")
+
+    if not from_number or not body:
+        raise HTTPException(status_code=400, detail="Missing From or Body")
+
+    logger.info(f"Twilio message from {from_number}: {body[:80]}")
+
+    result = await _process_incoming_message(db, from_number, body, to_number, channel="twilio")
+
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     if twilio_client and Config.TWILIO_PHONE_NUMBER:
         try:
             twilio_client.messages.create(
                 from_=Config.TWILIO_PHONE_NUMBER,
-                body=reply,
-                to=from_number
+                body=result["reply"],
+                to=from_number,
             )
-            logger.info(f"Auto-reply sent to {from_number}")
         except Exception as e:
-            logger.error(f"Failed to send Twilio message: {e}")
+            logger.error(f"Twilio send failed: {e}")
 
-    # Respond with empty TwiML (Twilio messages sent via API)
     twiml = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>'
     return Response(content=twiml, media_type="application/xml")
+
+
+@app.post("/api/baileys/webhook")
+async def baileys_webhook(request: Request, db: AsyncSession = Depends(get_db)):
+    """Receives messages forwarded from the Baileys WhatsApp bot"""
+    data = await request.json()
+    from_number = str(data.get("from", "")).strip()
+    body = str(data.get("body", "")).strip()
+
+    if not from_number or not body:
+        raise HTTPException(status_code=400, detail="Missing from or body")
+
+    logger.info(f"Baileys message from {from_number}: {body[:80]}")
+
+    result = await _process_incoming_message(db, from_number, body, channel="baileys")
+
+    return {"reply": result["reply"], "to": from_number, "category": result["category"]}
+
+
+@app.get("/api/baileys/status")
+async def baileys_status():
+    """Check if the Baileys bot is running and connected"""
+    bot_port = os.getenv("BOT_PORT", "3001")
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.get(f"http://127.0.0.1:{bot_port}/health")
+            if resp.status_code == 200:
+                return resp.json()
+    except Exception:
+        pass
+    return {"ok": False, "connected": False}
+
+
+@app.get("/api/pipeline/metrics")
+async def pipeline_metrics():
+    """Returns pipeline performance metrics for monitoring"""
+    from services.ai.metrics import metrics
+    return metrics.snapshot()
+
+
+@app.get("/api/pipeline/circuit-breaker")
+async def circuit_breaker_status():
+    """Returns circuit breaker state for each provider"""
+    from services.ai.circuit_breaker import circuit_breaker
+    import time
+    providers = ["gemini", "openrouter", "groq", "mistral"]
+    return {
+        p: {
+            "state": circuit_breaker._state.get(p, "closed") if hasattr(circuit_breaker, "_state") else "closed",
+            "failures": circuit_breaker._failures.get(p, 0),
+        }
+        for p in providers
+    }
 
 
 @app.get("/api/csrf-token")
@@ -452,13 +592,30 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
     orders = await crud.list_orders(db)
     users = await crud.list_users(db)
     s = await crud.stats(db)
+    from services.ai.groq_client import groq_configured
+    from services.ai.mistral_client import mistral_configured
+    from models import PipelineLog, BusinessProfile
+    from sqlalchemy import select, func
+    pl_q = await db.execute(select(func.count(PipelineLog.id)))
+    pipeline_count = pl_q.scalar() or 0
+    bp_q = await db.execute(select(func.count(BusinessProfile.id)))
+    biz_count = bp_q.scalar() or 0
     return {
         "stats": s,
         "total_users": len(users),
         "total_conversations": len(convs),
         "total_orders": len(orders),
         "ai_enabled": ai_configured(),
+<<<<<<< HEAD
         "twilio_configured": is_twilio_enabled(),
+=======
+        "groq_enabled": groq_configured(),
+        "mistral_enabled": mistral_configured(),
+        "twilio_configured": is_twilio_enabled(),
+        "pipeline_runs": pipeline_count,
+        "business_profiles": biz_count,
+        "channels": ["whatsapp"],
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
         "recent_users": [public_user(u) for u in users[:10]],
         "recent_conversations": [{
             "id": c.id,
@@ -473,11 +630,17 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
 @app.get("/api/conversations")
 async def get_conversations(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
     convs = await crud.list_conversations(db, user.id)
+<<<<<<< HEAD
+=======
+    if not convs and user.is_admin:
+        convs = await crud.list_conversations(db, None)
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     return JSONResponse(content=[{
         "id": c.id,
         "phone": c.phone,
         "message": c.message,
         "category": c.category,
+        "channel": c.channel,
         "timestamp": c.timestamp.isoformat() if c.timestamp else None
     } for c in convs])
 
@@ -485,6 +648,11 @@ async def get_conversations(db: AsyncSession = Depends(get_db), user=Depends(get
 @app.get("/api/orders")
 async def get_orders(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
     orders = await crud.list_orders(db, user.id)
+<<<<<<< HEAD
+=======
+    if not orders and user.is_admin:
+        orders = await crud.list_orders(db, None)
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     return JSONResponse(content=[{
         "id": o.id,
         "phone": o.phone,
@@ -516,6 +684,7 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
 
 @app.get("/api/whatsapp/qr")
 async def whatsapp_qr():
+<<<<<<< HEAD
     if is_twilio_enabled():
         raise HTTPException(status_code=404, detail="Twilio is configured")
     state = get_whatsapp_qr_state()
@@ -527,6 +696,21 @@ async def whatsapp_qr():
         "connected": False,
         "qr_image": generate_qr_data_url(state["qr"]),
         "message": state["message"],
+=======
+    """Returns status of both WhatsApp channels (Twilio + Baileys)"""
+    twilio_active = bool(Config.TWILIO_ACCOUNT_SID and Config.TWILIO_AUTH_TOKEN)
+    state = get_whatsapp_qr_state()
+    return {
+        "twilio": {"configured": twilio_active, "phone": Config.TWILIO_PHONE_NUMBER or None},
+        "baileys": {
+            "connected": state["connected"],
+            "qr": state["qr"],
+            "qr_image": generate_qr_data_url(state["qr"]) if state["qr"] else None,
+            "message": state["message"],
+            "is_running": state["qr"] is not None or state["connected"],
+        },
+        "any_connected": twilio_active or state["connected"],
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
 
@@ -537,10 +721,13 @@ async def whatsapp_connect(request: Request, db: AsyncSession = Depends(get_db))
     user = await crud.get_user_by_id(db, user_id) if user_id else None
     if not user:
         return RedirectResponse(url="/")
+<<<<<<< HEAD
     if is_twilio_enabled():
         return RedirectResponse(url="/dashboard")
     if is_baileys_connected():
         return RedirectResponse(url="/dashboard")
+=======
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     connect_html = Path("templates/connect.html").read_text(encoding="utf-8")
     return HTMLResponse(content=connect_html)
 
@@ -576,6 +763,264 @@ async def terms():
       </body>
     </html>
     """)
+
+
+@app.get("/pipeline/status/{message_id}")
+async def pipeline_status(message_id: str, db: AsyncSession = Depends(get_db)):
+    from models import PipelineLog
+    from sqlalchemy import select
+    q = await db.execute(
+        select(PipelineLog).where(PipelineLog.message_id == message_id)
+    )
+    log = q.scalar_one_or_none()
+    if not log:
+        raise HTTPException(status_code=404, detail="Pipeline log not found")
+    return {
+        "id": log.id,
+        "message": log.message,
+        "category": log.category,
+        "success": log.success,
+        "errors": log.errors,
+        "final_reply": log.final_reply,
+        "created_at": log.created_at.isoformat() if log.created_at else None,
+    }
+
+
+@app.post("/pipeline/process")
+async def trigger_pipeline(request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    message = str(data.get("message", "")).strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="Message is required")
+
+    from services.ai.pipeline import run_pipeline
+    message_id = str(uuid.uuid4())
+    result = await run_pipeline(message, message_id=message_id)
+
+    await crud.create_pipeline_log(
+        db,
+        message=message,
+        category=result.category,
+        gemini_output=str(result.tier_outputs.get(1)),
+        groq_output=str(result.tier_outputs.get(2)),
+        mistral_output=str(result.tier_outputs.get(3)),
+        final_reply=result.reply,
+        errors="; ".join(result.errors) if result.errors else None,
+        success=result.success,
+        message_id=message_id,
+    )
+    await db.commit()
+
+    return {
+        "message_id": message_id,
+        "category": result.category,
+        "reply": result.reply,
+        "success": result.success,
+    }
+
+
+@app.post("/api/chat/send")
+async def chat_send(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    data = await request.json()
+    message = str(data.get("message", "")).strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="Message is required")
+
+    from services.ai.pipeline import run_pipeline
+    import uuid
+    message_id = str(uuid.uuid4())
+    result = await run_pipeline(message, message_id=message_id)
+
+    await crud.create_pipeline_log(
+        db,
+        message=message,
+        category=result.category,
+        gemini_output=str(result.tier_outputs.get(1)),
+        groq_output=str(result.tier_outputs.get(2)),
+        mistral_output=str(result.tier_outputs.get(3)),
+        final_reply=result.reply,
+        errors="; ".join(result.errors) if result.errors else None,
+        success=result.success,
+        message_id=message_id,
+    )
+
+    conv = await crud.create_conversation(
+        db,
+        phone=f"chat:{user.id}",
+        message=message,
+        category=result.category or "inquiry",
+        user_id=user.id,
+        channel="dashboard",
+    )
+    await db.commit()
+
+    return {
+        "reply": result.reply,
+        "category": result.category,
+        "success": result.success,
+        "conv_id": conv.id,
+    }
+
+
+@app.post("/webhook/whatsapp/status")
+async def whatsapp_status_webhook(request: Request):
+    form = await request.form()
+    logger.info(f"Delivery status update: {dict(form)}")
+    return Response(content='<?xml version="1.0" encoding="UTF-8"?><Response></Response>', media_type="application/xml")
+
+
+@app.get("/api/business/profile")
+async def get_my_business_profile(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    profile = await crud.get_business_profile(db, user.id)
+    if not profile:
+        return None
+    return {
+        "id": profile.id,
+        "business_name": profile.business_name,
+        "description": profile.description,
+        "category": profile.category,
+        "address": profile.address,
+        "currency": profile.currency,
+        "is_public": profile.is_public,
+        "created_at": profile.created_at.isoformat() if profile.created_at else None,
+    }
+
+
+@app.post("/api/business/profile")
+async def create_or_update_business_profile(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    data = await request.json()
+    business_name = str(data.get("business_name", "")).strip()
+    if not business_name:
+        raise HTTPException(status_code=400, detail="Business name is required")
+
+    existing = await crud.get_business_profile(db, user.id)
+    if existing:
+        existing.business_name = business_name
+        existing.description = str(data.get("description", existing.description or "")) or None
+        existing.category = str(data.get("category", existing.category or "")) or None
+        existing.address = str(data.get("address", existing.address or "")) or None
+        if "is_public" in data:
+            existing.is_public = bool(data["is_public"])
+        await db.flush()
+        await db.commit()
+        return {"id": existing.id, "business_name": existing.business_name, "updated": True}
+
+    profile = await crud.create_business_profile(
+        db,
+        user_id=user.id,
+        business_name=business_name,
+        description=str(data.get("description", "")).strip() or None,
+        category=str(data.get("category", "")).strip() or None,
+        address=str(data.get("address", "")).strip() or None,
+        is_public=bool(data.get("is_public", True)),
+    )
+    await db.commit()
+    return {"id": profile.id, "business_name": profile.business_name, "created": True}
+
+
+@app.get("/api/business/products")
+async def list_my_products(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    profile = await crud.get_business_profile(db, user.id)
+    if not profile:
+        return []
+    products = await crud.list_products(db, profile.id)
+    return [{
+        "id": p.id,
+        "name": p.name,
+        "description": p.description,
+        "price": p.price,
+        "currency": p.currency,
+        "is_available": p.is_available,
+    } for p in products]
+
+
+@app.post("/api/business/products")
+async def create_product(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    profile = await crud.get_business_profile(db, user.id)
+    if not profile:
+        raise HTTPException(status_code=400, detail="Create a business profile first")
+    data = await request.json()
+    name = str(data.get("name", "")).strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Product name is required")
+    product = await crud.create_product(
+        db,
+        business_id=profile.id,
+        name=name,
+        description=str(data.get("description", "")).strip() or None,
+        price=float(data["price"]) if data.get("price") else None,
+    )
+    await db.commit()
+    return {"id": product.id, "name": product.name, "created": True}
+
+
+@app.get("/api/business/{profile_id}/public")
+async def get_public_business_profile(profile_id: int, db: AsyncSession = Depends(get_db)):
+    from models import BusinessProfile
+    from sqlalchemy import select
+    q = await db.execute(select(BusinessProfile).where(BusinessProfile.id == profile_id))
+    profile = q.scalar_one_or_none()
+    if not profile or not profile.is_public:
+        raise HTTPException(status_code=404, detail="Business profile not found or not public")
+    products = await crud.list_products(db, profile.id)
+    return {
+        "id": profile.id,
+        "business_name": profile.business_name,
+        "description": profile.description,
+        "category": profile.category,
+        "address": profile.address,
+        "currency": profile.currency,
+        "is_public": profile.is_public,
+        "products": [{
+            "id": p.id,
+            "name": p.name,
+            "description": p.description,
+            "price": p.price,
+            "currency": p.currency,
+        } for p in products],
+    }
+
+
+@app.get("/business-profile/{profile_id}", response_class=HTMLResponse)
+async def business_profile_page(profile_id: int, db: AsyncSession = Depends(get_db)):
+    from models import BusinessProfile
+    from sqlalchemy import select
+    q = await db.execute(select(BusinessProfile).where(BusinessProfile.id == profile_id))
+    profile = q.scalar_one_or_none()
+    if not profile:
+        return HTMLResponse(content="<h1>Profile not found</h1>", status_code=404)
+    html = Path("templates/business_profile.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
+
+
+@app.get("/discover", response_class=HTMLResponse)
+async def discover_page():
+    html = Path("templates/business_profile.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
+
+
+@app.get("/api/business/discover")
+async def discover_businesses(db: AsyncSession = Depends(get_db)):
+    profiles = await crud.get_public_business_profiles(db)
+    return [{
+        "id": p.id,
+        "business_name": p.business_name,
+        "description": p.description,
+        "category": p.category,
+    } for p in profiles]
+
+
+@app.post("/api/archive/run")
+async def trigger_archive(db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
+    from services.archival import run_weekly_archive
+    result = await run_weekly_archive(db)
+    return result
+
+
+@app.get("/api/channels")
+async def list_channels():
+    from services.channels.base import router
+    return {"channels": router.available_channels()}
 
 
 @app.get("/privacy", response_class=HTMLResponse)

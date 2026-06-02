@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: tell5
+    runtime: python
+    region: ohio
+    plan: starter
+    buildCommand: ./render-build.sh
+    startCommand: ./render-start.sh
+    healthCheckPath: /healthz
+    envVars:
+      - key: BOT_PORT
+        value: 3001
+      - key: PYTHON_VERSION
+        value: 3.12
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: MONGODB_URL
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: FROM_EMAIL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false

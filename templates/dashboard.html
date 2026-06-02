@@ -4,70 +4,96 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tell5 Dashboard</title>
-  <link rel="icon" href="static/tell5-icon.svg" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #0a0c0f;
-      --surface:  #0f1318;
-      --border:   #1e2530;
-      --muted:    #2a3340;
-      --text:     #e2e8f0;
-      --sub:      #64748b;
+      --bg:       #060809;
+      --surface:  #0c1014;
+      --surface2: #111820;
+      --border:   #1a2330;
+      --border2:  #243040;
+      --muted:    #1e2d3d;
+      --text:     #e8f0f8;
+      --sub:      #5a7a94;
+      --sub2:     #8aa0b4;
       --accent:   #00e5b0;
-      --accent2:  #3b82f6;
-      --accent3:  #f97316;
+      --blue:     #3b82f6;
+      --orange:   #f97316;
       --danger:   #ef4444;
-      --glow:     0 0 20px rgba(0, 229, 176, 0.15);
+      --r:        10px;
+      --r-sm:     7px;
+      --sidebar:  220px;
     }
+
+    html, body { height: 100%; }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Syne', sans-serif;
-      min-height: 100vh;
-      padding: 0;
+      font-family: 'Cabinet Grotesk', sans-serif;
       overflow-x: hidden;
     }
 
+<<<<<<< HEAD
+=======
+    /* Dot grid */
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image:
-        linear-gradient(rgba(0,229,176,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,229,176,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
+      background-image: radial-gradient(circle, rgba(0,229,176,0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
       pointer-events: none;
       z-index: 0;
     }
 
-    .shell {
+    /* ═══════ APP SHELL ═══════ */
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar) 1fr;
+      grid-template-rows: 58px 1fr;
+      min-height: 100vh;
       position: relative;
       z-index: 1;
+<<<<<<< HEAD
       max-width: 1280px;
       margin: 0 auto;
       padding: 24px 20px;
+=======
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
-    /* ── Header ── */
-    header {
+    /* ═══════ TOPBAR ═══════ */
+    .topbar {
+      grid-column: 1 / -1;
       display: flex;
       align-items: center;
+<<<<<<< HEAD
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
       margin-bottom: 24px;
       padding-bottom: 18px;
+=======
+      padding: 0 24px 0 0;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       border-bottom: 1px solid var(--border);
+      background: rgba(6,8,9,0.9);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .brand {
+    .topbar-brand {
+      width: var(--sidebar);
       display: flex;
+<<<<<<< HEAD
       align-items: baseline;
       gap: 10px;
       flex-shrink: 0;
@@ -98,17 +124,63 @@
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
+=======
+      align-items: center;
+      gap: 8px;
+      padding: 0 20px;
+      height: 100%;
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+      text-decoration: none;
     }
 
-    .live-badge {
+    .brand-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: breathe 2.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes breathe {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .4; transform: scale(.7); }
+    }
+
+    .brand-name {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: var(--accent);
+    }
+
+    .topbar-center { flex: 1; padding: 0 24px; }
+
+    .topbar-greeting {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--sub2);
+    }
+
+    .topbar-greeting span { color: var(--text); }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
+    }
+
+    .live-pill {
       display: flex;
       align-items: center;
       gap: 6px;
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--accent);
-      letter-spacing: 0.08em;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
+<<<<<<< HEAD
       white-space: nowrap;
     }
 
@@ -124,15 +196,204 @@
     @keyframes pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
       50%       { opacity: 0.5; transform: scale(0.85); }
+=======
+      color: var(--accent);
+      background: rgba(0,229,176,0.07);
+      border: 1px solid rgba(0,229,176,0.18);
+      padding: 5px 10px;
+      border-radius: 100px;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+      animation: breathe 2s ease-in-out infinite;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .clock {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
+      color: var(--sub);
+      min-width: 64px;
+      text-align: right;
+    }
+
+    .top-btn {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 7px 13px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .top-btn-ghost {
+      background: transparent;
+      color: var(--sub2);
+      border: 1px solid var(--border2);
+    }
+    .top-btn-ghost:hover { color: var(--text); border-color: var(--sub); background: var(--surface2); }
+
+    .top-btn-accent {
+      background: rgba(0,229,176,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0,229,176,0.25);
+    }
+    .top-btn-accent:hover { background: rgba(0,229,176,0.18); }
+
+    /* ═══════ SIDEBAR ═══════ */
+    .sidebar {
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      overflow-y: auto;
+      position: sticky;
+      top: 58px;
+      height: calc(100vh - 58px);
+    }
+
+    .sidebar-section {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--sub);
+      padding: 14px 20px 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--sub2);
+      cursor: pointer;
+      transition: all 0.13s;
+      position: relative;
+      text-decoration: none;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .sidebar-item:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+
+    .sidebar-item.active {
+      color: var(--text);
+      background: var(--surface2);
+    }
+
+    .sidebar-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 20%; bottom: 20%;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 0 3px 3px 0;
+      box-shadow: 0 0 8px rgba(0,229,176,0.4);
+    }
+
+    .s-icon {
+      font-size: 0.95rem;
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .s-badge {
+      margin-left: auto;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.52rem;
+      padding: 2px 7px;
+      border-radius: 100px;
+    }
+
+    .s-badge-green { background: rgba(0,229,176,0.1);  color: var(--accent); }
+    .s-badge-red   { background: rgba(239,68,68,0.1);  color: var(--danger); }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: #060809;
+      flex-shrink: 0;
+    }
+
+    .user-name  { font-size: 0.78rem; font-weight: 700; line-height: 1.2; }
+    .user-plan  {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.55rem;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ═══════ MAIN CONTENT ═══════ */
+    .main {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow: hidden;
+    }
+
+    /* Page header row */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .page-title {
+      font-size: 1.3rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .page-date {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
       color: var(--sub);
       white-space: nowrap;
     }
 
+<<<<<<< HEAD
     /* hide clock on tiny screens */
     @media (max-width: 480px) {
       .clock { display: none; }
@@ -161,10 +422,14 @@
     }
 
     /* ── KPI Row ── */
+=======
+    /* ═══════ KPI ROW ═══════ */
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
+<<<<<<< HEAD
       margin-bottom: 20px;
     }
 
@@ -174,31 +439,63 @@
 
     @media (max-width: 400px) {
       .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+=======
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .kpi {
       background: var(--surface);
       border: 1px solid var(--border);
+<<<<<<< HEAD
       border-radius: 8px;
       padding: 14px 16px;
+=======
+      border-radius: var(--r);
+      padding: 16px 18px;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       position: relative;
       overflow: hidden;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, transform 0.18s;
+      cursor: default;
     }
 
+    .kpi:hover { transform: translateY(-2px); }
+
+    /* Coloured top-edge accent */
     .kpi::before {
       content: '';
       position: absolute;
+<<<<<<< HEAD
       top: 0; left: 0;
       width: 3px; height: 100%;
       background: var(--kpi-color, var(--accent));
+=======
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 2px 2px 0 0;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
-    .kpi:hover { border-color: var(--kpi-color, var(--accent)); }
+    .kpi-g { border-top-color: transparent; }
+    .kpi-g::before { background: var(--accent); }
+    .kpi-g:hover   { border-color: rgba(0,229,176,0.3); }
+
+    .kpi-b::before { background: var(--blue); }
+    .kpi-b:hover   { border-color: rgba(59,130,246,0.3); }
+
+    .kpi-o::before { background: var(--orange); }
+    .kpi-o:hover   { border-color: rgba(249,115,22,0.3); }
+
+    .kpi-r::before { background: var(--danger); }
+    .kpi-r:hover   { border-color: rgba(239,68,68,0.3); }
 
     .kpi-label {
       font-family: 'IBM Plex Mono', monospace;
+<<<<<<< HEAD
       font-size: clamp(0.58rem, 1.2vw, 0.65rem);
+=======
+      font-size: 0.6rem;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       color: var(--sub);
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -206,23 +503,57 @@
     }
 
     .kpi-value {
+<<<<<<< HEAD
       font-size: clamp(1.4rem, 3.5vw, 1.9rem);
       font-weight: 800;
       letter-spacing: -0.04em;
       color: var(--kpi-color, var(--accent));
+=======
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .kpi-g .kpi-value { color: var(--accent); }
+    .kpi-b .kpi-value { color: var(--blue); }
+    .kpi-o .kpi-value { color: var(--orange); }
+    .kpi-r .kpi-value { color: var(--danger); }
+
+    .kpi-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .kpi-sub {
       font-family: 'IBM Plex Mono', monospace;
+<<<<<<< HEAD
       font-size: clamp(0.58rem, 1.1vw, 0.65rem);
       color: var(--sub);
       margin-top: 5px;
+=======
+      font-size: 0.58rem;
+      color: var(--sub);
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
-    /* ── Main Grid ── */
-    .main-grid {
+    .kpi-delta {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.58rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .delta-up   { background: rgba(0,229,176,0.1);  color: var(--accent); }
+    .delta-down { background: rgba(239,68,68,0.1);  color: var(--danger); }
+
+    /* ═══════ CONTENT GRID ═══════ */
+    .content-grid {
       display: grid;
+<<<<<<< HEAD
       grid-template-columns: 1fr 360px;
       gap: 14px;
     }
@@ -231,25 +562,35 @@
       .main-grid {
         grid-template-columns: 1fr;
       }
+=======
+      grid-template-columns: 1fr 340px;
+      gap: 14px;
+      align-items: start;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
-    /* ── Panel ── */
+    /* ═══════ PANELS ═══════ */
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: var(--r);
       overflow: hidden;
     }
 
-    .panel-header {
+    .panel-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
+<<<<<<< HEAD
       padding: 12px 16px;
+=======
+      padding: 13px 16px;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       border-bottom: 1px solid var(--border);
     }
 
     .panel-title {
+<<<<<<< HEAD
       font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 0.12em;
@@ -258,27 +599,54 @@
       display: flex;
       align-items: center;
       gap: 7px;
+=======
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sub2);
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
-    .panel-title::before {
-      content: '';
-      width: 6px; height: 6px;
+    .panel-pip {
+      width: 5px; height: 5px;
       border-radius: 50%;
       background: var(--accent);
+<<<<<<< HEAD
+=======
+      box-shadow: 0 0 6px rgba(0,229,176,0.5);
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       flex-shrink: 0;
     }
 
-    .panel-count {
+    .panel-badge {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--sub);
-      background: var(--muted);
+      font-size: 0.58rem;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--sub2);
       padding: 2px 8px;
-      border-radius: 20px;
+      border-radius: 100px;
     }
 
-    /* ── Conversation List ── */
+    .panel-action {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--sub);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 3px 0;
+      transition: color 0.15s;
+    }
+    .panel-action:hover { color: var(--accent); }
+
+    /* ═══════ CONVERSATIONS ═══════ */
     .conv-list {
+<<<<<<< HEAD
       max-height: 460px;
       overflow-y: auto;
     }
@@ -300,65 +668,116 @@
       align-items: start;
       transition: background 0.15s;
       animation: fadeSlideIn 0.3s ease both;
+=======
+      max-height: 480px;
+      overflow-y: auto;
     }
 
-    @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .conv-list::-webkit-scrollbar { width: 3px; }
+    .conv-list::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+
+    .conv-item {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.13s;
+      cursor: pointer;
+      animation: slideIn 0.25s ease both;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
-    .conv-item:hover { background: rgba(255,255,255,0.02); }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
     .conv-item:last-child { border-bottom: none; }
+    .conv-item:hover { background: var(--surface2); }
 
     .conv-avatar {
+<<<<<<< HEAD
       width: 32px; height: 32px;
       border-radius: 6px;
+=======
+      width: 36px; height: 36px;
+      border-radius: 50%;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       background: var(--muted);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'IBM Plex Mono', monospace;
+<<<<<<< HEAD
       font-size: 0.68rem;
       font-weight: 600;
       color: var(--accent);
       flex-shrink: 0;
       margin-top: 2px;
+=======
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--accent);
+      flex-shrink: 0;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .conv-body { min-width: 0; }
 
-    .conv-meta {
+    .conv-top {
       display: flex;
       align-items: center;
+<<<<<<< HEAD
       gap: 7px;
       margin-bottom: 3px;
       flex-wrap: wrap;
+=======
+      gap: 8px;
+      margin-bottom: 3px;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .conv-phone {
       font-family: 'IBM Plex Mono', monospace;
+<<<<<<< HEAD
       font-size: 0.7rem;
       color: var(--text);
+=======
+      font-size: 0.72rem;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       font-weight: 500;
+      color: var(--text);
     }
 
     .conv-time {
       font-family: 'IBM Plex Mono', monospace;
+<<<<<<< HEAD
       font-size: 0.6rem;
+=======
+      font-size: 0.58rem;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       color: var(--sub);
     }
 
     .conv-msg {
+<<<<<<< HEAD
       font-size: 0.8rem;
       color: #94a3b8;
+=======
+      font-size: 0.78rem;
+      color: var(--sub2);
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       line-height: 1.4;
     }
 
-    .conv-category {
+    .cat-tag {
       font-family: 'IBM Plex Mono', monospace;
+<<<<<<< HEAD
       font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.07em;
@@ -392,21 +811,49 @@
 
     /* ── Chart Panel ── */
     .chart-wrap {
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+=======
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 3px 8px;
+      border-radius: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
+    .cat-order     { background: rgba(0,229,176,0.1);  color: var(--accent); }
+    .cat-complaint { background: rgba(239,68,68,0.1);  color: var(--danger); }
+    .cat-inquiry   { background: rgba(59,130,246,0.1); color: var(--blue); }
+    .cat-support   { background: rgba(249,115,22,0.1); color: var(--orange); }
+    .cat-other     { background: rgba(90,122,148,0.1); color: var(--sub2); }
+
+    /* ═══════ RIGHT COLUMN ═══════ */
+    .right-col { display: flex; flex-direction: column; gap: 14px; }
+
+    /* Chart */
+    .chart-inner {
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+<<<<<<< HEAD
     #pieChart { max-height: 200px; width: 100% !important; }
 
     /* On mobile, chart takes less height */
     @media (max-width: 600px) {
       #pieChart { max-height: 160px; }
     }
+=======
+    #pieChart { max-height: 180px; width: 100% !important; }
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 
-    /* ── Orders Panel ── */
+    /* Orders */
     .orders-list {
+<<<<<<< HEAD
       max-height: 300px;
       overflow-y: auto;
     }
@@ -421,29 +868,74 @@
     .order-item {
       padding: 11px 16px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      transition: background 0.15s;
+=======
+      max-height: 320px;
+      overflow-y: auto;
     }
 
-    .order-item:hover { background: rgba(255,255,255,0.02); }
-    .order-item:last-child { border-bottom: none; }
+    .orders-list::-webkit-scrollbar { width: 3px; }
+    .orders-list::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
 
+    .order-item {
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.13s;
+      cursor: pointer;
+    }
+
+    .order-item:last-child { border-bottom: none; }
+    .order-item:hover { background: var(--surface2); }
+
+<<<<<<< HEAD
     .order-left { min-width: 0; flex: 1; }
 
     .order-name {
       font-size: 0.78rem;
       font-weight: 600;
       color: var(--text);
+=======
+    .order-avatar {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.58rem;
+      font-weight: 600;
+      color: var(--blue);
+      flex-shrink: 0;
+    }
+
+    .order-body { flex: 1; min-width: 0; }
+
+    .order-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+
+    .order-detail {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--sub);
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .order-item-name {
+    .status-pill {
       font-family: 'IBM Plex Mono', monospace;
+<<<<<<< HEAD
       font-size: 0.62rem;
       color: var(--sub);
       margin-top: 2px;
@@ -459,32 +951,36 @@
       letter-spacing: 0.06em;
       padding: 3px 7px;
       border-radius: 4px;
+=======
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: 5px;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       white-space: nowrap;
       flex-shrink: 0;
     }
 
-    /* Status colours */
-    .s-pending    { background: rgba(249,115,22,0.12); color: #f97316; }
-    .s-confirmed  { background: rgba(59,130,246,0.12); color: #60a5fa; }
-    .s-delivered  { background: rgba(0,229,176,0.12);  color: #00e5b0; }
-    .s-cancelled  { background: rgba(239,68,68,0.12);  color: #ef4444; }
+    .s-pending   { background: rgba(249,115,22,0.1);  color: var(--orange); }
+    .s-confirmed { background: rgba(59,130,246,0.1);  color: var(--blue); }
+    .s-delivered { background: rgba(0,229,176,0.1);   color: var(--accent); }
+    .s-cancelled { background: rgba(239,68,68,0.1);   color: var(--danger); }
 
-    /* Category colours */
-    .c-order     { background: rgba(59,130,246,0.12);  color: #60a5fa; }
-    .c-complaint { background: rgba(239,68,68,0.12);   color: #ef4444; }
-    .c-inquiry   { background: rgba(249,115,22,0.12);  color: #f97316; }
-    .c-support   { background: rgba(0,229,176,0.12);   color: #00e5b0; }
-    .c-other     { background: rgba(100,116,139,0.12); color: #94a3b8; }
-
-    /* ── Empty state ── */
+    /* ═══════ EMPTY / LOADING ═══════ */
     .empty {
+<<<<<<< HEAD
       padding: 36px 18px;
+=======
+      padding: 40px 20px;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       text-align: center;
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--sub);
     }
 
+<<<<<<< HEAD
     /* ── Mobile tab switcher for right column panels ── */
     /* On ≤900px, collapse chart behind a toggle */
     .chart-toggle {
@@ -535,67 +1031,208 @@
       .shell {
         padding-bottom: calc(24px + env(safe-area-inset-bottom));
       }
+=======
+    /* ═══════ RESPONSIVE ═══════ */
+    @media (max-width: 1024px) {
+      .content-grid { grid-template-columns: 1fr 300px; }
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
+
+    @media (max-width: 860px) {
+      :root { --sidebar: 0px; }
+      .sidebar {
+        position: fixed;
+        left: -240px;
+        top: 58px;
+        width: 240px;
+        height: calc(100vh - 58px);
+        z-index: 200;
+        transition: left 0.25s ease;
+        border-right: 1px solid var(--border2);
+      }
+      .sidebar.open { left: 0; }
+      .app { grid-template-columns: 1fr; }
+      .topbar-brand { width: auto; border-right: none; padding: 0 16px; }
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .content-grid { grid-template-columns: 1fr; }
+      .right-col { flex-direction: row; flex-wrap: wrap; }
+      .right-col > .panel { flex: 1; min-width: 260px; }
+      .menu-btn { display: flex !important; }
+    }
+
+    @media (max-width: 520px) {
+      .main { padding: 16px; }
+      .kpi-row { gap: 8px; }
+      .kpi-value { font-size: 1.6rem; }
+      .clock { display: none; }
+      .right-col > .panel { flex: 1 1 100%; }
+    }
+
+    .menu-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 34px; height: 34px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--sub2);
+      cursor: pointer;
+      font-size: 1rem;
+      margin-right: 4px;
+      transition: all 0.15s;
+    }
+
+    .menu-btn:hover { border-color: var(--sub); color: var(--text); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 190;
+      background: rgba(0,0,0,0.4);
+    }
+
+    .sidebar-overlay.show { display: block; }
   </style>
 </head>
 <body>
-  <div class="shell">
 
-    <!-- Header -->
-    <header>
-      <div class="brand">
+  <div class="app">
+
+    <!-- ═══════ TOPBAR ═══════ -->
+    <header class="topbar">
+      <a class="topbar-brand" href="/">
+        <div class="brand-dot"></div>
         <span class="brand-name">Tell5</span>
-        <span class="brand-tag">Operations Dashboard</span>
+      </a>
+
+      <div class="topbar-center">
+        <div class="topbar-greeting">
+          <span id="greeting-text">Loading…</span>
+        </div>
       </div>
-      <div class="header-right">
-        <div class="live-badge"><span class="live-dot"></span>Live</div>
+
+      <div class="topbar-right">
+        <div class="live-pill">
+          <div class="live-dot"></div>
+          Live
+        </div>
         <div class="clock" id="clock">--:--:--</div>
+<<<<<<< HEAD
         <a class="header-btn" href="/admin">Admin</a>
         <button class="header-btn" onclick="logout()">Logout</button>
+=======
+        <a class="top-btn top-btn-accent" href="/whatsapp-connect" id="whatsapp-btn">Connect</a>
+        <a class="top-btn top-btn-ghost" href="/admin">Admin</a>
+        <button class="top-btn top-btn-ghost" onclick="logout()">Logout</button>
+        <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       </div>
     </header>
 
-    <!-- KPIs -->
-    <div class="kpi-row">
-      <div class="kpi" style="--kpi-color: var(--accent)">
-        <div class="kpi-label">Conversations</div>
-        <div class="kpi-value" id="kpi-convs">—</div>
-        <div class="kpi-sub">total messages</div>
-      </div>
-      <div class="kpi" style="--kpi-color: var(--accent2)">
-        <div class="kpi-label">Orders</div>
-        <div class="kpi-value" id="kpi-orders">—</div>
-        <div class="kpi-sub">total orders</div>
-      </div>
-      <div class="kpi" style="--kpi-color: var(--accent3)">
-        <div class="kpi-label">Pending</div>
-        <div class="kpi-value" id="kpi-pending">—</div>
-        <div class="kpi-sub">awaiting fulfillment</div>
-      </div>
-      <div class="kpi" style="--kpi-color: var(--danger)">
-        <div class="kpi-label">Complaints</div>
-        <div class="kpi-value" id="kpi-complaints">—</div>
-        <div class="kpi-sub">need attention</div>
-      </div>
-    </div>
+    <!-- ═══════ SIDEBAR ═══════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-section">Main</div>
 
-    <!-- Main Grid -->
-    <div class="main-grid">
+      <a class="sidebar-item active" href="/dashboard">
+        <span class="s-icon">📊</span>
+        Overview
+      </a>
+      <button class="sidebar-item" onclick="">
+        <span class="s-icon">💬</span>
+        Conversations
+        <span class="s-badge s-badge-green" id="sb-convs">—</span>
+      </button>
+      <button class="sidebar-item" onclick="">
+        <span class="s-icon">📦</span>
+        Orders
+        <span class="s-badge s-badge-green" id="sb-orders">—</span>
+      </button>
+      <button class="sidebar-item" onclick="">
+        <span class="s-icon">🚨</span>
+        Complaints
+        <span class="s-badge s-badge-red" id="sb-complaints">—</span>
+      </button>
 
-      <!-- Conversations Panel -->
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title">Recent Conversations</span>
-          <span class="panel-count" id="conv-count">0</span>
+      <div class="sidebar-section">Tools</div>
+
+      <a class="sidebar-item" href="/admin">
+        <span class="s-icon">📈</span>
+        Analytics
+      </a>
+      <a class="sidebar-item" href="/whatsapp-connect">
+        <span class="s-icon">🔗</span>
+        Connections
+      </a>
+      <button class="sidebar-item" onclick="">
+        <span class="s-icon">⚙️</span>
+        Settings
+      </button>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="user-avatar" id="user-avatar">—</div>
+          <div>
+            <div class="user-name" id="user-name">Loading…</div>
+            <div class="user-plan">Starter Plan</div>
+          </div>
         </div>
-        <div class="conv-list" id="conversations">
-          <div class="empty">Loading conversations…</div>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile sidebar -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- ═══════ MAIN ═══════ -->
+    <main class="main">
+
+      <!-- Page header -->
+      <div class="page-header">
+        <div>
+          <div class="page-title">Overview</div>
+        </div>
+        <div class="page-date" id="page-date">—</div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="kpi kpi-g">
+          <div class="kpi-label">Conversations</div>
+          <div class="kpi-value" id="kpi-convs">—</div>
+          <div class="kpi-footer">
+            <div class="kpi-sub">total messages</div>
+            <div class="kpi-delta delta-up" id="kpi-convs-delta" style="display:none">—</div>
+          </div>
+        </div>
+        <div class="kpi kpi-b">
+          <div class="kpi-label">Orders</div>
+          <div class="kpi-value" id="kpi-orders">—</div>
+          <div class="kpi-footer">
+            <div class="kpi-sub">total orders</div>
+            <div class="kpi-delta delta-up" id="kpi-orders-delta" style="display:none">—</div>
+          </div>
+        </div>
+        <div class="kpi kpi-o">
+          <div class="kpi-label">Pending</div>
+          <div class="kpi-value" id="kpi-pending">—</div>
+          <div class="kpi-footer">
+            <div class="kpi-sub">awaiting fulfillment</div>
+          </div>
+        </div>
+        <div class="kpi kpi-r">
+          <div class="kpi-label">Complaints</div>
+          <div class="kpi-value" id="kpi-complaints">—</div>
+          <div class="kpi-footer">
+            <div class="kpi-sub">need attention</div>
+          </div>
         </div>
       </div>
 
-      <!-- Right Column -->
-      <div class="right-col">
+      <!-- Main content grid -->
+      <div class="content-grid">
 
+<<<<<<< HEAD
         <!-- Chart Panel (collapsible on mobile) -->
         <div class="panel">
           <div class="panel-header">
@@ -608,26 +1245,59 @@
           </div>
           <div class="chart-wrap chart-collapsible" id="chart-collapsible">
             <canvas id="pieChart"></canvas>
-          </div>
-        </div>
-
-        <!-- Orders Panel -->
+=======
+        <!-- Conversations -->
         <div class="panel">
-          <div class="panel-header">
-            <span class="panel-title">Orders</span>
-            <span class="panel-count" id="order-count">0</span>
+          <div class="panel-head">
+            <div class="panel-title">
+              <div class="panel-pip"></div>
+              Recent Conversations
+            </div>
+            <span class="panel-badge" id="conv-count">0</span>
           </div>
-          <div class="orders-list" id="orders">
-            <div class="empty">Loading orders…</div>
+          <div class="conv-list" id="conversations">
+            <div class="empty">Loading conversations…</div>
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
           </div>
         </div>
 
+        <!-- Right column -->
+        <div class="right-col">
+
+          <!-- Chart -->
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <div class="panel-pip"></div>
+                Categories
+              </div>
+            </div>
+            <div class="chart-inner">
+              <canvas id="pieChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Orders -->
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <div class="panel-pip"></div>
+                Orders
+              </div>
+              <span class="panel-badge" id="order-count">0</span>
+            </div>
+            <div class="orders-list" id="orders">
+              <div class="empty">Loading orders…</div>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 
   <script>
-    // ── Clock ──
+    /* ── Clock & date ── */
     function tickClock() {
       document.getElementById('clock').textContent =
         new Date().toLocaleTimeString('en-GB', { hour12: false });
@@ -635,6 +1305,7 @@
     tickClock();
     setInterval(tickClock, 1000);
 
+<<<<<<< HEAD
     // ── Chart toggle (mobile) ──
     let chartOpen = false;
     function toggleChart() {
@@ -697,19 +1368,69 @@
       if (k.includes('deliver'))  return 's-delivered';
       if (k.includes('cancel'))   return 's-cancelled';
       return 's-other';
+=======
+    (function setDate() {
+      const d = new Date();
+      const opts = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
+      document.getElementById('page-date').textContent =
+        d.toLocaleDateString('en-GB', opts);
+    })();
+
+    (function setGreeting() {
+      const h = new Date().getHours();
+      const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+      document.getElementById('greeting-text').innerHTML = `${g}, <span>Ada</span> 👋`;
+    })();
+
+    /* ── Mobile sidebar ── */
+    let sidebarOpen = false;
+    function toggleSidebar() {
+      sidebarOpen = !sidebarOpen;
+      document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
+      document.getElementById('sidebar-overlay').classList.toggle('show', sidebarOpen);
+    }
+
+    /* ── Helpers ── */
+    function initials(str) {
+      if (!str) return '??';
+      const digits = String(str).replace(/\D/g, '');
+      return digits.slice(-2) || str.slice(0, 2).toUpperCase();
+    }
+
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     function relTime(ts) {
       const diff = (Date.now() - new Date(ts)) / 1000;
       if (diff < 60)    return 'just now';
-      if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
-      if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-      return new Date(ts).toLocaleDateString();
+      if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return new Date(ts).toLocaleDateString('en-GB');
     }
 
-    // ── Chart ──
+    function catClass(cat = '') {
+      const c = cat.toLowerCase();
+      if (c.includes('order'))     return 'cat-order';
+      if (c.includes('complaint')) return 'cat-complaint';
+      if (c.includes('inquiry'))   return 'cat-inquiry';
+      if (c.includes('support'))   return 'cat-support';
+      return 'cat-other';
+    }
+
+    function statusClass(s = '') {
+      const k = s.toLowerCase();
+      if (k.includes('pending'))  return 's-pending';
+      if (k.includes('confirm'))  return 's-confirmed';
+      if (k.includes('deliver'))  return 's-delivered';
+      if (k.includes('cancel'))   return 's-cancelled';
+      return 's-pending';
+    }
+
+    /* ── Chart ── */
     let chartInst = null;
-    const CHART_COLORS = ['#00e5b0','#3b82f6','#f97316','#f43f5e','#a78bfa','#facc15'];
+    const CHART_COLORS = ['#00e5b0','#3b82f6','#f97316','#ef4444','#a78bfa','#facc15'];
 
     function renderChart(categories = {}) {
       const labels = Object.keys(categories);
@@ -730,30 +1451,40 @@
           datasets: [{
             data,
             backgroundColor: CHART_COLORS.slice(0, labels.length),
-            borderColor: '#0f1318',
+            borderColor: '#0c1014',
             borderWidth: 3,
-            hoverOffset: 6,
+            hoverOffset: 8,
           }]
         },
         options: {
+<<<<<<< HEAD
           cutout: '62%',
+=======
+          cutout: '66%',
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
           responsive: true,
           maintainAspectRatio: true,
           plugins: {
             legend: {
               position: 'bottom',
               labels: {
-                color: '#64748b',
+                color: '#5a7a94',
                 font: { family: 'IBM Plex Mono', size: 10 },
+<<<<<<< HEAD
                 boxWidth: 10,
                 padding: 10,
+=======
+                boxWidth: 8,
+                boxHeight: 8,
+                padding: 12,
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
               }
             },
             tooltip: {
-              backgroundColor: '#1e2530',
-              titleColor: '#e2e8f0',
-              bodyColor: '#94a3b8',
-              borderColor: '#2a3340',
+              backgroundColor: '#111820',
+              titleColor: '#e8f0f8',
+              bodyColor: '#8aa0b4',
+              borderColor: '#1a2330',
               borderWidth: 1,
               padding: 10,
               titleFont: { family: 'IBM Plex Mono', size: 11 },
@@ -764,82 +1495,128 @@
       });
     }
 
-    // ── Data ──
+    /* ── Logout ── */
+    async function logout() {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
+      window.location.href = '/';
+    }
+
+    /* ── WhatsApp status ── */
+    async function checkWhatsApp() {
+      const btn = document.getElementById('whatsapp-btn');
+      try {
+        const res  = await fetch('/api/whatsapp/qr', { credentials: 'same-origin' });
+        const data = await res.json();
+        if (data.any_connected) {
+          btn.textContent = 'WA Connected ✓';
+          btn.classList.remove('top-btn-accent');
+          btn.classList.add('top-btn-ghost');
+        }
+      } catch {}
+    }
+
+    /* ── Fetch & render ── */
+    let prevConvCount = null;
+
     async function fetchData() {
       try {
         const [convsRes, ordersRes, statsRes] = await Promise.all([
           fetch('/api/conversations', { credentials: 'same-origin' }),
           fetch('/api/orders',        { credentials: 'same-origin' }),
+<<<<<<< HEAD
           fetch('/api/stats',         { credentials: 'same-origin' })
         ]);
+=======
+          fetch('/api/stats',         { credentials: 'same-origin' }),
+        ]);
+
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
         if ([convsRes, ordersRes, statsRes].some(r => r.status === 401)) {
           window.location.href = '/';
           return;
         }
+
         const convs  = await convsRes.json();
         const orders = await ordersRes.json();
         const stats  = await statsRes.json();
 
+<<<<<<< HEAD
         // KPIs
         const complaints = (convs  || []).filter(c => (c.category || '').toLowerCase().includes('complaint')).length;
         const pending    = (orders || []).filter(o => (o.status   || '').toLowerCase().includes('pending')).length;
+=======
+        const complaints = (convs  || []).filter(c => (c.category || '').toLowerCase().includes('complaint')).length;
+        const pending    = (orders || []).filter(o => (o.status   || '').toLowerCase().includes('pending')).length;
+        const convLen    = (convs  || []).length;
+        const ordLen     = (orders || []).length;
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 
-        document.getElementById('kpi-convs').textContent      = (convs  || []).length;
-        document.getElementById('kpi-orders').textContent     = (orders || []).length;
+        /* KPIs */
+        document.getElementById('kpi-convs').textContent      = convLen;
+        document.getElementById('kpi-orders').textContent     = ordLen;
         document.getElementById('kpi-pending').textContent    = pending;
         document.getElementById('kpi-complaints').textContent = complaints;
 
-        // Conversations
-        const convsEl = document.getElementById('conversations');
-        document.getElementById('conv-count').textContent = (convs || []).length;
+        /* Sidebar badges */
+        document.getElementById('sb-convs').textContent      = convLen;
+        document.getElementById('sb-orders').textContent     = ordLen;
+        document.getElementById('sb-complaints').textContent = complaints;
 
-        if (!convs || convs.length === 0) {
+        /* Conversations */
+        const convsEl = document.getElementById('conversations');
+        document.getElementById('conv-count').textContent = convLen;
+
+        if (!convs || convLen === 0) {
           convsEl.innerHTML = '<div class="empty">No conversations yet</div>';
         } else {
           convsEl.innerHTML = '';
           convs.forEach((c, i) => {
-            const el = document.createElement('div');
-            el.className = 'conv-item';
-            el.style.animationDelay = `${i * 30}ms`;
-            el.innerHTML = `
-              <div class="conv-avatar">${escapeHtml(initials(c.phone))}</div>
+            const div = document.createElement('div');
+            div.className = 'conv-item';
+            div.style.animationDelay = `${i * 25}ms`;
+            div.innerHTML = `
+              <div class="conv-avatar">${esc(initials(c.phone))}</div>
               <div class="conv-body">
-                <div class="conv-meta">
-                  <span class="conv-phone">${escapeHtml(c.phone || '—')}</span>
-                  <span class="conv-time">${escapeHtml(relTime(c.timestamp))}</span>
+                <div class="conv-top">
+                  <span class="conv-phone">${esc(c.phone || '—')}</span>
+                  <span class="conv-time">${esc(relTime(c.timestamp))}</span>
                 </div>
-                <div class="conv-msg">${escapeHtml(c.message || '')}</div>
+                <div class="conv-msg">${esc(c.message || '')}</div>
               </div>
-              <span class="conv-category ${catClass(c.category)}">${escapeHtml(c.category || 'other')}</span>
+              <span class="cat-tag ${catClass(c.category)}">${esc(c.category || 'other')}</span>
             `;
-            convsEl.appendChild(el);
+            convsEl.appendChild(div);
           });
         }
 
-        // Orders
+        /* Orders */
         const ordersEl = document.getElementById('orders');
-        document.getElementById('order-count').textContent = (orders || []).length;
+        document.getElementById('order-count').textContent = ordLen;
 
-        if (!orders || orders.length === 0) {
+        if (!orders || ordLen === 0) {
           ordersEl.innerHTML = '<div class="empty">No orders yet</div>';
         } else {
           ordersEl.innerHTML = '';
           orders.forEach(o => {
-            const el = document.createElement('div');
-            el.className = 'order-item';
-            el.innerHTML = `
-              <div class="order-left">
-                <div class="order-name">${escapeHtml(o.customer_name || o.phone || '—')}</div>
-                <div class="order-item-name">${escapeHtml(o.item || '—')} · qty ${escapeHtml(o.quantity ?? '—')}</div>
+            const div = document.createElement('div');
+            div.className = 'order-item';
+            const ini = initials(o.customer_name || o.phone || '');
+            div.innerHTML = `
+              <div class="order-avatar">${esc(ini)}</div>
+              <div class="order-body">
+                <div class="order-name">${esc(o.customer_name || o.phone || '—')}</div>
+                <div class="order-detail">${esc(o.item || '—')} · qty ${esc(o.quantity ?? '—')}</div>
               </div>
-              <span class="status-badge ${statusClass(o.status)}">${escapeHtml(o.status || '—')}</span>
+              <span class="status-pill ${statusClass(o.status)}">${esc(o.status || '—')}</span>
             `;
-            ordersEl.appendChild(el);
+            ordersEl.appendChild(div);
           });
         }
 
-        // Chart
+        /* Chart */
         renderChart(stats.categories || {});
+
+        prevConvCount = convLen;
 
       } catch (err) {
         console.error('Dashboard fetch error:', err);
@@ -847,6 +1624,7 @@
     }
 
     fetchData();
+    checkWhatsApp();
     setInterval(fetchData, 5000);
   </script>
 </body>

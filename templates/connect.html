@@ -7,6 +7,7 @@
   <link rel="icon" href="/static/tell5-icon.svg" type="image/x-icon">
   <style>
     body { margin:0; min-height:100vh; font-family:'Syne',sans-serif; background:#0a0c0f; color:#e2e8f0; display:flex; align-items:center; justify-content:center; padding:20px; }
+<<<<<<< HEAD
     .card { max-width:520px; width:100%; background:#121821; border:1px solid #1e2530; border-radius:18px; padding:32px; box-shadow:0 24px 80px rgba(0,0,0,0.25); }
     h1 { margin:0 0 12px; font-size:2rem; color:#00e5b0; }
     p { margin:0 0 20px; color:#94a3b8; line-height:1.7; }
@@ -36,12 +37,101 @@
   <script>
     async function refresh() {
       const statusEl = document.getElementById('status');
+=======
+    .card { max-width:600px; width:100%; background:#121821; border:1px solid #1e2530; border-radius:18px; padding:32px; box-shadow:0 24px 80px rgba(0,0,0,0.25); }
+    h1 { margin:0 0 4px; font-size:1.8rem; color:#00e5b0; }
+    .subtitle { color:#94a3b8; margin:0 0 24px; font-size:0.95rem; }
+    .option { background:#11171f; border:1px solid #1e2530; border-radius:14px; padding:20px; margin-bottom:16px; }
+    .option h3 { margin:0 0 6px; color:#e2e8f0; font-size:1.1rem; }
+    .option p { margin:0 0 12px; color:#94a3b8; font-size:0.9rem; line-height:1.6; }
+    .badge { display:inline-block; font-size:0.75rem; padding:3px 10px; border-radius:20px; font-weight:600; margin-bottom:8px; }
+    .badge-active { background:#00e5b0; color:#0a0c0f; }
+    .badge-inactive { background:#1e2530; color:#64748b; }
+    .badge-recommended { background:#f59e0b; color:#0a0c0f; }
+    .status-box { padding:14px; border-radius:12px; background:#0d1219; border:1px solid #1e2530; font-family:'IBM Plex Mono',monospace; font-size:0.85rem; margin-bottom:16px; color:#cbd5e1; }
+    .qr-image { max-width:280px; width:100%; height:auto; border-radius:14px; background:#081116; padding:12px; display:block; margin:12px auto; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 20px; border-radius:12px; font-weight:700; text-decoration:none; cursor:pointer; border:none; font-size:0.9rem; }
+    .btn-primary { background:#00e5b0; color:#0a0c0f; }
+    .btn-secondary { background:#1e2530; color:#e2e8f0; }
+    .btn-outline { background:transparent; border:1px solid #1e2530; color:#94a3b8; }
+    .btn:hover { opacity:0.9; }
+    .btn-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .skip { display:block; text-align:center; margin-top:20px; color:#64748b; font-size:0.85rem; }
+    .skip a { color:#00e5b0; text-decoration:none; }
+    .field { margin-bottom:14px; }
+    .field label { display:block; font-size:0.85rem; color:#94a3b8; margin-bottom:4px; }
+    .field input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid #1e2530; background:#0d1219; color:#e2e8f0; font-size:0.9rem; box-sizing:border-box; }
+    .field input:focus { outline:none; border-color:#00e5b0; }
+    .hidden { display:none !important; }
+    .tabs { display:flex; gap:4px; margin-bottom:20px; background:#0d1219; border-radius:12px; padding:4px; }
+    .tab { flex:1; padding:10px; text-align:center; border-radius:10px; cursor:pointer; color:#64748b; font-weight:600; font-size:0.85rem; border:none; background:transparent; }
+    .tab.active { background:#121821; color:#00e5b0; }
+    .info-note { background:#0d1219; border-left:3px solid #f59e0b; padding:12px 16px; border-radius:8px; font-size:0.85rem; color:#94a3b8; margin-top:12px; }
+    .info-note strong { color:#e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="card" id="app">
+    <h1>Connect WhatsApp</h1>
+    <p class="subtitle">Choose how you want to receive and reply to WhatsApp messages.</p>
+
+    <div id="global-status" class="status-box">Loading status…</div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="personal">Personal (QR Code)</button>
+      <button class="tab" data-tab="business">Business (Twilio)</button>
+    </div>
+
+    <!-- Baileys (Personal) Tab -->
+    <div id="tab-personal" class="tab-content">
+      <div class="option">
+        <span class="badge badge-recommended">Recommended</span>
+        <h3>Connect Your Personal WhatsApp</h3>
+        <p>Scan a QR code with your phone to link your personal WhatsApp number. No Twilio account needed. Messages are forwarded through the app.</p>
+        <div id="baileys-status" class="status-box">Checking Baileys service…</div>
+        <img id="qr-image" class="qr-image hidden" src="" alt="WhatsApp QR" />
+        <div id="qr-text" style="text-align:center;color:#94a3b8;font-size:0.85rem;"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="refresh()">Refresh QR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Twilio (Business) Tab -->
+    <div id="tab-business" class="tab-content hidden">
+      <div class="option">
+        <span class="badge badge-inactive">Business</span>
+        <h3>Use Twilio (Business WhatsApp API)</h3>
+        <p>If you have a Twilio account with a WhatsApp-enabled number, configure it in your <code>.env</code> file or through the admin panel. Messages go through Twilio's API and support auto-reply via the AI pipeline.</p>
+        <div id="twilio-status" class="status-box">Checking Twilio configuration…</div>
+        <div class="info-note">
+          <strong>Need a Twilio number?</strong> Sign up at <a href="https://www.twilio.com/whatsapp" target="_blank" style="color:#00e5b0;">twilio.com/whatsapp</a>, get a WhatsApp-enabled number, then add these to your <code>.env</code> file:<br><br>
+          <code>TWILIO_ACCOUNT_SID=your_account_sid</code><br>
+          <code>TWILIO_AUTH_TOKEN=your_auth_token</code><br>
+          <code>TWILIO_PHONE_NUMBER=whatsapp:+1234567890</code>
+        </div>
+        <p style="color:#94a3b8;font-size:0.85rem;margin-top:12px;">After updating your <code>.env</code>, restart the server. You can also set this up from the <a href="/admin" style="color:#00e5b0;">admin panel</a>.</p>
+      </div>
+    </div>
+
+    <div class="skip">
+      <a href="/dashboard">Skip — I'll set this up later</a>
+    </div>
+  </div>
+
+  <script>
+    let pollInterval = null;
+
+    async function refresh() {
+      const statusEl = document.getElementById('baileys-status');
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       const imgEl = document.getElementById('qr-image');
       const textEl = document.getElementById('qr-text');
 
       try {
         const res = await fetch('/api/whatsapp/qr', { credentials: 'same-origin' });
         const data = await res.json();
+<<<<<<< HEAD
         if (data.connected) {
           statusEl.textContent = 'WhatsApp is connected. Redirecting to dashboard…';
           imgEl.hidden = true;
@@ -68,6 +158,79 @@
 
     refresh();
     window.setInterval(refresh, 5000);
+=======
+
+        updateGlobalStatus(data);
+        updateTwilioStatus(data);
+
+        if (data.baileys.connected) {
+          statusEl.textContent = 'WhatsApp is connected via Baileys.';
+          imgEl.classList.add('hidden');
+          textEl.textContent = '';
+          if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+          window.setTimeout(() => window.location.href = '/dashboard', 1500);
+          return;
+        }
+
+        if (data.baileys.qr_image) {
+          imgEl.src = data.baileys.qr_image;
+          imgEl.classList.remove('hidden');
+          textEl.textContent = data.baileys.message || 'Open WhatsApp on your phone and scan this QR code.';
+          statusEl.textContent = 'QR code ready. Scan with WhatsApp.';
+        } else if (data.baileys.is_running) {
+          imgEl.classList.add('hidden');
+          statusEl.textContent = 'Service is running but no QR yet. If one was already generated, the bot may be waiting for a scan.';
+          textEl.textContent = 'If you previously scanned a QR and it expired, restart the bot and refresh.';
+        } else {
+          imgEl.classList.add('hidden');
+          statusEl.textContent = 'WhatsApp bot is not running. Start it from services/whatsapp and refresh.';
+          textEl.textContent = data.baileys.message || '';
+        }
+      } catch (err) {
+        document.getElementById('baileys-status').textContent = 'Unable to reach the Baileys service. Is the bot running on port 3001?';
+      }
+    }
+
+    function updateGlobalStatus(data) {
+      const el = document.getElementById('global-status');
+      if (data.twilio.configured) {
+        el.textContent = 'Twilio (Business WhatsApp) is configured and active.';
+        el.style.borderLeft = '3px solid #00e5b0';
+      } else if (data.baileys.connected) {
+        el.textContent = 'Baileys (Personal WhatsApp) is connected.';
+        el.style.borderLeft = '3px solid #00e5b0';
+      } else {
+        el.textContent = 'No WhatsApp channel active. Choose an option below or skip for now.';
+        el.style.borderLeft = '3px solid #f59e0b';
+      }
+    }
+
+    function updateTwilioStatus(data) {
+      const el = document.getElementById('twilio-status');
+      if (data.twilio.configured) {
+        el.textContent = 'Twilio is configured' + (data.twilio.phone ? ' (' + data.twilio.phone + ')' : '') + '.';
+        el.style.borderLeft = '3px solid #00e5b0';
+      } else {
+        el.textContent = 'Twilio is not configured. Enter your credentials below or use the QR method.';
+        el.style.borderLeft = '3px solid #1e2530';
+      }
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+        document.getElementById('tab-' + target).classList.remove('hidden');
+        if (target === 'personal') refresh();
+      });
+    });
+
+    refresh();
+    pollInterval = setInterval(refresh, 5000);
+>>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
   </script>
 </body>
 </html>

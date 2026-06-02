@@ -189,8 +189,8 @@ class TestStatsEndpoints:
         response = await client.get("/api/stats")
         assert response.status_code == 200
         data = response.json()
-        assert "order_count" in data
-        assert "order_by_category" in data
+        assert "categories" in data
+        assert "total_orders" in data
 
 
 @pytest.mark.integration

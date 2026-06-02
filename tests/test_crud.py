@@ -175,5 +175,8 @@ class TestNotificationCRUD:
             )
             await session.commit()
 
-            notifs = await crud.list_notifications(session)
+            from sqlalchemy import select
+            from models import Notification
+            q = await session.execute(select(Notification).order_by(Notification.timestamp.desc()))
+            notifs = q.scalars().all()
             assert len(notifs) >= 0

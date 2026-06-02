@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, func, Text
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, func, Text, Float, ForeignKey
 from sqlalchemy.sql import expression
 from sqlalchemy.orm import relationship
 from db import Base
@@ -12,6 +12,7 @@ class Conversation(Base):
     phone = Column(String(50), index=True, nullable=False)
     message = Column(Text, nullable=False)
     category = Column(String(50), nullable=False, index=True)
+    channel = Column(String(50), nullable=True, default="whatsapp")
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -25,6 +26,7 @@ class Order(Base):
     item = Column(String(200), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
     status = Column(String(50), nullable=False, default="pending")
+    channel = Column(String(50), nullable=True, default="whatsapp")
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -32,7 +34,7 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id = Column(Integer, primary_key=True, index=True)
-    type = Column(String(50), nullable=False)
+    notification_type = Column("type", String(50), nullable=False)
     payload = Column(Text, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -48,4 +50,59 @@ class User(Base):
     password_hash = Column(Text, nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
     is_admin = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class BusinessProfile(Base):
+    __tablename__ = "business_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False, index=True)
+    business_name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    category = Column(String(100), nullable=True)
+    address = Column(String(500), nullable=True)
+    currency = Column(String(10), nullable=True, default="NGN")
+    is_public = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class Product(Base):
+    __tablename__ = "products"
+
+    id = Column(Integer, primary_key=True, index=True)
+    business_id = Column(Integer, ForeignKey("business_profiles.id"), nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    price = Column(Float, nullable=True)
+    currency = Column(String(10), nullable=True, default="NGN")
+    is_available = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class PipelineLog(Base):
+    __tablename__ = "pipeline_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    message_id = Column(String(100), nullable=True, index=True)
+    message = Column(Text, nullable=False)
+    category = Column(String(50), nullable=True)
+    gemini_output = Column(Text, nullable=True)
+    groq_output = Column(Text, nullable=True)
+    mistral_output = Column(Text, nullable=True)
+    final_reply = Column(Text, nullable=True)
+    errors = Column(Text, nullable=True)
+    success = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class AIXListing(Base):
+    __tablename__ = "aix_listings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    business_id = Column(Integer, ForeignKey("business_profiles.id"), nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
+    is_global = Column(Boolean, nullable=False, default=False)
+    searchable_tags = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -15,9 +15,16 @@ class Config:
     DATABASE_URL: str = os.getenv("DATABASE_URL", "").strip()
     SESSION_SECRET: str = os.getenv("SESSION_SECRET", "").strip()
 
-    # Optional
+    # AI API Keys
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", "").strip() or None
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite").strip()
+    GROQ_API_KEY: Optional[str] = os.getenv("GROQ_API_KEY", "").strip() or None
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+    MISTRAL_API_KEY: Optional[str] = os.getenv("MISTRAL_API_KEY", "").strip() or None
+    MISTRAL_MODEL: str = os.getenv("MISTRAL_MODEL", "mistral-large-latest").strip()
+    OPENROUTER_API_KEY: Optional[str] = os.getenv("OPENROUTER_API_KEY", "").strip() or None
+    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-405b-instruct").strip()
+    SENTRY_DSN: Optional[str] = os.getenv("SENTRY_DSN", "").strip() or None
     ADMIN_EMAIL: Optional[str] = os.getenv("ADMIN_EMAIL", "").strip() or None
 
     # Flags
@@ -43,6 +50,12 @@ class Config:
             errors.append("SESSION_SECRET is required and must be at least 32 characters")
         elif len(cls.SESSION_SECRET) < 32:
             errors.append("SESSION_SECRET must be at least 32 characters")
+
+        # AI Configuration checks
+        if cls.GROQ_API_KEY and not cls.GROQ_API_KEY.startswith("gsk_"):
+            errors.append("GROQ_API_KEY should start with 'gsk_'")
+        if cls.MISTRAL_API_KEY and len(cls.MISTRAL_API_KEY) < 16:
+            errors.append("MISTRAL_API_KEY seems too short")
 
         # Production-specific validation
         if cls.ENVIRONMENT == "production":

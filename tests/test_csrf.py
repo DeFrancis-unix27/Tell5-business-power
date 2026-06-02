@@ -178,7 +178,7 @@ class TestCSRFTokenExpiry:
 
     def test_expired_token_fails_verification(self):
         """Test that expired token fails verification"""
-        from csrf import CSRF_TOKEN_EXPIRY, CONFIG_SESSION_SECRET
+        from csrf import CSRF_TOKEN_EXPIRY
         import hmac
         import hashlib
 

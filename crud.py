@@ -20,7 +20,7 @@ async def create_order(db: AsyncSession, phone: str, item: str, quantity: int = 
 
 
 async def create_notification(db: AsyncSession, ntype: str, payload: str | None = None):
-    n = Notification(type=ntype, payload=payload)
+    n = Notification(notification_type=ntype, payload=payload)
     db.add(n)
     await db.flush()
     return n
@@ -72,6 +72,12 @@ async def get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
     q = await db.execute(select(User).where(User.id == user_id, User.is_active == True))
     return q.scalar_one_or_none()
 
+async def delete_user_by_id(db: AsyncSession, user_id: int) -> User | None:
+    user = await get_user_by_id(db, user_id)
+    if user:
+        await db.delete(user)
+        await db.flush()
+    return user
 
 async def create_user(
     db: AsyncSession,
@@ -103,3 +109,100 @@ async def count_users(db: AsyncSession) -> int:
 async def list_users(db: AsyncSession) -> List[User]:
     q = await db.execute(select(User).order_by(User.created_at.desc()))
     return q.scalars().all()
+
+
+async def create_business_profile(
+    db: AsyncSession,
+    user_id: int,
+    business_name: str,
+    description: str | None = None,
+    category: str | None = None,
+    address: str | None = None,
+    currency: str = "NGN",
+    is_public: bool = False,
+) -> "BusinessProfile":
+    from models import BusinessProfile
+    profile = BusinessProfile(
+        user_id=user_id,
+        business_name=business_name,
+        description=description,
+        category=category,
+        address=address,
+        currency=currency,
+        is_public=is_public,
+    )
+    db.add(profile)
+    await db.flush()
+    return profile
+
+
+async def get_business_profile(db: AsyncSession, user_id: int) -> "BusinessProfile | None":
+    from models import BusinessProfile
+    q = await db.execute(select(BusinessProfile).where(BusinessProfile.user_id == user_id))
+    return q.scalar_one_or_none()
+
+
+async def get_public_business_profiles(db: AsyncSession) -> List["BusinessProfile"]:
+    from models import BusinessProfile
+    q = await db.execute(
+        select(BusinessProfile).where(BusinessProfile.is_public == True)
+    )
+    return q.scalars().all()
+
+
+async def create_product(
+    db: AsyncSession,
+    business_id: int,
+    name: str,
+    description: str | None = None,
+    price: float | None = None,
+    currency: str = "NGN",
+) -> "Product":
+    from models import Product
+    product = Product(
+        business_id=business_id,
+        name=name,
+        description=description,
+        price=price,
+        currency=currency,
+    )
+    db.add(product)
+    await db.flush()
+    return product
+
+
+async def list_products(db: AsyncSession, business_id: int) -> List["Product"]:
+    from models import Product
+    q = await db.execute(
+        select(Product).where(Product.business_id == business_id, Product.is_available == True)
+    )
+    return q.scalars().all()
+
+
+async def create_pipeline_log(
+    db: AsyncSession,
+    message: str,
+    category: str | None = None,
+    gemini_output: str | None = None,
+    groq_output: str | None = None,
+    mistral_output: str | None = None,
+    final_reply: str | None = None,
+    errors: str | None = None,
+    success: bool = False,
+    message_id: str | None = None,
+) -> "PipelineLog":
+    from models import PipelineLog
+    log = PipelineLog(
+        message_id=message_id,
+        message=message,
+        category=category,
+        gemini_output=gemini_output,
+        groq_output=groq_output,
+        mistral_output=mistral_output,
+        final_reply=final_reply,
+        errors=errors,
+        success=success,
+    )
+    db.add(log)
+    await db.flush()
+    return log
