@@ -5,18 +5,9 @@ from typing import Any, Optional
 from google import genai
 from google.genai import types
 
-<<<<<<< HEAD
-from google import genai
-from google.genai import types
-
-# =========================================================
-# Configuration
-# =========================================================
-=======
 # ==================================================================================================
 # Configuration
 # ==================================================================================================
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
 
@@ -28,15 +19,9 @@ ALLOWED_CATEGORIES = {
 }
 
 
-<<<<<<< HEAD
-# =========================================================
-# Gemini Client
-# =========================================================
-=======
 # ==================================================================================================
 # Gemini Client
 # ==================================================================================================
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 
 def ai_configured() -> bool:
     return bool(os.getenv("GEMINI_API_KEY"))
@@ -46,19 +31,6 @@ def get_client() -> genai.Client:
     return genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
-<<<<<<< HEAD
-# =========================================================
-# Prompt Builder
-# =========================================================
-
-def build_prompt(message: str) -> str:
-    return f"""
-You are Tell5, a WhatsApp operations assistant for small businesses.
-
-Classify this customer message and draft a short, friendly WhatsApp reply.
-
-Allowed categories:
-=======
 
 
 
@@ -82,18 +54,11 @@ Message:
 {text}
 
 Categories:
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 - order
 - inquiry
 - complaint
 - feedback
 
-<<<<<<< HEAD
-Return ONLY valid JSON in this exact format:
-
-{{
-  "category": "order|inquiry|complaint|feedback",
-=======
 Definitions:
 
 order:
@@ -159,7 +124,6 @@ Return JSON:
 
 {{
   "category": "{category}",
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
   "reply": "short reply"
 }}
 
@@ -168,15 +132,9 @@ Customer message:
 """.strip()
 
 
-<<<<<<< HEAD
-# =========================================================
-# Gemini Response
-# =========================================================
-=======
 # ==================================================================================================
 # Gemini Response
 # ==================================================================================================
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 
 def _generate_content(prompt: str) -> str | None:
     if not ai_configured():
@@ -184,51 +142,6 @@ def _generate_content(prompt: str) -> str | None:
 
     client = get_client()
 
-<<<<<<< HEAD
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            temperature=0.2,
-            max_output_tokens=220,
-            response_mime_type="application/json",
-        ),
-    )
-
-    return response.text
-
-
-# =========================================================
-# Validation
-# =========================================================
-
-def validate_response(data: dict[str, Any]) -> dict[str, str] | None:
-    category = str(data.get("category", "")).lower().strip()
-    reply = str(data.get("reply", "")).strip()
-
-    if category not in ALLOWED_CATEGORIES:
-        return None
-
-    if not reply:
-        return None
-
-    return {
-        "category": category,
-        "reply": reply[:700],
-    }
-
-
-# =========================================================
-# Public Functions
-# =========================================================
-
-async def analyze_customer_message(
-    message: str,
-) -> dict[str, str] | None:
-    prompt = build_prompt(message)
-
-    try:
-=======
     try:
         response = client.models.generate_content(
             model=GEMINI_MODEL,
@@ -324,7 +237,6 @@ async def analyze_customer_message(
     prompt = build_prompt(message, category)
 
     try:
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
         text = await asyncio.to_thread(
             _generate_content,
             prompt,
@@ -334,10 +246,6 @@ async def analyze_customer_message(
             return None
 
         data = json.loads(text)
-<<<<<<< HEAD
-
-        return validate_response(data)
-=======
         initial_validate = validate_response(data)
         
         if not initial_validate:
@@ -353,7 +261,6 @@ async def analyze_customer_message(
         initial_validate["reply"] = review.strip()
         
         return initial_validate
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 
     except Exception:
         return None

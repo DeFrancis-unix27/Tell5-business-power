@@ -38,10 +38,7 @@
       overflow-x: hidden;
     }
 
-<<<<<<< HEAD
-=======
     /* Dot grid */
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     body::before {
       content: '';
       position: fixed;
@@ -60,12 +57,6 @@
       min-height: 100vh;
       position: relative;
       z-index: 1;
-<<<<<<< HEAD
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 24px 20px;
-=======
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     /* ═══════ TOPBAR ═══════ */
@@ -73,15 +64,7 @@
       grid-column: 1 / -1;
       display: flex;
       align-items: center;
-<<<<<<< HEAD
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 24px;
-      padding-bottom: 18px;
-=======
       padding: 0 24px 0 0;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       border-bottom: 1px solid var(--border);
       background: rgba(6,8,9,0.9);
       backdrop-filter: blur(12px);
@@ -93,38 +76,6 @@
     .topbar-brand {
       width: var(--sidebar);
       display: flex;
-<<<<<<< HEAD
-      align-items: baseline;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-
-    .brand-name {
-      font-size: clamp(1.3rem, 4vw, 1.75rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      color: var(--accent);
-    }
-
-    .brand-tag {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: clamp(0.6rem, 1.5vw, 0.7rem);
-      color: var(--sub);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    /* hide on very small screens */
-    @media (max-width: 380px) {
-      .brand-tag { display: none; }
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-=======
       align-items: center;
       gap: 8px;
       padding: 0 20px;
@@ -169,7 +120,6 @@
       display: flex;
       align-items: center;
       gap: 10px;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .live-pill {
@@ -180,23 +130,6 @@
       font-size: 0.62rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-<<<<<<< HEAD
-      white-space: nowrap;
-    }
-
-    .live-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
-      animation: pulse 2s ease-in-out infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.5; transform: scale(0.85); }
-=======
       color: var(--accent);
       background: rgba(0,229,176,0.07);
       border: 1px solid rgba(0,229,176,0.18);
@@ -210,7 +143,6 @@
       background: var(--accent);
       box-shadow: 0 0 6px var(--accent);
       animation: breathe 2s ease-in-out infinite;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .clock {
@@ -393,66 +325,18 @@
       white-space: nowrap;
     }
 
-<<<<<<< HEAD
-    /* hide clock on tiny screens */
-    @media (max-width: 480px) {
-      .clock { display: none; }
-    }
-
-    .header-btn {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text);
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 7px 11px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: border-color 0.2s, color 0.2s;
-      white-space: nowrap;
-    }
-
-    .header-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    /* ── KPI Row ── */
-=======
     /* ═══════ KPI ROW ═══════ */
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
-<<<<<<< HEAD
-      margin-bottom: 20px;
-    }
-
-    @media (max-width: 860px) {
-      .kpi-row { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    @media (max-width: 400px) {
-      .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; }
-=======
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .kpi {
       background: var(--surface);
       border: 1px solid var(--border);
-<<<<<<< HEAD
-      border-radius: 8px;
-      padding: 14px 16px;
-=======
       border-radius: var(--r);
       padding: 16px 18px;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       position: relative;
       overflow: hidden;
       transition: border-color 0.2s, transform 0.18s;
@@ -465,15 +349,9 @@
     .kpi::before {
       content: '';
       position: absolute;
-<<<<<<< HEAD
-      top: 0; left: 0;
-      width: 3px; height: 100%;
-      background: var(--kpi-color, var(--accent));
-=======
       top: 0; left: 0; right: 0;
       height: 2px;
       border-radius: 2px 2px 0 0;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .kpi-g { border-top-color: transparent; }
@@ -491,11 +369,7 @@
 
     .kpi-label {
       font-family: 'IBM Plex Mono', monospace;
-<<<<<<< HEAD
-      font-size: clamp(0.58rem, 1.2vw, 0.65rem);
-=======
       font-size: 0.6rem;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       color: var(--sub);
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -503,16 +377,9 @@
     }
 
     .kpi-value {
-<<<<<<< HEAD
-      font-size: clamp(1.4rem, 3.5vw, 1.9rem);
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      color: var(--kpi-color, var(--accent));
-=======
       font-size: 2rem;
       font-weight: 900;
       letter-spacing: -0.05em;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       line-height: 1;
       margin-bottom: 6px;
     }
@@ -530,14 +397,8 @@
 
     .kpi-sub {
       font-family: 'IBM Plex Mono', monospace;
-<<<<<<< HEAD
-      font-size: clamp(0.58rem, 1.1vw, 0.65rem);
-      color: var(--sub);
-      margin-top: 5px;
-=======
       font-size: 0.58rem;
       color: var(--sub);
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .kpi-delta {
@@ -553,20 +414,9 @@
     /* ═══════ CONTENT GRID ═══════ */
     .content-grid {
       display: grid;
-<<<<<<< HEAD
-      grid-template-columns: 1fr 360px;
-      gap: 14px;
-    }
-
-    @media (max-width: 900px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-=======
       grid-template-columns: 1fr 340px;
       gap: 14px;
       align-items: start;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     /* ═══════ PANELS ═══════ */
@@ -581,25 +431,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-<<<<<<< HEAD
-      padding: 12px 16px;
-=======
       padding: 13px 16px;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       border-bottom: 1px solid var(--border);
     }
 
     .panel-title {
-<<<<<<< HEAD
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--sub);
-      display: flex;
-      align-items: center;
-      gap: 7px;
-=======
       display: flex;
       align-items: center;
       gap: 8px;
@@ -608,17 +444,13 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--sub2);
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .panel-pip {
       width: 5px; height: 5px;
       border-radius: 50%;
       background: var(--accent);
-<<<<<<< HEAD
-=======
       box-shadow: 0 0 6px rgba(0,229,176,0.5);
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       flex-shrink: 0;
     }
 
@@ -646,29 +478,6 @@
 
     /* ═══════ CONVERSATIONS ═══════ */
     .conv-list {
-<<<<<<< HEAD
-      max-height: 460px;
-      overflow-y: auto;
-    }
-
-    @media (max-width: 900px) {
-      .conv-list { max-height: 380px; }
-    }
-
-    .conv-list::-webkit-scrollbar { width: 4px; }
-    .conv-list::-webkit-scrollbar-track { background: transparent; }
-    .conv-list::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 4px; }
-
-    .conv-item {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 0 10px;
-      align-items: start;
-      transition: background 0.15s;
-      animation: fadeSlideIn 0.3s ease both;
-=======
       max-height: 480px;
       overflow-y: auto;
     }
@@ -686,7 +495,6 @@
       transition: background 0.13s;
       cursor: pointer;
       animation: slideIn 0.25s ease both;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     @keyframes slideIn {
@@ -698,30 +506,17 @@
     .conv-item:hover { background: var(--surface2); }
 
     .conv-avatar {
-<<<<<<< HEAD
-      width: 32px; height: 32px;
-      border-radius: 6px;
-=======
       width: 36px; height: 36px;
       border-radius: 50%;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       background: var(--muted);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'IBM Plex Mono', monospace;
-<<<<<<< HEAD
-      font-size: 0.68rem;
-      font-weight: 600;
-      color: var(--accent);
-      flex-shrink: 0;
-      margin-top: 2px;
-=======
       font-size: 0.65rem;
       font-weight: 600;
       color: var(--accent);
       flex-shrink: 0;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .conv-body { min-width: 0; }
@@ -729,46 +524,26 @@
     .conv-top {
       display: flex;
       align-items: center;
-<<<<<<< HEAD
-      gap: 7px;
-      margin-bottom: 3px;
-      flex-wrap: wrap;
-=======
       gap: 8px;
       margin-bottom: 3px;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     .conv-phone {
       font-family: 'IBM Plex Mono', monospace;
-<<<<<<< HEAD
-      font-size: 0.7rem;
-      color: var(--text);
-=======
       font-size: 0.72rem;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       font-weight: 500;
       color: var(--text);
     }
 
     .conv-time {
       font-family: 'IBM Plex Mono', monospace;
-<<<<<<< HEAD
-      font-size: 0.6rem;
-=======
       font-size: 0.58rem;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       color: var(--sub);
     }
 
     .conv-msg {
-<<<<<<< HEAD
-      font-size: 0.8rem;
-      color: #94a3b8;
-=======
       font-size: 0.78rem;
       color: var(--sub2);
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -777,41 +552,6 @@
 
     .cat-tag {
       font-family: 'IBM Plex Mono', monospace;
-<<<<<<< HEAD
-      font-size: 0.58rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      padding: 3px 7px;
-      border-radius: 4px;
-      white-space: nowrap;
-      flex-shrink: 0;
-      margin-top: 3px;
-      align-self: start;
-    }
-
-    /* hide category badge on very small screens */
-    @media (max-width: 360px) {
-      .conv-category { display: none; }
-      .conv-item { grid-template-columns: auto 1fr; }
-    }
-
-    /* ── Right Column ── */
-    .right-col {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    /* On mobile, reorder so orders come before chart */
-    @media (max-width: 900px) {
-      .right-col {
-        flex-direction: column-reverse;
-      }
-    }
-
-    /* ── Chart Panel ── */
-    .chart-wrap {
-=======
       font-size: 0.55rem;
       text-transform: uppercase;
       letter-spacing: 0.07em;
@@ -832,7 +572,6 @@
 
     /* Chart */
     .chart-inner {
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -840,35 +579,10 @@
       gap: 12px;
     }
 
-<<<<<<< HEAD
-    #pieChart { max-height: 200px; width: 100% !important; }
-
-    /* On mobile, chart takes less height */
-    @media (max-width: 600px) {
-      #pieChart { max-height: 160px; }
-    }
-=======
     #pieChart { max-height: 180px; width: 100% !important; }
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 
     /* Orders */
     .orders-list {
-<<<<<<< HEAD
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    @media (max-width: 900px) {
-      .orders-list { max-height: 260px; }
-    }
-
-    .orders-list::-webkit-scrollbar { width: 4px; }
-    .orders-list::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 4px; }
-
-    .order-item {
-      padding: 11px 16px;
-      border-bottom: 1px solid var(--border);
-=======
       max-height: 320px;
       overflow-y: auto;
     }
@@ -877,7 +591,6 @@
     .orders-list::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
 
     .order-item {
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       display: flex;
       align-items: center;
       gap: 10px;
@@ -890,14 +603,6 @@
     .order-item:last-child { border-bottom: none; }
     .order-item:hover { background: var(--surface2); }
 
-<<<<<<< HEAD
-    .order-left { min-width: 0; flex: 1; }
-
-    .order-name {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--text);
-=======
     .order-avatar {
       width: 30px; height: 30px;
       border-radius: 8px;
@@ -927,7 +632,6 @@
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.6rem;
       color: var(--sub);
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -935,29 +639,11 @@
 
     .status-pill {
       font-family: 'IBM Plex Mono', monospace;
-<<<<<<< HEAD
-      font-size: 0.62rem;
-      color: var(--sub);
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .status-badge {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.58rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 3px 7px;
-      border-radius: 4px;
-=======
       font-size: 0.55rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       padding: 3px 8px;
       border-radius: 5px;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       white-space: nowrap;
       flex-shrink: 0;
     }
@@ -969,73 +655,16 @@
 
     /* ═══════ EMPTY / LOADING ═══════ */
     .empty {
-<<<<<<< HEAD
-      padding: 36px 18px;
-=======
       padding: 40px 20px;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       text-align: center;
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.7rem;
       color: var(--sub);
     }
 
-<<<<<<< HEAD
-    /* ── Mobile tab switcher for right column panels ── */
-    /* On ≤900px, collapse chart behind a toggle */
-    .chart-toggle {
-      display: none;
-    }
-
-    @media (max-width: 900px) {
-      .chart-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        cursor: pointer;
-        width: 100%;
-        background: none;
-        border: none;
-        color: inherit;
-        font-family: inherit;
-        padding: 0;
-      }
-
-      .chart-toggle-icon {
-        font-size: 0.7rem;
-        color: var(--sub);
-        transition: transform 0.2s;
-      }
-
-      .chart-collapsible {
-        overflow: hidden;
-        max-height: 0;
-        transition: max-height 0.3s ease;
-      }
-
-      .chart-collapsible.open {
-        max-height: 300px;
-      }
-    }
-
-    /* Larger screens always show chart */
-    @media (min-width: 901px) {
-      .chart-collapsible {
-        max-height: none !important;
-        overflow: visible !important;
-      }
-    }
-
-    /* ── Safe area padding (notch phones) ── */
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      .shell {
-        padding-bottom: calc(24px + env(safe-area-inset-bottom));
-      }
-=======
     /* ═══════ RESPONSIVE ═══════ */
     @media (max-width: 1024px) {
       .content-grid { grid-template-columns: 1fr 300px; }
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     @media (max-width: 860px) {
@@ -1119,15 +748,10 @@
           Live
         </div>
         <div class="clock" id="clock">--:--:--</div>
-<<<<<<< HEAD
-        <a class="header-btn" href="/admin">Admin</a>
-        <button class="header-btn" onclick="logout()">Logout</button>
-=======
         <a class="top-btn top-btn-accent" href="/whatsapp-connect" id="whatsapp-btn">Connect</a>
         <a class="top-btn top-btn-ghost" href="/admin">Admin</a>
         <button class="top-btn top-btn-ghost" onclick="logout()">Logout</button>
         <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       </div>
     </header>
 
@@ -1232,20 +856,6 @@
       <!-- Main content grid -->
       <div class="content-grid">
 
-<<<<<<< HEAD
-        <!-- Chart Panel (collapsible on mobile) -->
-        <div class="panel">
-          <div class="panel-header">
-            <button class="chart-toggle" onclick="toggleChart()" aria-expanded="false" id="chart-toggle-btn">
-              <span class="panel-title">Category Breakdown</span>
-              <span class="chart-toggle-icon" id="chart-icon">▼</span>
-            </button>
-            <!-- Static title on desktop (hidden on mobile via CSS) -->
-            <span class="panel-title desktop-chart-title" style="display:none">Category Breakdown</span>
-          </div>
-          <div class="chart-wrap chart-collapsible" id="chart-collapsible">
-            <canvas id="pieChart"></canvas>
-=======
         <!-- Conversations -->
         <div class="panel">
           <div class="panel-head">
@@ -1257,7 +867,6 @@
           </div>
           <div class="conv-list" id="conversations">
             <div class="empty">Loading conversations…</div>
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
           </div>
         </div>
 
@@ -1305,70 +914,6 @@
     tickClock();
     setInterval(tickClock, 1000);
 
-<<<<<<< HEAD
-    // ── Chart toggle (mobile) ──
-    let chartOpen = false;
-    function toggleChart() {
-      chartOpen = !chartOpen;
-      const c = document.getElementById('chart-collapsible');
-      const icon = document.getElementById('chart-icon');
-      const btn = document.getElementById('chart-toggle-btn');
-      c.classList.toggle('open', chartOpen);
-      icon.textContent = chartOpen ? '▲' : '▼';
-      btn.setAttribute('aria-expanded', chartOpen);
-    }
-
-    // Handle resize: on desktop, ensure chart visible; swap title element visibility
-    function syncChartLayout() {
-      const isDesktop = window.innerWidth > 900;
-      const desktopTitle = document.querySelector('.desktop-chart-title');
-      const toggleBtn = document.getElementById('chart-toggle-btn');
-      if (isDesktop) {
-        desktopTitle.style.display = 'flex';
-        toggleBtn.style.display = 'none';
-      } else {
-        desktopTitle.style.display = 'none';
-        toggleBtn.style.display = 'flex';
-      }
-    }
-    syncChartLayout();
-    window.addEventListener('resize', syncChartLayout);
-
-    // ── Helpers ──
-    function initials(phone) {
-      if (!phone) return '??';
-      const digits = phone.replace(/\D/g, '');
-      return digits.slice(-2) || '??';
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? '').replace(/[&<>"']/g, ch => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-      }[ch]));
-    }
-
-    async function logout() {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
-      window.location.href = '/';
-    }
-
-    function catClass(cat = '') {
-      const c = cat.toLowerCase();
-      if (c.includes('order'))     return 'c-order';
-      if (c.includes('complaint')) return 'c-complaint';
-      if (c.includes('inquiry'))   return 'c-inquiry';
-      if (c.includes('support'))   return 'c-support';
-      return 'c-other';
-    }
-
-    function statusClass(s = '') {
-      const k = s.toLowerCase();
-      if (k.includes('pending'))  return 's-pending';
-      if (k.includes('confirm'))  return 's-confirmed';
-      if (k.includes('deliver'))  return 's-delivered';
-      if (k.includes('cancel'))   return 's-cancelled';
-      return 's-other';
-=======
     (function setDate() {
       const d = new Date();
       const opts = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
@@ -1399,7 +944,6 @@
 
     function esc(v) {
       return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
     function relTime(ts) {
@@ -1457,11 +1001,7 @@
           }]
         },
         options: {
-<<<<<<< HEAD
-          cutout: '62%',
-=======
           cutout: '66%',
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
           responsive: true,
           maintainAspectRatio: true,
           plugins: {
@@ -1470,14 +1010,9 @@
               labels: {
                 color: '#5a7a94',
                 font: { family: 'IBM Plex Mono', size: 10 },
-<<<<<<< HEAD
-                boxWidth: 10,
-                padding: 10,
-=======
                 boxWidth: 8,
                 boxHeight: 8,
                 padding: 12,
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
               }
             },
             tooltip: {
@@ -1523,14 +1058,9 @@
         const [convsRes, ordersRes, statsRes] = await Promise.all([
           fetch('/api/conversations', { credentials: 'same-origin' }),
           fetch('/api/orders',        { credentials: 'same-origin' }),
-<<<<<<< HEAD
-          fetch('/api/stats',         { credentials: 'same-origin' })
-        ]);
-=======
           fetch('/api/stats',         { credentials: 'same-origin' }),
         ]);
 
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
         if ([convsRes, ordersRes, statsRes].some(r => r.status === 401)) {
           window.location.href = '/';
           return;
@@ -1540,16 +1070,10 @@
         const orders = await ordersRes.json();
         const stats  = await statsRes.json();
 
-<<<<<<< HEAD
-        // KPIs
-        const complaints = (convs  || []).filter(c => (c.category || '').toLowerCase().includes('complaint')).length;
-        const pending    = (orders || []).filter(o => (o.status   || '').toLowerCase().includes('pending')).length;
-=======
         const complaints = (convs  || []).filter(c => (c.category || '').toLowerCase().includes('complaint')).length;
         const pending    = (orders || []).filter(o => (o.status   || '').toLowerCase().includes('pending')).length;
         const convLen    = (convs  || []).length;
         const ordLen     = (orders || []).length;
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 
         /* KPIs */
         document.getElementById('kpi-convs').textContent      = convLen;

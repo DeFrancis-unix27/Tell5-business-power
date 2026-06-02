@@ -1763,21 +1763,12 @@
             </div>
           </div>
 
-<<<<<<< HEAD
-          <div class="field">
-            <label>Business / WhatsApp phone <span style="font-size:0.72rem;color:var(--sub);font-weight:500">(optional)</span></label>
-            <input type="tel" id="signup-phone" placeholder="+234 800 000 0000" autocomplete="tel" />
-=======
           <div class="form-group">
             <label class="form-label">
               WhatsApp phone
               <span style="font-size:0.58rem; color:var(--sub); margin-left:4px; text-transform:none; letter-spacing:0;">(optional)</span>
             </label>
             <input class="form-input" type="tel" id="signup-phone" placeholder="+234 800 000 0000" autocomplete="tel" />
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
-          </div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--sub);line-height:1.4">
-            Leave this blank if you want to connect WhatsApp via QR code instead of Twilio.
           </div>
 
           <div class="form-group">
@@ -1867,17 +1858,9 @@
       const errEl = document.getElementById('signup-error');
       const btn   = document.getElementById('signup-btn');
       errEl.classList.remove('show');
-<<<<<<< HEAD
-
-      if (!first || !last || !email || !pass) {
-        errEl.textContent = 'Please fill in all required fields.';
-        errEl.classList.add('show');
-        return;
-=======
       if (!first || !last || !email || !pass) {
         errEl.textContent = 'Please fill in all required fields.';
         return errEl.classList.add('show');
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       }
       if (pass.length < 8) {
         errEl.textContent = 'Password must be at least 8 characters.';

@@ -4,10 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-<<<<<<< HEAD
-=======
     "start": "node index.js",
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

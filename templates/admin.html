@@ -358,10 +358,6 @@
         <div class="kpi-value" id="orders">—</div>
       </div>
       <div class="kpi" style="--kpi-color: var(--accent)">
-<<<<<<< HEAD
-        <div class="kpi-label">AI Assistant</div>
-        <div class="kpi-value" id="ai">—</div>
-=======
         <div class="kpi-label">AI Pipeline</div>
         <div class="kpi-value" id="ai">—</div>
       </div>
@@ -372,7 +368,6 @@
       <div class="kpi" style="--kpi-color: var(--accent3)">
         <div class="kpi-label">Business Profiles</div>
         <div class="kpi-value" id="biz-profiles">—</div>
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       </div>
     </div>
 
@@ -418,11 +413,7 @@
           <div class="table-wrap">
             <table>
               <thead>
-<<<<<<< HEAD
-                <tr><th>Name</th><th>Email</th><th>Role</th></tr>
-=======
                 <tr><th>Name</th><th>Email</th><th>Role</th><th>delete</th></tr>
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
               </thead>
               <tbody id="user-list">
                 <tr><td colspan="3" class="muted-cell" style="padding:20px 16px;text-align:center">Loading…</td></tr>
@@ -474,15 +465,6 @@
       document.getElementById('orders').textContent = data.total_orders        || 0;
 
       const aiEl = document.getElementById('ai');
-<<<<<<< HEAD
-      aiEl.textContent  = data.ai_enabled ? 'On' : 'Off';
-      aiEl.className    = 'kpi-value ' + (data.ai_enabled ? 'ok' : 'warn');
-
-      const waEl = document.getElementById('whatsapp-status');
-      waEl.textContent  = data.twilio_configured ? 'Connected' : 'Needs setup';
-      waEl.className    = 'badge ' + (data.twilio_configured ? 'ok' : 'warn');
-
-=======
       const pipelineInfo = [];
       if (data.ai_enabled) pipelineInfo.push('Gemini');
       if (data.groq_enabled) pipelineInfo.push('Groq');
@@ -497,7 +479,6 @@
       waEl.textContent  = data.twilio_configured ? 'Connected' : 'Needs setup';
       waEl.className    = 'badge ' + (data.twilio_configured ? 'ok' : 'warn');
 
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
       const aiSt = document.getElementById('ai-status');
       aiSt.textContent  = data.ai_enabled ? 'Enabled' : 'Fallback mode';
       aiSt.className    = 'badge ' + (data.ai_enabled ? 'ok' : 'warn');

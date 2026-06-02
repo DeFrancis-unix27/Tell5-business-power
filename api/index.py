@@ -33,10 +33,7 @@ import logging
 import base64
 import io
 import json
-<<<<<<< HEAD
-=======
 import uuid
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 from pathlib import Path
 from typing import Optional
 import qrcode
@@ -57,8 +54,6 @@ if Config.TWILIO_ACCOUNT_SID and Config.TWILIO_AUTH_TOKEN:
 else:
     twilio_client = None
     validator = None
-<<<<<<< HEAD
-=======
 
 # Sentry error tracking (only in production)
 if Config.SENTRY_DSN:
@@ -68,7 +63,6 @@ if Config.SENTRY_DSN:
         traces_sample_rate=0.25,
         send_default_pii=False,
     )
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
 
 # Rate limiting setup
 limiter = Limiter(key_func=get_remote_address)
@@ -282,13 +276,9 @@ async def startup():
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"))
         await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS user_id INTEGER"))
-<<<<<<< HEAD
-        await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER"))
-=======
         await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS channel VARCHAR(50) DEFAULT 'whatsapp'"))
         await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER"))
         await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS channel VARCHAR(50) DEFAULT 'whatsapp'"))
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
         admin_email = (Config.ADMIN_EMAIL or "").strip().lower()
         if admin_email:
             await conn.execute(text("UPDATE users SET is_admin = TRUE WHERE lower(email) = :email"), {"email": admin_email})
@@ -306,33 +296,6 @@ def validate_twilio_request(request_url: str, post_data: dict, signature: str) -
     return validator.validate(request_url, post_data, signature)
 
 
-<<<<<<< HEAD
-@app.post("/webhook/whatsapp")
-@limiter.limit("100/minute")
-async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db)):
-    # Get signature for validation
-    signature = request.headers.get("X-Twilio-Signature", "")
-
-    # Get form data
-    form = await request.form()
-    form_dict = dict(form)
-
-    # Validate Twilio request
-    request_url = str(request.url)
-    if not validate_twilio_request(request_url, form_dict, signature):
-        logger.warning(f"Invalid Twilio signature from {form.get('From')}")
-        raise HTTPException(status_code=403, detail="Invalid Twilio signature")
-
-    from_number: Optional[str] = form.get("From")
-    to_number: Optional[str] = form.get("To")
-    body: Optional[str] = form.get("Body")
-
-    if not from_number or not body:
-        raise HTTPException(status_code=400, detail="Missing From or Body")
-
-    logger.info(f"Received message from {from_number} to {to_number}: {body}")
-
-=======
 async def _process_incoming_message(
     db: AsyncSession,
     from_number: str,
@@ -341,7 +304,6 @@ async def _process_incoming_message(
     channel: str = "whatsapp",
 ) -> dict:
     """Shared message processing for both Twilio and Baileys"""
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     target_user_id = None
     if to_number:
         normalized_to = str(to_number).replace("whatsapp:", "").replace(" ", "").strip()
@@ -350,10 +312,6 @@ async def _process_incoming_message(
             target_user_id = target_user.id
 
     phone = from_number
-<<<<<<< HEAD
-    ai_result = await analyze_customer_message(body)
-    category = ai_result["category"] if ai_result else categorize_message(body)
-=======
 
     from services.ai.pipeline import run_pipeline
     import uuid
@@ -376,7 +334,6 @@ async def _process_incoming_message(
         )
 
     ai_result = {"category": category, "reply": ai_reply} if ai_reply else None
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     conv = await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id)
 
     reply = ""
@@ -395,9 +352,6 @@ async def _process_incoming_message(
     await db.commit()
     return {"reply": reply, "category": category, "conv_id": conv.id, "pipeline_success": pipeline_result.success}
 
-<<<<<<< HEAD
-    # Send auto-reply via Twilio if client is available and a Twilio sender is configured
-=======
 
 @app.post("/webhook/whatsapp")
 @limiter.limit("100/minute")
@@ -422,7 +376,6 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
 
     result = await _process_incoming_message(db, from_number, body, to_number, channel="twilio")
 
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     if twilio_client and Config.TWILIO_PHONE_NUMBER:
         try:
             twilio_client.messages.create(
@@ -606,16 +559,12 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
         "total_conversations": len(convs),
         "total_orders": len(orders),
         "ai_enabled": ai_configured(),
-<<<<<<< HEAD
-        "twilio_configured": is_twilio_enabled(),
-=======
         "groq_enabled": groq_configured(),
         "mistral_enabled": mistral_configured(),
         "twilio_configured": is_twilio_enabled(),
         "pipeline_runs": pipeline_count,
         "business_profiles": biz_count,
         "channels": ["whatsapp"],
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
         "recent_users": [public_user(u) for u in users[:10]],
         "recent_conversations": [{
             "id": c.id,
@@ -630,11 +579,8 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
 @app.get("/api/conversations")
 async def get_conversations(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
     convs = await crud.list_conversations(db, user.id)
-<<<<<<< HEAD
-=======
     if not convs and user.is_admin:
         convs = await crud.list_conversations(db, None)
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     return JSONResponse(content=[{
         "id": c.id,
         "phone": c.phone,
@@ -648,11 +594,8 @@ async def get_conversations(db: AsyncSession = Depends(get_db), user=Depends(get
 @app.get("/api/orders")
 async def get_orders(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
     orders = await crud.list_orders(db, user.id)
-<<<<<<< HEAD
-=======
     if not orders and user.is_admin:
         orders = await crud.list_orders(db, None)
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     return JSONResponse(content=[{
         "id": o.id,
         "phone": o.phone,
@@ -684,19 +627,6 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
 
 @app.get("/api/whatsapp/qr")
 async def whatsapp_qr():
-<<<<<<< HEAD
-    if is_twilio_enabled():
-        raise HTTPException(status_code=404, detail="Twilio is configured")
-    state = get_whatsapp_qr_state()
-    if state["connected"]:
-        return {"connected": True, "message": "WhatsApp is connected."}
-    if not state["qr"]:
-        return {"connected": False, "qr_image": None, "message": state["message"]}
-    return {
-        "connected": False,
-        "qr_image": generate_qr_data_url(state["qr"]),
-        "message": state["message"],
-=======
     """Returns status of both WhatsApp channels (Twilio + Baileys)"""
     twilio_active = bool(Config.TWILIO_ACCOUNT_SID and Config.TWILIO_AUTH_TOKEN)
     state = get_whatsapp_qr_state()
@@ -710,7 +640,6 @@ async def whatsapp_qr():
             "is_running": state["qr"] is not None or state["connected"],
         },
         "any_connected": twilio_active or state["connected"],
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     }
 
 
@@ -721,13 +650,6 @@ async def whatsapp_connect(request: Request, db: AsyncSession = Depends(get_db))
     user = await crud.get_user_by_id(db, user_id) if user_id else None
     if not user:
         return RedirectResponse(url="/")
-<<<<<<< HEAD
-    if is_twilio_enabled():
-        return RedirectResponse(url="/dashboard")
-    if is_baileys_connected():
-        return RedirectResponse(url="/dashboard")
-=======
->>>>>>> 4907714 (Refactor tests for API stats, CRUD notifications, and CSRF token expiry)
     connect_html = Path("templates/connect.html").read_text(encoding="utf-8")
     return HTMLResponse(content=connect_html)
 
