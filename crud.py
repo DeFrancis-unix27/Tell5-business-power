@@ -5,8 +5,8 @@ from datetime import datetime
 from typing import List
 
 
-async def create_conversation(db: AsyncSession, phone: str, message: str, category: str, user_id: int | None = None):
-    conv = Conversation(phone=phone, message=message, category=category, user_id=user_id)
+async def create_conversation(db: AsyncSession, phone: str, message: str, category: str, user_id: int | None = None, channel: str | None = None):
+    conv = Conversation(phone=phone, message=message, category=category, user_id=user_id, channel=channel or "whatsapp")
     db.add(conv)
     await db.flush()
     return conv

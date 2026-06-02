@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Discover — Tell5</title>
+  <link rel="icon" href="/static/tell5-icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0c0f; --surface: #0f1318; --border: #1e2530;
+      --muted: #2a3340; --text: #e2e8f0; --sub: #64748b;
+      --accent: #00e5b0; --danger: #ef4444;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+    .shell { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px; margin-bottom: 20px; }
+    h1 { font-size: 1.8rem; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
+    .nav-link { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--accent); text-decoration: none; margin-bottom: 20px; display: inline-block; }
+    .nav-link:hover { text-decoration: underline; }
+    .profile-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 12px; cursor: pointer; transition: border-color 0.2s; }
+    .profile-card:hover { border-color: var(--accent); }
+    .profile-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+    .profile-category { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .profile-desc { color: #94a3b8; font-size: 0.85rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .empty { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--sub); padding: 40px 0; text-align: center; }
+    .search-box { width: 100%; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; outline: none; margin-bottom: 20px; }
+    .search-box:focus { border-color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <a href="/" class="nav-link">&larr; Back to home</a>
+    <h1>Discover Businesses</h1>
+    <input type="text" class="search-box" id="search" placeholder="Search by name or category…" oninput="filterProfiles()" />
+    <div id="profiles-list">
+      <div class="empty">Loading businesses…</div>
+    </div>
+  </div>
+  <script>
+    let profiles = [];
+    fetch('/api/business/discover')
+      .then(r => r.json())
+      .then(data => {
+        profiles = data;
+        renderProfiles(profiles);
+      })
+      .catch(() => {
+        document.getElementById('profiles-list').innerHTML = '<div class="empty">Could not load businesses.</div>';
+      });
+    function renderProfiles(list) {
+      const el = document.getElementById('profiles-list');
+      if (!list.length) {
+        el.innerHTML = '<div class="empty">No businesses found yet.</div>';
+        return;
+      }
+      el.innerHTML = list.map(p => `
+        <div class="profile-card" onclick="window.location.href='/business-profile/${p.id}'">
+          <div class="profile-name">${p.business_name || 'Unnamed'}</div>
+          <div class="profile-category">${p.category || 'General'}</div>
+          <div class="profile-desc">${p.description || 'No description'}</div>
+        </div>
+      `).join('');
+    }
+    function filterProfiles() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const filtered = profiles.filter(p =>
+        (p.business_name && p.business_name.toLowerCase().includes(q)) ||
+        (p.category && p.category.toLowerCase().includes(q))
+      );
+      renderProfiles(filtered);
+    }
+  </script>
+</body>
+</html>

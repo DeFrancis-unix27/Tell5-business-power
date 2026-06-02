@@ -1,3 +1,4 @@
+import os
 import sentry_sdk
 
 from fastapi import FastAPI, Request, Depends, HTTPException
@@ -391,6 +392,7 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
 
 
 @app.post("/api/baileys/webhook")
+@limiter.limit("30/minute")
 async def baileys_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     """Receives messages forwarded from the Baileys WhatsApp bot"""
     data = await request.json()
@@ -709,6 +711,7 @@ async def pipeline_status(message_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @app.post("/pipeline/process")
+@limiter.limit("20/minute")
 async def trigger_pipeline(request: Request, db: AsyncSession = Depends(get_db)):
     data = await request.json()
     message = str(data.get("message", "")).strip()
@@ -742,6 +745,7 @@ async def trigger_pipeline(request: Request, db: AsyncSession = Depends(get_db))
 
 
 @app.post("/api/chat/send")
+@limiter.limit("20/minute")
 async def chat_send(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
     data = await request.json()
     message = str(data.get("message", "")).strip()
@@ -917,7 +921,7 @@ async def business_profile_page(profile_id: int, db: AsyncSession = Depends(get_
 
 @app.get("/discover", response_class=HTMLResponse)
 async def discover_page():
-    html = Path("templates/business_profile.html").read_text(encoding="utf-8")
+    html = Path("templates/discover.html").read_text(encoding="utf-8")
     return HTMLResponse(content=html)
 
 

@@ -8,10 +8,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 load_dotenv(override=True)
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://avnadmin:<redacted>@pg-3d4feff9-davfran9090-88a1.c.aivencloud.com:11427/defaultdb?sslmode=require",
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
