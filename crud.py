@@ -179,6 +179,17 @@ async def list_products(db: AsyncSession, business_id: int) -> List["Product"]:
     return q.scalars().all()
 
 
+async def delete_product(db: AsyncSession, product_id: int) -> bool:
+    from models import Product
+    q = await db.execute(select(Product).where(Product.id == product_id))
+    product = q.scalar_one_or_none()
+    if not product:
+        return False
+    product.is_available = False
+    await db.flush()
+    return True
+
+
 async def create_pipeline_log(
     db: AsyncSession,
     message: str,

@@ -5,38 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Connect WhatsApp — Tell5</title>
   <link rel="icon" href="/static/tell5-icon.svg" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <style>
-    body { margin:0; min-height:100vh; font-family:'Syne',sans-serif; background:#0a0c0f; color:#e2e8f0; display:flex; align-items:center; justify-content:center; padding:20px; }
-    .card { max-width:600px; width:100%; background:#121821; border:1px solid #1e2530; border-radius:18px; padding:32px; box-shadow:0 24px 80px rgba(0,0,0,0.25); }
-    h1 { margin:0 0 4px; font-size:1.8rem; color:#00e5b0; }
-    .subtitle { color:#94a3b8; margin:0 0 24px; font-size:0.95rem; }
-    .option { background:#11171f; border:1px solid #1e2530; border-radius:14px; padding:20px; margin-bottom:16px; }
-    .option h3 { margin:0 0 6px; color:#e2e8f0; font-size:1.1rem; }
-    .option p { margin:0 0 12px; color:#94a3b8; font-size:0.9rem; line-height:1.6; }
-    .badge { display:inline-block; font-size:0.75rem; padding:3px 10px; border-radius:20px; font-weight:600; margin-bottom:8px; }
-    .badge-active { background:#00e5b0; color:#0a0c0f; }
-    .badge-inactive { background:#1e2530; color:#64748b; }
-    .badge-recommended { background:#f59e0b; color:#0a0c0f; }
-    .status-box { padding:14px; border-radius:12px; background:#0d1219; border:1px solid #1e2530; font-family:'IBM Plex Mono',monospace; font-size:0.85rem; margin-bottom:16px; color:#cbd5e1; }
-    .qr-image { max-width:280px; width:100%; height:auto; border-radius:14px; background:#081116; padding:12px; display:block; margin:12px auto; }
-    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 20px; border-radius:12px; font-weight:700; text-decoration:none; cursor:pointer; border:none; font-size:0.9rem; }
-    .btn-primary { background:#00e5b0; color:#0a0c0f; }
-    .btn-secondary { background:#1e2530; color:#e2e8f0; }
-    .btn-outline { background:transparent; border:1px solid #1e2530; color:#94a3b8; }
-    .btn:hover { opacity:0.9; }
-    .btn-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-    .skip { display:block; text-align:center; margin-top:20px; color:#64748b; font-size:0.85rem; }
-    .skip a { color:#00e5b0; text-decoration:none; }
-    .field { margin-bottom:14px; }
-    .field label { display:block; font-size:0.85rem; color:#94a3b8; margin-bottom:4px; }
-    .field input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid #1e2530; background:#0d1219; color:#e2e8f0; font-size:0.9rem; box-sizing:border-box; }
-    .field input:focus { outline:none; border-color:#00e5b0; }
-    .hidden { display:none !important; }
-    .tabs { display:flex; gap:4px; margin-bottom:20px; background:#0d1219; border-radius:12px; padding:4px; }
-    .tab { flex:1; padding:10px; text-align:center; border-radius:10px; cursor:pointer; color:#64748b; font-weight:600; font-size:0.85rem; border:none; background:transparent; }
-    .tab.active { background:#121821; color:#00e5b0; }
-    .info-note { background:#0d1219; border-left:3px solid #f59e0b; padding:12px 16px; border-radius:8px; font-size:0.85rem; color:#94a3b8; margin-top:12px; }
-    .info-note strong { color:#e2e8f0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060809; --surface: #0c1014; --surface2: #111820;
+      --border: #1a2330; --border2: #243040; --muted: #1e2d3d;
+      --text: #e8f0f8; --sub: #5a7a94; --sub2: #8aa0b4;
+      --accent: #00e5b0; --blue: #3b82f6; --orange: #f97316; --danger: #ef4444;
+      --r: 14px; --r-sm: 8px;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(0,229,176,0.06) 1px, transparent 1px);
+      background-size: 28px 28px; pointer-events: none; z-index: 0;
+    }
+    body {
+      background: var(--bg); color: var(--text); font-family: 'Cabinet Grotesk', sans-serif;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 20px; position: relative; z-index: 1;
+    }
+    .card {
+      max-width: 580px; width: 100%; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--r);
+      padding: 36px; box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+    }
+    h1 { margin: 0 0 4px; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.04em; color: var(--accent); }
+    .subtitle { color: var(--sub2); margin: 0 0 24px; font-size: 0.9rem; line-height: 1.6; }
+    .tabs {
+      display: flex; gap: 4px; margin-bottom: 20px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 10px; padding: 3px;
+    }
+    .tab {
+      flex: 1; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer;
+      color: var(--sub); font-weight: 600; font-size: 0.78rem; border: none;
+      background: transparent; transition: all 0.15s; font-family: 'IBM Plex Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.07em;
+    }
+    .tab.active { background: var(--surface2); color: var(--accent); }
+    .tab:hover:not(.active) { color: var(--text); }
+    .option { margin-bottom: 16px; }
+    .badge {
+      display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem;
+      padding: 3px 10px; border-radius: 100px; font-weight: 600; margin-bottom: 10px;
+      text-transform: uppercase; letter-spacing: 0.07em;
+    }
+    .badge-active { background: rgba(0,229,176,0.1); color: var(--accent); border: 1px solid rgba(0,229,176,0.2); }
+    .badge-inactive { background: rgba(90,122,148,0.1); color: var(--sub); border: 1px solid var(--border2); }
+    .badge-recommended { background: rgba(249,115,22,0.1); color: var(--orange); border: 1px solid rgba(249,115,22,0.2); }
+    .option h3 { margin: 0 0 6px; color: var(--text); font-size: 1rem; font-weight: 800; }
+    .option p { margin: 0 0 14px; color: var(--sub2); font-size: 0.85rem; line-height: 1.7; }
+    .status-box {
+      padding: 14px 16px; border-radius: var(--r-sm); background: var(--bg);
+      border-left: 3px solid var(--sub); font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem; margin-bottom: 14px; color: var(--sub2); line-height: 1.5;
+    }
+    .qr-image { max-width: 260px; width: 100%; height: auto; border-radius: 12px; display: block; margin: 12px auto; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px;
+      border-radius: var(--r-sm); font-weight: 700; text-decoration: none;
+      cursor: pointer; border: none; font-size: 0.82rem; transition: all 0.15s;
+      font-family: 'Cabinet Grotesk', sans-serif;
+    }
+    .btn-primary { background: var(--accent); color: #060809; }
+    .btn-primary:hover { background: #1fffd0; box-shadow: 0 6px 24px rgba(0,229,176,0.3); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+    .btn-secondary:hover { border-color: var(--sub); }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .skip { display: block; text-align: center; margin-top: 20px; color: var(--sub); font-size: 0.82rem; }
+    .skip a { color: var(--accent); text-decoration: none; font-weight: 700; }
+    .skip a:hover { text-decoration: underline; }
+    .hidden { display: none !important; }
+    .info-note {
+      background: var(--bg); border-left: 3px solid var(--orange); padding: 14px 16px;
+      border-radius: var(--r-sm); font-size: 0.8rem; color: var(--sub2); line-height: 1.7; margin-top: 14px;
+    }
+    .info-note strong { color: var(--text); }
+    .info-note code { font-family: 'IBM Plex Mono', monospace; font-size: 0.75em; color: var(--accent); }
+    .info-note a { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -47,44 +94,44 @@
     <div id="global-status" class="status-box">Loading status…</div>
 
     <div class="tabs">
-      <button class="tab active" data-tab="personal">Personal (QR Code)</button>
+      <button class="tab active" data-tab="personal">Personal QR</button>
       <button class="tab" data-tab="business">Business (Twilio)</button>
     </div>
 
-    <!-- Baileys (Personal) Tab -->
     <div id="tab-personal" class="tab-content">
       <div class="option">
         <span class="badge badge-recommended">Recommended</span>
         <h3>Connect Your Personal WhatsApp</h3>
-        <p>Scan a QR code with your phone to link your personal WhatsApp number. No Twilio account needed. Messages are forwarded through the app.</p>
-        <div id="baileys-status" class="status-box">Checking Baileys service…</div>
+        <p>Scan a QR code with your phone to link your personal WhatsApp number. No Twilio account needed.</p>
+        <div id="baileys-status" class="status-box">Checking service…</div>
         <img id="qr-image" class="qr-image hidden" src="" alt="WhatsApp QR" />
-        <div id="qr-text" style="text-align:center;color:#94a3b8;font-size:0.85rem;"></div>
+        <div id="qr-text" style="text-align:center;color:var(--sub2);font-size:0.8rem;"></div>
         <div class="btn-row">
           <button class="btn btn-primary" onclick="refresh()">Refresh QR</button>
         </div>
       </div>
     </div>
 
-    <!-- Twilio (Business) Tab -->
     <div id="tab-business" class="tab-content hidden">
       <div class="option">
         <span class="badge badge-inactive">Business</span>
-        <h3>Use Twilio (Business WhatsApp API)</h3>
-        <p>If you have a Twilio account with a WhatsApp-enabled number, configure it in your <code>.env</code> file or through the admin panel. Messages go through Twilio's API and support auto-reply via the AI pipeline.</p>
-        <div id="twilio-status" class="status-box">Checking Twilio configuration…</div>
+        <h3>Twilio Business WhatsApp API</h3>
+        <p>Configure your Twilio WhatsApp-enabled number. Supports auto-reply via the AI pipeline.</p>
+        <div id="twilio-status" class="status-box">Checking configuration…</div>
         <div class="info-note">
-          <strong>Need a Twilio number?</strong> Sign up at <a href="https://www.twilio.com/whatsapp" target="_blank" style="color:#00e5b0;">twilio.com/whatsapp</a>, get a WhatsApp-enabled number, then add these to your <code>.env</code> file:<br><br>
-          <code>TWILIO_ACCOUNT_SID=your_account_sid</code><br>
-          <code>TWILIO_AUTH_TOKEN=your_auth_token</code><br>
+          <strong>Need a Twilio number?</strong> Sign up at <a href="https://www.twilio.com/whatsapp" target="_blank">twilio.com/whatsapp</a>, get a WhatsApp-enabled number, then set these in your <code>.env</code>:<br><br>
+          <code>TWILIO_ACCOUNT_SID=your_sid</code><br>
+          <code>TWILIO_AUTH_TOKEN=your_token</code><br>
           <code>TWILIO_PHONE_NUMBER=whatsapp:+1234567890</code>
         </div>
-        <p style="color:#94a3b8;font-size:0.85rem;margin-top:12px;">After updating your <code>.env</code>, restart the server. You can also set this up from the <a href="/admin" style="color:#00e5b0;">admin panel</a>.</p>
+        <p style="color:var(--sub2);font-size:0.82rem;margin-top:12px;line-height:1.6;">
+          After updating your <code>.env</code>, restart the server or configure from the <a href="/admin" style="color:var(--accent);">admin panel</a>.
+        </p>
       </div>
     </div>
 
     <div class="skip">
-      <a href="/dashboard">Skip — I'll set this up later</a>
+      <a href="/dashboard">Skip — I'll set this up later →</a>
     </div>
   </div>
 
@@ -104,7 +151,8 @@
         updateTwilioStatus(data);
 
         if (data.baileys.connected) {
-          statusEl.textContent = 'WhatsApp is connected via Baileys.';
+          statusEl.textContent = '✓ WhatsApp is connected via Baileys.';
+          statusEl.style.borderLeftColor = 'var(--accent)';
           imgEl.classList.add('hidden');
           textEl.textContent = '';
           if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
@@ -117,31 +165,35 @@
           imgEl.classList.remove('hidden');
           textEl.textContent = data.baileys.message || 'Open WhatsApp on your phone and scan this QR code.';
           statusEl.textContent = 'QR code ready. Scan with WhatsApp.';
+          statusEl.style.borderLeftColor = 'var(--accent)';
         } else if (data.baileys.is_running) {
           imgEl.classList.add('hidden');
-          statusEl.textContent = 'Service is running but no QR yet. If one was already generated, the bot may be waiting for a scan.';
-          textEl.textContent = 'If you previously scanned a QR and it expired, restart the bot and refresh.';
+          statusEl.textContent = 'Service is running but no QR available yet. It may appear momentarily.';
+          statusEl.style.borderLeftColor = 'var(--orange)';
+          textEl.textContent = 'If you previously scanned a QR that expired, restart the bot and refresh.';
         } else {
           imgEl.classList.add('hidden');
           statusEl.textContent = 'WhatsApp bot is not running. Start it from services/whatsapp and refresh.';
+          statusEl.style.borderLeftColor = 'var(--danger)';
           textEl.textContent = data.baileys.message || '';
         }
       } catch (err) {
-        document.getElementById('baileys-status').textContent = 'Unable to reach the Baileys service. Is the bot running on port 3001?';
+        document.getElementById('baileys-status').textContent = 'Unable to reach the Baileys service. Is the bot running?';
+        document.getElementById('baileys-status').style.borderLeftColor = 'var(--danger)';
       }
     }
 
     function updateGlobalStatus(data) {
       const el = document.getElementById('global-status');
       if (data.twilio.configured) {
-        el.textContent = 'Twilio (Business WhatsApp) is configured and active.';
-        el.style.borderLeft = '3px solid #00e5b0';
+        el.textContent = 'Twilio Business WhatsApp is configured and active.';
+        el.style.borderLeftColor = 'var(--accent)';
       } else if (data.baileys.connected) {
-        el.textContent = 'Baileys (Personal WhatsApp) is connected.';
-        el.style.borderLeft = '3px solid #00e5b0';
+        el.textContent = 'Baileys Personal WhatsApp is connected.';
+        el.style.borderLeftColor = 'var(--accent)';
       } else {
         el.textContent = 'No WhatsApp channel active. Choose an option below or skip for now.';
-        el.style.borderLeft = '3px solid #f59e0b';
+        el.style.borderLeftColor = 'var(--orange)';
       }
     }
 
@@ -149,14 +201,13 @@
       const el = document.getElementById('twilio-status');
       if (data.twilio.configured) {
         el.textContent = 'Twilio is configured' + (data.twilio.phone ? ' (' + data.twilio.phone + ')' : '') + '.';
-        el.style.borderLeft = '3px solid #00e5b0';
+        el.style.borderLeftColor = 'var(--accent)';
       } else {
-        el.textContent = 'Twilio is not configured. Enter your credentials below or use the QR method.';
-        el.style.borderLeft = '3px solid #1e2530';
+        el.textContent = 'Twilio is not configured. Use the QR method or add credentials to your .env file.';
+        el.style.borderLeftColor = 'var(--sub)';
       }
     }
 
-    // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));

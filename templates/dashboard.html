@@ -739,6 +739,11 @@
     .chat-input-row button { padding:10px 18px; border-radius:8px; border:none; background:var(--accent); color:#0a0c0f; font-weight:700; cursor:pointer; font-size:0.8rem; white-space:nowrap; }
     .chat-input-row button:disabled { opacity:0.5; cursor:not-allowed; }
     .chat-empty { padding:30px 16px; text-align:center; font-size:0.75rem; color:var(--sub); font-family:'IBM Plex Mono',monospace; }
+    .chat-typing { align-self:flex-start; display:flex; gap:4px; padding:12px 16px; }
+    .chat-typing span { width:6px; height:6px; border-radius:50%; background:var(--sub); animation:typing 1.2s infinite; }
+    .chat-typing span:nth-child(2) { animation-delay:0.2s; }
+    .chat-typing span:nth-child(3) { animation-delay:0.4s; }
+    @keyframes typing { 0%,60%,100% { opacity:0.3; transform:scale(1); } 30% { opacity:1; transform:scale(1.3); } }
   </style>
 </head>
 <body>
@@ -759,12 +764,13 @@
       </div>
 
       <div class="topbar-right">
-        <div class="live-pill">
+        <div class="live-pill" id="live-pill">
           <div class="live-dot"></div>
-          Live
+          Checking
         </div>
         <div class="clock" id="clock">--:--:--</div>
         <a class="top-btn top-btn-accent" href="/whatsapp-connect" id="whatsapp-btn">Connect</a>
+        <a class="top-btn top-btn-ghost" id="biz-btn" href="/business-profile" style="display:none;">Business</a>
         <a class="top-btn top-btn-ghost" href="/admin">Admin</a>
         <button class="top-btn top-btn-ghost" onclick="logout()">Logout</button>
         <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
@@ -954,10 +960,21 @@
         d.toLocaleDateString('en-GB', opts);
     })();
 
-    (function setGreeting() {
+    (async function setGreeting() {
       const h = new Date().getHours();
       const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-      document.getElementById('greeting-text').innerHTML = `${g}, <span>Ada</span> 👋`;
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
+        if (res.ok) {
+          const u = await res.json();
+          const name = u.first_name || u.email?.split('@')[0] || 'there';
+          document.getElementById('greeting-text').innerHTML = `${g}, <span>${esc(name)}</span> 👋`;
+          document.getElementById('user-name').textContent = name;
+          document.getElementById('user-avatar').textContent = (u.first_name?.[0] || u.email?.[0] || '?').toUpperCase();
+          return;
+        }
+      } catch {}
+      document.getElementById('greeting-text').innerHTML = `${g}, <span>there</span> 👋`;
     })();
 
     /* ── Mobile sidebar ── */
@@ -1072,6 +1089,7 @@
     /* ── WhatsApp status ── */
     async function checkWhatsApp() {
       const btn = document.getElementById('whatsapp-btn');
+      const live = document.getElementById('live-pill');
       try {
         const res  = await fetch('/api/whatsapp/qr', { credentials: 'same-origin' });
         const data = await res.json();
@@ -1079,8 +1097,16 @@
           btn.textContent = 'WA Connected ✓';
           btn.classList.remove('top-btn-accent');
           btn.classList.add('top-btn-ghost');
+          live.innerHTML = '<div class="live-dot"></div> Live';
+        } else {
+          live.innerHTML = '<div class="live-dot" style="background:var(--orange);box-shadow:0 0 6px rgba(249,115,22,0.5)"></div> No WA';
         }
-      } catch {}
+        if (data.baileys.connected || data.twilio.configured) {
+          document.getElementById('biz-btn').style.display = 'inline-flex';
+        }
+      } catch {
+        live.innerHTML = '<div class="live-dot" style="background:var(--sub);box-shadow:none"></div> Offline';
+      }
     }
 
     /* ── Fetch & render ── */
@@ -1198,6 +1224,12 @@
       msgsEl.innerHTML += '<div class="chat-bubble user">' + esc(msg) + '</div>';
       msgsEl.scrollTop = msgsEl.scrollHeight;
 
+      const typing = document.createElement('div');
+      typing.className = 'chat-typing';
+      typing.innerHTML = '<span></span><span></span><span></span>';
+      msgsEl.appendChild(typing);
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+
       try {
         const res = await fetch('/api/chat/send', {
           method: 'POST',
@@ -1206,9 +1238,11 @@
           body: JSON.stringify({ message: msg }),
         });
         const data = await res.json();
+        typing.remove();
         const catTag = data.category ? '<div class="cat-tag">' + esc(data.category) + '</div>' : '';
         msgsEl.innerHTML += '<div class="chat-bubble ai">' + esc(data.reply || 'No response') + catTag + '</div>';
       } catch {
+        typing.remove();
         msgsEl.innerHTML += '<div class="chat-bubble ai" style="color:var(--danger)">Error: could not reach AI pipeline</div>';
       }
 

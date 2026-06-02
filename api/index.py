@@ -529,6 +529,20 @@ async def me(user=Depends(get_current_user)):
     return {"user": public_user(user)}
 
 
+@app.post("/api/auth/send-reset")
+@limiter.limit("3/minute")
+async def send_reset(request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    email = str(data.get("email", "")).strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    user = await crud.get_user_by_email(db, email)
+    if not user:
+        return {"ok": True, "message": "If that email exists, a reset link has been sent."}
+    logger.info(f"Password reset requested for {email}")
+    return {"ok": True, "message": "Check your email for a reset link."}
+
+
 @app.post("/api/ai/draft-reply")
 async def ai_draft_reply(request: Request, user=Depends(get_current_user)):
     data = await request.json()
@@ -907,6 +921,12 @@ async def get_public_business_profile(profile_id: int, db: AsyncSession = Depend
     }
 
 
+@app.get("/business-profile", response_class=HTMLResponse)
+async def business_profile_setup(user=Depends(get_current_user)):
+    html = Path("templates/business_setup.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
+
+
 @app.get("/business-profile/{profile_id}", response_class=HTMLResponse)
 async def business_profile_page(profile_id: int, db: AsyncSession = Depends(get_db)):
     from models import BusinessProfile
@@ -923,6 +943,15 @@ async def business_profile_page(profile_id: int, db: AsyncSession = Depends(get_
 async def discover_page():
     html = Path("templates/discover.html").read_text(encoding="utf-8")
     return HTMLResponse(content=html)
+
+
+@app.delete("/api/business/products/{product_id}")
+async def delete_product_route(product_id: int, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    ok = await crud.delete_product(db, product_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Product not found")
+    await db.commit()
+    return {"ok": True}
 
 
 @app.get("/api/business/discover")

@@ -1280,9 +1280,7 @@
       .stat:not(:first-child) { padding-left: 20px; }
       footer { flex-direction: column; gap: 10px; text-align: center; }
     }
-    .hero-h1{
-      font-size: clamp(1.8rem, 4vw, 3.5rem)
-    }
+
   </style>
 </head>
 <body>
@@ -1688,8 +1686,8 @@
           <div class="form-group">
             <div style="display:flex; justify-content:space-between; align-items:center">
               <label class="form-label">Password</label>
-              <a class="forgot-link"
-                onclick="alert('Password reset coming soon. Contact support.')">
+              <a class="forgot-link" id="forgot-link"
+                onclick="showForgotPassword()">
                 Forgot password?
               </a>
             </div>
@@ -1702,6 +1700,40 @@
 
           <div class="form-switch">
             Don't have an account? <a onclick="showPage('signup')">Sign up free</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FORGOT PASSWORD ══ -->
+  <div id="page-forgot" class="page">
+    <div class="auth-shell">
+      <div class="auth-left">
+        <div class="auth-left-glow"></div>
+        <div class="auth-left-brand">
+          <div class="nav-brand-dot"></div>
+          Tell5
+        </div>
+        <div class="auth-left-content">
+          <h2 class="auth-left-h">Reset your<br><span>password</span></h2>
+          <p class="auth-left-p">Enter your email and we'll send you a reset link. Back in action in seconds.</p>
+        </div>
+        <div class="auth-left-footer">© 2026 Tell5 · Built for African businesses.</div>
+      </div>
+      <div class="auth-right">
+        <div class="auth-form-wrap">
+          <div class="auth-form-title">Reset password</div>
+          <div class="auth-form-sub">We'll send a reset link to your email.</div>
+          <div class="form-error" id="reset-error">Something went wrong.</div>
+          <div class="form-group">
+            <label class="form-label">Email address</label>
+            <input class="form-input" type="email" id="reset-email" placeholder="you@company.com" autocomplete="email" />
+          </div>
+          <button class="form-submit" id="reset-btn" onclick="handleReset()">Send reset link →</button>
+          <div class="form-divider"><span>or</span></div>
+          <div class="form-switch">
+            <a onclick="showPage('login')">Back to log in</a>
           </div>
         </div>
       </div>
@@ -1875,6 +1907,31 @@
         errEl.classList.add('show');
       } finally {
         btn.disabled = false; btn.textContent = 'Create account →';
+      }
+    }
+
+    function showForgotPassword() {
+      showPage('forgot');
+    }
+
+    async function handleReset() {
+      const email = document.getElementById('reset-email').value.trim();
+      const errEl = document.getElementById('reset-error');
+      const btn   = document.getElementById('reset-btn');
+      errEl.classList.remove('show');
+      if (!email) {
+        errEl.textContent = 'Please enter your email address.';
+        return errEl.classList.add('show');
+      }
+      btn.disabled = true; btn.textContent = 'Sending…';
+      try {
+        await apiRequest('/api/auth/send-reset', { email });
+        btn.textContent = '✓ Link sent!';
+        btn.style.background = '#00e5b0';
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.add('show');
+        btn.disabled = false; btn.textContent = 'Send reset link →';
       }
     }
 

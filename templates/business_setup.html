@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Business Profile — Tell5</title>
+  <link rel="icon" href="/static/tell5-icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060809; --surface: #0c1014; --surface2: #111820;
+      --border: #1a2330; --border2: #243040; --muted: #1e2d3d;
+      --text: #e8f0f8; --sub: #5a7a94; --sub2: #8aa0b4;
+      --accent: #00e5b0; --blue: #3b82f6; --orange: #f97316; --danger: #ef4444;
+      --r: 14px; --r-sm: 8px;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(0,229,176,0.05) 1px, transparent 1px);
+      background-size: 28px 28px; pointer-events: none; z-index: 0;
+    }
+    body {
+      background: var(--bg); color: var(--text); font-family: 'Cabinet Grotesk', sans-serif;
+      min-height: 100vh; padding: 40px 20px; position: relative; z-index: 1;
+    }
+    .shell { max-width: 680px; margin: 0 auto; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 32px; margin-bottom: 16px;
+    }
+    h1 { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.04em; color: var(--accent); margin-bottom: 4px; }
+    .sub { color: var(--sub2); font-size: 0.85rem; margin-bottom: 24px; line-height: 1.6; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sub); margin-bottom: 6px; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 11px 14px; border-radius: var(--r-sm); border: 1px solid var(--border2);
+      background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none;
+      font-family: 'Cabinet Grotesk', sans-serif; transition: border-color 0.15s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+    .field textarea { min-height: 80px; resize: vertical; }
+    .field select { cursor: pointer; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn {
+      padding: 12px 24px; border-radius: var(--r-sm); font-weight: 800; cursor: pointer;
+      border: none; font-size: 0.9rem; transition: all 0.15s; font-family: 'Cabinet Grotesk', sans-serif;
+    }
+    .btn-primary { background: var(--accent); color: #060809; }
+    .btn-primary:hover { background: #1fffd0; box-shadow: 0 6px 24px rgba(0,229,176,0.3); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+    .btn-row { display: flex; gap: 10px; margin-top: 8px; }
+    .toast {
+      padding: 12px 16px; border-radius: var(--r-sm); margin-bottom: 16px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; display: none;
+    }
+    .toast.show { display: block; }
+    .toast-success { background: rgba(0,229,176,0.1); color: var(--accent); border: 1px solid rgba(0,229,176,0.2); }
+    .toast-error { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+    .nav-back { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--accent); text-decoration: none; margin-bottom: 20px; display: inline-block; }
+    .nav-back:hover { text-decoration: underline; }
+    .product-item {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm);
+      margin-bottom: 8px;
+    }
+    .product-item .name { flex: 1; font-weight: 600; }
+    .product-item .price { font-family: 'IBM Plex Mono', monospace; color: var(--accent); font-size: 0.8rem; }
+    .product-item .del { color: var(--danger); cursor: pointer; font-size: 0.8rem; background: none; border: none; }
+    .inline-form { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .inline-form input { flex: 1; min-width: 100px; padding: 8px 12px; border-radius: var(--r-sm); border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-size: 0.8rem; }
+    .inline-form button { padding: 8px 16px; border-radius: var(--r-sm); border: none; background: var(--accent); color: #060809; font-weight: 700; cursor: pointer; }
+    #profile-url { margin-top: 12px; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; text-align: center; display: none; }
+    #profile-url a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <a href="/dashboard" class="nav-back">&larr; Back to Dashboard</a>
+    <div class="card">
+      <h1>Business Profile</h1>
+      <p class="sub">Set up your business to appear on the Tell5 discover page and let customers find you.</p>
+
+      <div class="toast" id="toast"></div>
+
+      <div class="field">
+        <label>Business name</label>
+        <input type="text" id="biz-name" placeholder="Your business name" />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Category</label>
+          <select id="biz-category">
+            <option value="">Select category</option>
+            <option value="retail">Retail</option>
+            <option value="food">Food &amp; Beverage</option>
+            <option value="tech">Technology</option>
+            <option value="fashion">Fashion</option>
+            <option value="health">Health &amp; Beauty</option>
+            <option value="services">Services</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Location</label>
+          <input type="text" id="biz-address" placeholder="Lagos, Nigeria" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Description</label>
+        <textarea id="biz-desc" placeholder="Tell customers about your business…"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Public profile</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+          <input type="checkbox" id="biz-public" checked style="width:18px;height:18px;accent-color:var(--accent);" />
+          <span style="color:var(--sub2);font-size:0.85rem;">Show on discover page</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveProfile()">Save profile</button>
+        <button class="btn btn-secondary" onclick="window.location.href='/dashboard'">Cancel</button>
+      </div>
+
+      <div id="profile-url"></div>
+
+      <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--border);">
+        <h2 style="font-size:1rem;font-weight:800;margin-bottom:12px;">Products &amp; Services</h2>
+        <div id="product-list"></div>
+        <div class="inline-form">
+          <input type="text" id="prod-name" placeholder="Product name" />
+          <input type="number" id="prod-price" placeholder="Price" style="max-width:120px;" />
+          <button onclick="addProduct()">+ Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let profileId = null;
+
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/business/profile', { credentials: 'same-origin' });
+        if (res.ok) {
+          const data = await res.json();
+          profileId = data.id;
+          document.getElementById('biz-name').value = data.business_name || '';
+          document.getElementById('biz-category').value = data.category || '';
+          document.getElementById('biz-address').value = data.address || '';
+          document.getElementById('biz-desc').value = data.description || '';
+          document.getElementById('biz-public').checked = data.is_public !== false;
+          if (data.id) {
+            document.getElementById('profile-url').style.display = 'block';
+            document.getElementById('profile-url').innerHTML = 'Public URL: <a href="/business-profile/' + data.id + '" target="_blank">/business-profile/' + data.id + '</a>';
+          }
+          loadProducts();
+        }
+      } catch {}
+    }
+
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/business/products', { credentials: 'same-origin' });
+        if (res.ok) {
+          const data = await res.json();
+          renderProducts(data.products || []);
+        }
+      } catch {}
+    }
+
+    function renderProducts(products) {
+      const el = document.getElementById('product-list');
+      if (!products.length) {
+        el.innerHTML = '<div style="color:var(--sub);font-size:0.82rem;padding:8px 0;">No products yet. Add one below.</div>';
+        return;
+      }
+      el.innerHTML = products.map(p => `
+        <div class="product-item">
+          <span class="name">${esc(p.name)}</span>
+          <span class="price">${p.currency || 'NGN'} ${p.price || '—'}</span>
+          <button class="del" onclick="removeProduct(${p.id})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    async function saveProfile() {
+      const btn = document.querySelector('.btn-primary');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const res = await fetch('/api/business/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            business_name: document.getElementById('biz-name').value.trim(),
+            category: document.getElementById('biz-category').value,
+            address: document.getElementById('biz-address').value.trim(),
+            description: document.getElementById('biz-desc').value.trim(),
+            is_public: document.getElementById('biz-public').checked,
+          }),
+        });
+        if (!res.ok) throw new Error('Failed to save');
+        const data = await res.json();
+        profileId = data.id;
+        showToast('Profile saved!', 'success');
+        document.getElementById('profile-url').style.display = 'block';
+        document.getElementById('profile-url').innerHTML = 'Public URL: <a href="/business-profile/' + data.id + '" target="_blank">/business-profile/' + data.id + '</a>';
+      } catch (err) {
+        showToast('Error saving profile: ' + err.message, 'error');
+      }
+      btn.disabled = false; btn.textContent = 'Save profile';
+    }
+
+    async function addProduct() {
+      const name = document.getElementById('prod-name').value.trim();
+      const price = document.getElementById('prod-price').value.trim();
+      if (!name || !price) return;
+      try {
+        const res = await fetch('/api/business/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ name, price: parseFloat(price) }),
+        });
+        if (!res.ok) throw new Error('Failed to add');
+        document.getElementById('prod-name').value = '';
+        document.getElementById('prod-price').value = '';
+        loadProducts();
+      } catch (err) {
+        showToast('Error adding product: ' + err.message, 'error');
+      }
+    }
+
+    async function removeProduct(id) {
+      if (!confirm('Remove this product?')) return;
+      try {
+        const res = await fetch('/api/business/products/' + id, { method: 'DELETE', credentials: 'same-origin' });
+        if (!res.ok) throw new Error('Failed to delete');
+        loadProducts();
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    function showToast(msg, type) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'toast toast-' + type + ' show';
+      setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>
