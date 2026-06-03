@@ -9,6 +9,8 @@ from ai import ai_categorize_message, _generate_content, build_prompt, validate_
 from services.ai.mcp_router import router
 from services.ai.circuit_breaker import circuit_breaker
 from services.ai.metrics import metrics
+from services.ai import mongodb_tools
+from config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -216,9 +218,26 @@ async def run_pipeline(
     message: str,
     message_id: Optional[str] = None,
     context: Optional[dict[str, Any]] = None,
+    from_number: Optional[str] = None,
+    user_id: Optional[int] = None,
 ) -> PipelineResult:
     result = PipelineResult()
     result.message_id = message_id
+    context = context or {}
+
+    # Build MongoDB context and merge into pipeline context
+    if Config.MDB_MCP_CONNECTION_STRING and mongodb_tools.get_mongo_provider():
+        try:
+            mongo_ctx = await mongodb_tools.build_mongo_context(
+                Config.MDB_MCP_DB_NAME,
+                from_number or "",
+                user_id=user_id,
+            )
+            if mongo_ctx:
+                context["mongodb"] = mongo_ctx
+                logger.info("Merged MongoDB context (%d keys) into pipeline context", len(mongo_ctx))
+        except Exception as e:
+            logger.warning("Failed to build MongoDB context: %s", e)
 
     pipeline_order = router.get_pipeline_order()
     start_total = time.monotonic()
@@ -264,6 +283,21 @@ async def run_pipeline(
 
     if not result.reply:
         result.reply = "Thank you for your message. We will get back to you shortly."
+
+    # Store conversation and analysis in MongoDB via MCP
+    if Config.MDB_MCP_CONNECTION_STRING and from_number and mongodb_tools.get_mongo_provider():
+        try:
+            await mongodb_tools.store_conversation(
+                Config.MDB_MCP_DB_NAME,
+                from_number,
+                message,
+                result.reply,
+                result.category or "inquiry",
+                user_id=user_id,
+            )
+            logger.info("Stored conversation in MongoDB")
+        except Exception as e:
+            logger.warning("Failed to store conversation in MongoDB: %s", e)
 
     total_ms = (time.monotonic() - start_total) * 1000
     logger.info(f"Pipeline completed in {total_ms:.0f}ms, success={result.success}, errors={len(result.errors)}")

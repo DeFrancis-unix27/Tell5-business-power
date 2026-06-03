@@ -26,6 +26,9 @@ class Config:
     OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-405b-instruct").strip()
     SENTRY_DSN: Optional[str] = os.getenv("SENTRY_DSN", "").strip() or None
     ADMIN_EMAIL: Optional[str] = os.getenv("ADMIN_EMAIL", "").strip() or None
+    MDB_MCP_CONNECTION_STRING: Optional[str] = os.getenv("MDB_MCP_CONNECTION_STRING", "").strip() or None
+    MDB_MCP_READ_ONLY: bool = os.getenv("MDB_MCP_READ_ONLY", "false").lower() in {"1", "true", "yes"}
+    MDB_MCP_DB_NAME: str = os.getenv("MDB_MCP_DB_NAME", "tell5").strip()
 
     # Flags
     DEBUG: bool = os.getenv("DEBUG", "false").lower() in {"1", "true", "yes"}

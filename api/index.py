@@ -11,6 +11,8 @@ from sqlalchemy import text
 from config import Config
 import crud
 from ai import ai_configured, analyze_customer_message, draft_reply, ai_categorize_message
+from services.ai.mongodb_mcp import MongoDBProvider
+from services.ai import mongodb_tools
 from auth import (
     SESSION_COOKIE_NAME,
     SESSION_MAX_AGE_SECONDS,
@@ -291,6 +293,32 @@ async def startup():
         """))
     logger.info("Database tables initialized")
 
+    # --- Start MongoDB provider ---
+    if Config.MDB_MCP_CONNECTION_STRING:
+        try:
+            provider = MongoDBProvider(
+                connection_string=Config.MDB_MCP_CONNECTION_STRING,
+                db_name=Config.MDB_MCP_DB_NAME,
+                read_only=Config.MDB_MCP_READ_ONLY,
+            )
+            await provider.start()
+            mongodb_tools.set_mongo_provider(provider)
+            app.state.mongo_provider = provider
+            logger.info("MongoDB provider started (db=%s)", Config.MDB_MCP_DB_NAME)
+        except Exception as e:
+            logger.warning("Failed to start MongoDB provider: %s", e)
+            app.state.mongo_provider = None
+    else:
+        logger.info("MDB_MCP_CONNECTION_STRING not set, skipping MongoDB")
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    mcp = getattr(app.state, "mongo_provider", None)
+    if mcp:
+        await mcp.close()
+        logger.info("MongoDB provider stopped")
+
 
 def validate_twilio_request(request_url: str, post_data: dict, signature: str) -> bool:
     """Validate that request came from Twilio"""
@@ -317,7 +345,7 @@ async def _process_incoming_message(
     from services.ai.pipeline import run_pipeline
     import uuid
     message_id = str(uuid.uuid4())
-    pipeline_result = await run_pipeline(body, message_id=message_id)
+    pipeline_result = await run_pipeline(body, message_id=message_id, from_number=phone, user_id=target_user_id)
     category = pipeline_result.category or categorize_message(body)
     ai_reply = pipeline_result.reply
 
@@ -769,7 +797,7 @@ async def chat_send(request: Request, db: AsyncSession = Depends(get_db), user=D
     from services.ai.pipeline import run_pipeline
     import uuid
     message_id = str(uuid.uuid4())
-    result = await run_pipeline(message, message_id=message_id)
+    result = await run_pipeline(message, message_id=message_id, from_number=f"chat:{user.id}", user_id=user.id)
 
     await crud.create_pipeline_log(
         db,

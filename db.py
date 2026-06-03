@@ -22,15 +22,17 @@ sslmode = query.pop("sslmode", None)
 
 if (sslmode and sslmode != "disable") or (parts.hostname or "").endswith(".aivencloud.com"):
     ca_cert_path = os.getenv("PGSSLROOTCERT") or os.getenv("AIVEN_CA_CERT_PATH")
-    if ca_cert_path:
-        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-        ssl_context.load_verify_locations(cafile=ca_cert_path)
-        connect_args["ssl"] = ssl_context
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    if ca_cert_path and os.path.exists(ca_cert_path):
+        try:
+            ssl_context.load_verify_locations(cafile=ca_cert_path)
+        except Exception:
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
     else:
-        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
-        connect_args["ssl"] = ssl_context
+    connect_args["ssl"] = ssl_context
     DATABASE_URL = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
 engine: AsyncEngine = create_async_engine(DATABASE_URL, echo=False, connect_args=connect_args)
