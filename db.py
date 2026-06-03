@@ -24,15 +24,6 @@ if (sslmode and sslmode != "disable") or (parts.hostname or "").endswith(".aiven
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
-    ca_cert_path = os.getenv("PGSSLROOTCERT") or os.getenv("AIVEN_CA_CERT_PATH")
-    if ca_cert_path and os.path.exists(ca_cert_path):
-        try:
-            ssl_context.load_verify_locations(cafile=ca_cert_path)
-            if sslmode == "verify-full":
-                ssl_context.check_hostname = True
-                ssl_context.verify_mode = ssl.CERT_REQUIRED
-        except Exception:
-            pass
     connect_args["ssl"] = ssl_context
     DATABASE_URL = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
