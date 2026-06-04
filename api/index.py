@@ -822,9 +822,10 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
 
 @app.get("/api/conversations")
 async def get_conversations(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
-    convs = await crud.list_conversations(db, user.id)
-    if not convs and user.is_admin:
+    if user.is_admin:
         convs = await crud.list_conversations(db, None)
+    else:
+        convs = await crud.list_conversations(db, user.id)
     return JSONResponse(content=[{
         "id": c.id,
         "phone": c.phone,
@@ -837,9 +838,10 @@ async def get_conversations(db: AsyncSession = Depends(get_db), user=Depends(get
 
 @app.get("/api/orders")
 async def get_orders(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
-    orders = await crud.list_orders(db, user.id)
-    if not orders and user.is_admin:
+    if user.is_admin:
         orders = await crud.list_orders(db, None)
+    else:
+        orders = await crud.list_orders(db, user.id)
     return JSONResponse(content=[{
         "id": o.id,
         "phone": o.phone,
@@ -853,7 +855,7 @@ async def get_orders(db: AsyncSession = Depends(get_db), user=Depends(get_curren
 
 @app.get("/api/stats")
 async def get_stats(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
-    s = await crud.stats(db, user.id)
+    s = await crud.stats(db, None if user.is_admin else user.id)
     return s
 
 
