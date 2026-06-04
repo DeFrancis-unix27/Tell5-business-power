@@ -32,6 +32,7 @@ class PipelineResult:
         self.message_id: Optional[str] = None
         self.category: Optional[str] = None
         self.reply: Optional[str] = None
+        self.adk_reply: Optional[str] = None
         self.tier_outputs: dict[int, Any] = {}
         self.errors: list[str] = []
         self.completed_at: Optional[datetime] = None
@@ -99,9 +100,27 @@ async def _run_gemini_tier(message: str, tier: int) -> Optional[dict[str, Any]]:
         timeout=TIMEOUT_PER_TIER["gemini"],
     )
 
-    # Fallback to OpenRouter if Gemini fails
+    # Fallback to a different Gemini model if primary fails
+    if not text:
+        from config import Config
+        fallback_model = getattr(Config, "GEMINI_FALLBACK_MODEL", "gemini-2.5-flash-lite")
+        if fallback_model and fallback_model != Config.GEMINI_MODEL:
+            logger.info("Gemini primary failed, falling back to %s", fallback_model)
+            import ai as _ai
+
+            async def _gemini_fallback():
+                return await asyncio.to_thread(_ai._generate_content, prompt, model=fallback_model)
+
+            text = await _call_with_retry(
+                "gemini",
+                f"Tier {tier} Gemini fallback ({fallback_model})",
+                _gemini_fallback,
+                timeout=TIMEOUT_PER_TIER["gemini"],
+            )
+
+    # Fallback to OpenRouter if all Gemini models fail
     if not text and router.is_configured("openrouter"):
-        logger.info("Gemini failed, falling back to OpenRouter")
+        logger.info("All Gemini models failed, falling back to OpenRouter")
         from services.ai.openrouter_client import openrouter_generate
 
         async def _or_fallback():
@@ -294,6 +313,19 @@ async def run_pipeline(
 
     if not result.reply:
         result.reply = "Thank you for your message. We will get back to you shortly."
+
+    # Run ADK agent enrichment
+    if router.is_configured("adk"):
+        try:
+            from services.ai.adk_agent import ask_agent, init_agent
+            init_agent()
+            user_id_str = str(user_id) if user_id else "anonymous"
+            adk_reply = await ask_agent(f"User message: {message}\nContext: {json.dumps(context)}", user_id=user_id_str)
+            if adk_reply and "ADK agent is not available" not in adk_reply and "ADK agent not initialized" not in adk_reply:
+                result.adk_reply = adk_reply
+                logger.info("ADK agent produced a response")
+        except Exception as e:
+            logger.warning("ADK agent enrichment failed: %s", e)
 
     # Store conversation and analysis in MongoDB via MCP
     if Config.MDB_MCP_CONNECTION_STRING and from_number and mongodb_tools.get_mongo_provider():

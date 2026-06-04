@@ -118,6 +118,10 @@ async def create_business_profile(
     description: str | None = None,
     category: str | None = None,
     address: str | None = None,
+    phone: str | None = None,
+    hours: str | None = None,
+    website: str | None = None,
+    logo_url: str | None = None,
     currency: str = "NGN",
     is_public: bool = False,
 ) -> "BusinessProfile":
@@ -128,6 +132,10 @@ async def create_business_profile(
         description=description,
         category=category,
         address=address,
+        phone=phone,
+        hours=hours,
+        website=website,
+        logo_url=logo_url,
         currency=currency,
         is_public=is_public,
     )
@@ -242,3 +250,28 @@ async def create_pipeline_log(
     db.add(log)
     await db.flush()
     return log
+
+
+async def list_knowledge(db: AsyncSession, user_id: int) -> list:
+    from models import KnowledgeEntry
+    q = await db.execute(select(KnowledgeEntry).where(KnowledgeEntry.user_id == user_id).order_by(KnowledgeEntry.created_at.desc()))
+    return q.scalars().all()
+
+
+async def add_knowledge(db: AsyncSession, user_id: int, content: str, category: str | None = None) -> "KnowledgeEntry":
+    from models import KnowledgeEntry
+    entry = KnowledgeEntry(user_id=user_id, content=content, category=category)
+    db.add(entry)
+    await db.flush()
+    return entry
+
+
+async def delete_knowledge(db: AsyncSession, entry_id: int, user_id: int) -> bool:
+    from models import KnowledgeEntry
+    q = await db.execute(select(KnowledgeEntry).where(KnowledgeEntry.id == entry_id, KnowledgeEntry.user_id == user_id))
+    entry = q.scalar_one_or_none()
+    if not entry:
+        return False
+    await db.delete(entry)
+    await db.flush()
+    return True

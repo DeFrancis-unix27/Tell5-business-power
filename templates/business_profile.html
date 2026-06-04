@@ -61,10 +61,15 @@
     </div>
     <div class="card" id="profile-card">
       <div class="tag">Business Profile</div>
+      <div id="logo-container" style="display:none;margin-bottom:12px;">
+        <img id="business-logo" style="max-width:120px;max-height:120px;border-radius:12px;border:1px solid var(--border);background:var(--bg);" />
+      </div>
       <h1 id="business-name">—</h1>
       <div class="meta">
         <div class="meta-item">Category: <span id="category">—</span></div>
         <div class="meta-item">Location: <span id="address">—</span></div>
+        <div class="meta-item" id="hours-row" style="display:none;">Hours: <span id="hours">—</span></div>
+        <div class="meta-item" id="website-row" style="display:none;">Web: <span id="website">—</span></div>
       </div>
       <p class="desc" id="description">—</p>
       <div class="cta-row">
@@ -92,12 +97,27 @@
         .then(r => r.json())
         .then(data => {
           document.getElementById('business-name').textContent = data.business_name || '—';
+          if (data.logo_url) {
+            document.getElementById('business-logo').src = data.logo_url;
+            document.getElementById('logo-container').style.display = '';
+          }
           document.getElementById('category').textContent = data.category || '—';
           document.getElementById('address').textContent = data.address || '—';
           document.getElementById('description').textContent = data.description || '—';
+          if (data.hours) {
+            document.getElementById('hours').textContent = data.hours;
+            document.getElementById('hours-row').style.display = '';
+          }
+          if (data.website) {
+            document.getElementById('website').textContent = data.website;
+            document.getElementById('website-row').style.display = '';
+          }
           const waBtn = document.getElementById('wa-cta');
-          if (data.phone) {
-            waBtn.href = 'https://wa.me/' + data.phone.replace(/\D/g, '');
+          const phone = data.phone;
+          if (phone) {
+            const bizName = data.business_name || 'this business';
+            const tell5Msg = 'Hi%21%20I%20saw%20' + encodeURIComponent(bizName) + '%20on%20Tell5%20and%20I%27m%20interested%20in%20your%20products%2Fservices.';
+            waBtn.href = 'https://wa.me/' + phone.replace(/\D/g, '') + '?text=' + tell5Msg;
           } else {
             waBtn.style.display = 'none';
           }

@@ -27,6 +27,7 @@ class MCPRouter:
             "mistral": bool(Config.MISTRAL_API_KEY),
             "openrouter": bool(Config.OPENROUTER_API_KEY),
             "discovery_engine": bool(Config.AGENT_BUILDER_DATA_STORE),
+            "adk": bool(Config.GEMINI_API_KEY),
         }
         return key_map.get(provider, False)
 
@@ -39,3 +40,4 @@ router.register(tier=2, name="groq", provider="groq", config={"model": "llama-3.
 router.register(tier=2, name="openrouter", provider="openrouter", config={"model": "meta-llama/llama-3.1-405b-instruct"})
 
 router.register(tier=3, name="mistral", provider="mistral", config={"model": "mistral-large-latest"})
+router.register(tier=4, name="adk", provider="adk", config={"model": "gemini-2.5-flash-lite"})

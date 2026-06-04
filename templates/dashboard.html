@@ -1011,6 +1011,24 @@
             </div>
           </div>
 
+          <!-- Knowledge Base -->
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <div class="panel-pip" style="background:var(--orange)"></div>
+                Knowledge Base
+              </div>
+              <span class="panel-badge" id="knowledge-count">0</span>
+            </div>
+            <div style="padding:8px 12px 12px;">
+              <div id="knowledge-list" style="max-height:200px;overflow-y:auto;margin-bottom:8px;"></div>
+              <div style="display:flex;gap:6px;">
+                <input type="text" id="knowledge-input" placeholder="Paste a business fact..." style="flex:1;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.75rem;font-family:'IBM Plex Mono',monospace;outline:none;" />
+                <button onclick="addKnowledge()" style="padding:8px 14px;border-radius:6px;border:none;background:var(--orange);color:#060809;font-weight:700;cursor:pointer;font-size:0.75rem;">Add</button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </main>
@@ -1317,6 +1335,56 @@
       }
     }
 
+    /* ── Knowledge Base ── */
+    let knowledgeData = [];
+
+    async function loadKnowledge() {
+      try {
+        const res = await fetch('/api/knowledge', { credentials: 'same-origin' });
+        if (!res.ok) return;
+        knowledgeData = await res.json();
+        const el = document.getElementById('knowledge-list');
+        document.getElementById('knowledge-count').textContent = knowledgeData.length;
+        if (!knowledgeData.length) {
+          el.innerHTML = '<div style="color:var(--sub);font-size:0.72rem;padding:4px 0;">No business facts added yet. Paste what your business does, pricing, policies, etc.</div>';
+          return;
+        }
+        el.innerHTML = knowledgeData.map(e => `
+          <div style="display:flex;gap:6px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border);">
+            <div style="flex:1;font-size:0.72rem;color:var(--sub2);line-height:1.4;">${esc(e.content)}</div>
+            <button onclick="deleteKnowledge(${e.id})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.6rem;padding:2px;">✕</button>
+          </div>
+        `).join('');
+      } catch {}
+    }
+
+    async function addKnowledge() {
+      const input = document.getElementById('knowledge-input');
+      const content = input.value.trim();
+      if (!content) return;
+      try {
+        const res = await fetch('/api/knowledge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ content }),
+        });
+        if (!res.ok) { showToast('Failed to add', 'error'); return; }
+        input.value = '';
+        showToast('Business fact saved! The AI will use it in replies.', 'success');
+        loadKnowledge();
+      } catch { showToast('Failed to add', 'error'); }
+    }
+
+    async function deleteKnowledge(id) {
+      try {
+        const res = await fetch(`/api/knowledge/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+        if (!res.ok) return;
+        showToast('Fact removed', 'info');
+        loadKnowledge();
+      } catch {}
+    }
+
     /* ── AI Chat ── */
     async function sendChat() {
       const input = document.getElementById('chat-input');
@@ -1502,6 +1570,7 @@
     checkOnboarding();
     fetchData();
     checkWhatsApp();
+    loadKnowledge();
     setInterval(fetchData, 10000);
   </script>
   <div class="toast-container" id="toast-container"></div>

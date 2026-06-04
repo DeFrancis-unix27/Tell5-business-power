@@ -77,6 +77,10 @@ class BusinessProfile(Base):
     description = Column(Text, nullable=True)
     category = Column(String(100), nullable=True)
     address = Column(String(500), nullable=True)
+    phone = Column(String(30), nullable=True)
+    hours = Column(String(200), nullable=True)
+    website = Column(String(255), nullable=True)
+    logo_url = Column(Text, nullable=True)
     currency = Column(String(10), nullable=True, default="NGN")
     is_public = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -137,4 +141,14 @@ class AIXListing(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
     is_global = Column(Boolean, nullable=False, default=False)
     searchable_tags = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class KnowledgeEntry(Base):
+    __tablename__ = "knowledge_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    content = Column(Text, nullable=False)
+    category = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

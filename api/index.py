@@ -294,6 +294,10 @@ async def startup():
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS pricing_tier VARCHAR(20) NOT NULL DEFAULT 'free'"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_enabled BOOLEAN NOT NULL DEFAULT TRUE"))
         await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS ai_response TEXT"))
+        await conn.execute(text("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS phone VARCHAR(30)"))
+        await conn.execute(text("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS hours VARCHAR(200)"))
+        await conn.execute(text("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS website VARCHAR(255)"))
+        await conn.execute(text("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS logo_url TEXT"))
         await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS contact_name VARCHAR(100)"))
         await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS profile_pic_url TEXT"))
         await conn.execute(text("""
@@ -345,6 +349,15 @@ async def startup():
                     )
             except Exception:
                 pass
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS knowledge_entries (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) NOT NULL,
+                content TEXT NOT NULL,
+                category VARCHAR(50),
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        """))
     logger.info("Database tables initialized")
 
     # --- Start MongoDB provider ---
@@ -492,8 +505,9 @@ async def _process_incoming_message(
             "personality_mode": personality_match["mode"],
         }
 
-    # If mode is unknown or looks like a physical occurrence, stay quiet
-    if personality_mode == "unknown" or is_physical:
+    # If mode is personal, unknown, or looks like a physical occurrence, stay quiet
+    # Only business questions and Tell5 recommendations get replies
+    if personality_mode != "business" or is_physical:
         category = "inquiry"
         await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
@@ -504,6 +518,18 @@ async def _process_incoming_message(
             "pipeline_success": True,
             "personality_mode": "quiet",
         }
+
+    # Load business knowledge base entries to shape AI responses
+    knowledge_context = {}
+    if target_user_id:
+        try:
+            from crud import list_knowledge
+            entries = await list_knowledge(db, target_user_id)
+            if entries:
+                knowledge_context["business_knowledge"] = [{"content": e.content, "category": e.category} for e in entries[:20]]
+                logger.info("Loaded %d knowledge entries for user %d", len(entries), target_user_id)
+        except Exception as e:
+            logger.warning("Failed to load knowledge base: %s", e)
 
     # Load user personality profile from MongoDB to shape AI responses
     personality_context = {}
@@ -524,16 +550,26 @@ async def _process_incoming_message(
     from services.ai.pipeline import run_pipeline
     import uuid
     message_id = str(uuid.uuid4())
+    merged_context = {}
+    if personality_context:
+        merged_context.update(personality_context)
+    if knowledge_context:
+        merged_context.update(knowledge_context)
     pipeline_result = await run_pipeline(
         body, message_id=message_id, from_number=phone, user_id=target_user_id,
-        context=personality_context if personality_context else None,
+        context=merged_context if merged_context else None,
     )
 
     # If AI replies are disabled for this user, clear the auto-generated reply
     if not ai_reply_enabled:
         pipeline_result.reply = None
+        pipeline_result.adk_reply = None
+    # Prefer ADK agent response over standard pipeline reply
+    if pipeline_result.adk_reply:
+        ai_reply = pipeline_result.adk_reply
+    else:
+        ai_reply = pipeline_result.reply
     category = pipeline_result.category or categorize_message(body)
-    ai_reply = pipeline_result.reply
 
     if pipeline_result.tier_outputs:
         await crud.create_pipeline_log(
@@ -1181,6 +1217,10 @@ async def get_my_business_profile(db: AsyncSession = Depends(get_db), user=Depen
         "description": profile.description,
         "category": profile.category,
         "address": profile.address,
+        "phone": profile.phone,
+        "hours": profile.hours,
+        "website": profile.website,
+        "logo_url": profile.logo_url,
         "currency": profile.currency,
         "is_public": profile.is_public,
         "created_at": profile.created_at.isoformat() if profile.created_at else None,
@@ -1200,6 +1240,10 @@ async def create_or_update_business_profile(request: Request, db: AsyncSession =
         existing.description = str(data.get("description", existing.description or "")) or None
         existing.category = str(data.get("category", existing.category or "")) or None
         existing.address = str(data.get("address", existing.address or "")) or None
+        existing.phone = str(data.get("phone", existing.phone or "")) or None
+        existing.hours = str(data.get("hours", existing.hours or "")) or None
+        existing.website = str(data.get("website", existing.website or "")) or None
+        existing.logo_url = str(data.get("logo_url", existing.logo_url or "")) or None
         if "is_public" in data:
             existing.is_public = bool(data["is_public"])
         await db.flush()
@@ -1213,6 +1257,10 @@ async def create_or_update_business_profile(request: Request, db: AsyncSession =
         description=str(data.get("description", "")).strip() or None,
         category=str(data.get("category", "")).strip() or None,
         address=str(data.get("address", "")).strip() or None,
+        phone=str(data.get("phone", "")).strip() or None,
+        hours=str(data.get("hours", "")).strip() or None,
+        website=str(data.get("website", "")).strip() or None,
+        logo_url=str(data.get("logo_url", "")).strip() or None,
         is_public=bool(data.get("is_public", True)),
     )
     await db.commit()
@@ -1270,6 +1318,9 @@ async def get_public_business_profile(profile_id: int, db: AsyncSession = Depend
         "description": profile.description,
         "category": profile.category,
         "address": profile.address,
+        "phone": profile.phone,
+        "hours": profile.hours,
+        "website": profile.website,
         "currency": profile.currency,
         "is_public": profile.is_public,
         "products": [{
@@ -1445,77 +1496,33 @@ async def reload_personality(db: AsyncSession = Depends(get_db), user=Depends(ge
     return {"ok": True}
 
 
-# ── Billing / Pricing ──
+# ── Knowledge Base ──────────────────────────────────────────────────────
 
-@app.get("/api/billing/status")
-async def billing_status(db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
-    from services.billing import pricing_enabled, TIER_FEATURES
-    async with db as session:
-        from models import SiteConfig
-        from sqlalchemy import select
-        q = await session.execute(select(SiteConfig).where(SiteConfig.key == "pricing_enabled"))
-        cfg = q.scalar_one_or_none()
-    enabled = cfg is not None and cfg.value == "true"
-    return {
-        "pricing_enabled": enabled,
-        "tiers": {k: v for k, v in TIER_FEATURES.items()},
-    }
+@app.get("/api/knowledge")
+async def list_knowledge(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    entries = await crud.list_knowledge(db, user.id)
+    return [{"id": e.id, "content": e.content, "category": e.category, "created_at": e.created_at.isoformat() if e.created_at else None} for e in entries]
 
 
-@app.post("/api/billing/toggle")
-async def billing_toggle(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
-    from services.billing import set_pricing_enabled
-    body = await request.json()
-    enabled = body.get("enabled", False)
-    from models import SiteConfig
-    from sqlalchemy import select
-    q = await db.execute(select(SiteConfig).where(SiteConfig.key == "pricing_enabled"))
-    cfg = q.scalar_one_or_none()
-    if cfg:
-        cfg.value = "true" if enabled else "false"
-    else:
-        db.add(SiteConfig(key="pricing_enabled", value="true" if enabled else "false"))
+@app.post("/api/knowledge")
+async def add_knowledge(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    data = await request.json()
+    content = str(data.get("content", "")).strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="Content is required")
+    category = str(data.get("category", "")).strip() or None
+    entry = await crud.add_knowledge(db, user.id, content, category)
     await db.commit()
-    set_pricing_enabled(enabled)
-    return {"pricing_enabled": enabled}
+    return {"id": entry.id, "content": entry.content, "category": entry.category, "created_at": entry.created_at.isoformat() if entry.created_at else None}
 
 
-@app.get("/api/billing/users")
-async def billing_users(db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
-    from sqlalchemy import select
-    from models import User
-    q = await db.execute(select(User).order_by(User.created_at.desc()))
-    users = q.scalars().all()
-    return [{
-        "id": u.id,
-        "email": u.email,
-        "first_name": u.first_name,
-        "last_name": u.last_name,
-        "pricing_tier": u.pricing_tier or "free",
-    } for u in users]
-
-
-@app.post("/api/billing/users/{user_id}/tier")
-async def set_user_tier(user_id: int, request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
-    body = await request.json()
-    tier = body.get("tier", "free")
-    if tier not in ("free", "growth", "enterprise"):
-        raise HTTPException(status_code=400, detail="Invalid tier")
-    from sqlalchemy import select
-    from models import User
-    q = await db.execute(select(User).where(User.id == user_id))
-    u = q.scalar_one_or_none()
-    if not u:
-        raise HTTPException(status_code=404, detail="User not found")
-    u.pricing_tier = tier
+@app.delete("/api/knowledge/{entry_id}")
+async def delete_knowledge(entry_id: int, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    ok = await crud.delete_knowledge(db, entry_id, user.id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Entry not found")
     await db.commit()
-    return {"ok": True, "tier": tier}
-
-
-@app.get("/api/channels")
-async def list_channels():
-    from services.channels.base import router
-    return {"channels": router.available_channels()}
+    return {"ok": True}
 
 
 @app.get("/api/export/csv")

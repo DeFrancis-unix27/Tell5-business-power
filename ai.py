@@ -10,6 +10,7 @@ from google.genai import types
 # ==================================================================================================
 
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
+GEMINI_FALLBACK_MODEL = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash-lite")
 
 ALLOWED_CATEGORIES = {
     "order",
@@ -136,15 +137,16 @@ Customer message:
 # Gemini Response
 # ==================================================================================================
 
-def _generate_content(prompt: str) -> str | None:
+def _generate_content(prompt: str, model: Optional[str] = None) -> str | None:
     if not ai_configured():
         return None
 
+    model_name = model or GEMINI_MODEL
     client = get_client()
 
     try:
         response = client.models.generate_content(
-            model=GEMINI_MODEL,
+            model=model_name,
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.2,
@@ -155,7 +157,7 @@ def _generate_content(prompt: str) -> str | None:
         return response.text
     except Exception as exc:
         import logging
-        logging.getLogger(__name__).warning(f"Gemini generation failed: {exc}")
+        logging.getLogger(__name__).warning(f"Gemini {model_name} generation failed: {exc}")
         return None
 
 def confidence_check(data:dict[str, Any]) -> str | None :

@@ -11,6 +11,12 @@ BUSINESS_KEYWORDS = [
     "catalog", "menu", "offer", "discount", "transaction",
 ]
 
+TELL5_KEYWORDS = [
+    "tell5", "tell 5", "what can you do", "recommend", "suggestion",
+    "what is tell5", "how does tell5 work", "tell5 features",
+    "what do you offer", "capabilities", "help me",
+]
+
 PERSONAL_KEYWORDS = [
     "how are you", "who are you", "what is your name", "your name",
     "hello", "hi", "hey", "good morning", "good evening",
@@ -47,8 +53,9 @@ def match_qa(message: str) -> Optional[dict]:
 def detect_mode(message: str) -> str:
     msg = message.lower()
     biz_score = sum(1 for kw in BUSINESS_KEYWORDS if kw in msg)
+    tell5_score = sum(1 for kw in TELL5_KEYWORDS if kw in msg)
     per_score = sum(1 for kw in PERSONAL_KEYWORDS if kw in msg)
-    if biz_score > per_score:
+    if biz_score > per_score or tell5_score > 0:
         return "business"
     elif per_score > biz_score:
         return "personal"

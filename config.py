@@ -42,6 +42,7 @@ class Config:
     # AI API Keys
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", "").strip() or None
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview").strip()
+    GEMINI_FALLBACK_MODEL: str = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash-lite").strip()
     GROQ_API_KEY: Optional[str] = os.getenv("GROQ_API_KEY", "").strip() or None
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
     MISTRAL_API_KEY: Optional[str] = os.getenv("MISTRAL_API_KEY", "").strip() or None

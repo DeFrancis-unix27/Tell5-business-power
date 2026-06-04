@@ -130,6 +130,22 @@
         </div>
       </div>
 
+      <div class="field-row">
+        <div class="field">
+          <label>Phone (WhatsApp)</label>
+          <input type="text" id="biz-phone" placeholder="+2348012345678" />
+        </div>
+        <div class="field">
+          <label>Operating hours</label>
+          <input type="text" id="biz-hours" placeholder="Mon-Fri 9AM-6PM" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Website</label>
+        <input type="text" id="biz-website" placeholder="https://example.com" />
+      </div>
+
       <div class="field">
         <label>Business image</label>
         <div class="image-upload" id="image-upload" onclick="document.getElementById('image-input').click()">
@@ -184,6 +200,7 @@
 
   <script>
     let profileId = null;
+    let logoDataUrl = '';
 
     async function loadProfile() {
       try {
@@ -194,8 +211,19 @@
           document.getElementById('biz-name').value = data.business_name || '';
           document.getElementById('biz-category').value = data.category || '';
           document.getElementById('biz-address').value = data.address || '';
+          document.getElementById('biz-phone').value = data.phone || '';
+          document.getElementById('biz-hours').value = data.hours || '';
+          document.getElementById('biz-website').value = data.website || '';
           document.getElementById('biz-desc').value = data.description || '';
           document.getElementById('biz-public').checked = data.is_public !== false;
+          if (data.logo_url) {
+            logoDataUrl = data.logo_url;
+            const preview = document.getElementById('image-preview');
+            preview.src = data.logo_url;
+            preview.style.display = 'block';
+            document.getElementById('upload-placeholder').style.display = 'none';
+            document.getElementById('image-upload').classList.add('has-image');
+          }
           if (data.id) {
             document.getElementById('profile-url').style.display = 'block';
             document.getElementById('profile-url').innerHTML = 'Public URL: <a href="/business-profile/' + data.id + '" target="_blank">/business-profile/' + data.id + '</a>';
@@ -242,8 +270,12 @@
             business_name: document.getElementById('biz-name').value.trim(),
             category: document.getElementById('biz-category').value,
             address: document.getElementById('biz-address').value.trim(),
+            phone: document.getElementById('biz-phone').value.trim(),
+            hours: document.getElementById('biz-hours').value.trim(),
+            website: document.getElementById('biz-website').value.trim(),
             description: document.getElementById('biz-desc').value.trim(),
             is_public: document.getElementById('biz-public').checked,
+            logo_url: logoDataUrl || undefined,
           }),
         });
         if (!res.ok) throw new Error('Failed to save');
@@ -313,8 +345,9 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
+        logoDataUrl = e.target.result;
         const preview = document.getElementById('image-preview');
-        preview.src = e.target.result;
+        preview.src = logoDataUrl;
         preview.style.display = 'block';
         document.getElementById('upload-placeholder').style.display = 'none';
         document.getElementById('image-upload').classList.add('has-image');
