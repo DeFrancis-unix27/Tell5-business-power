@@ -115,9 +115,21 @@ async function startBot() {
         if (!text.trim()) return;
 
         const sender = m.key.remoteJid;
-        console.log("Incoming:", text.slice(0, 80));
+        const pushName = m.pushName || "";
+        let profilePicUrl = null;
+        try {
+            profilePicUrl = await sock.profilePictureUrl(sender, "image");
+        } catch {}
 
-        await forwardToApi({ from: sender, body: text, message_id: m.key.id });
+        console.log(`Incoming from ${pushName || sender}:`, text.slice(0, 80));
+
+        await forwardToApi({
+            from: sender,
+            body: text,
+            message_id: m.key.id,
+            push_name: pushName,
+            profile_pic_url: profilePicUrl,
+        });
     });
 }
 
@@ -150,6 +162,14 @@ const server = http.createServer(async (req, res) => {
                 qr: state.qr || null,
                 message: state.message || "",
             });
+        }
+
+        if (req.method === "GET" && pathname === "/profile-pic") {
+            const jid = url.searchParams.get("jid");
+            if (!jid) return sendJson(400, { error: "Missing jid param" });
+            let picUrl = null;
+            try { picUrl = await sock.profilePictureUrl(jid, "image"); } catch {}
+            return sendJson(200, { jid, profile_pic_url: picUrl });
         }
 
         if (req.method === "POST" && pathname === "/send") {

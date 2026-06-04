@@ -88,6 +88,8 @@
     .preview-name { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
     .preview-meta { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--sub); margin: 6px 0; }
     .preview-desc { color: var(--sub2); font-size: 0.82rem; line-height: 1.6; margin-top: 8px; }
+    @media (max-width: 640px) { body { padding: 20px 12px; } .card { padding: 20px; } h1 { font-size: 1.2rem; } .field-row { grid-template-columns: 1fr; gap: 0; } .btn-row { flex-direction: column; } .btn { width: 100%; text-align: center; } .inline-form { flex-direction: column; } .inline-form input { min-width: auto; } }
+    @media (max-width: 400px) { .card { padding: 16px; } .product-item { flex-wrap: wrap; } }
   </style>
 </head>
 <body>

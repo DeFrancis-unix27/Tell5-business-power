@@ -10,9 +10,12 @@ class Conversation(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=True, index=True)
     phone = Column(String(50), index=True, nullable=False)
+    contact_name = Column(String(100), nullable=True)
+    profile_pic_url = Column(Text, nullable=True)
     message = Column(Text, nullable=False)
     category = Column(String(50), nullable=False, index=True)
     channel = Column(String(50), nullable=True, default="whatsapp")
+    ai_response = Column(Text, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
 

@@ -97,6 +97,8 @@
     .step-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.06em; }
     .step.active .step-label { color: var(--accent); }
     .step.done .step-label { color: var(--accent); }
+    @media (max-width: 640px) { .card { padding: 20px; } h1 { font-size: 1.2rem; } .tabs { flex-direction: column; gap: 2px; } .step-label { font-size: 0.45rem; } }
+    @media (max-width: 400px) { .card { padding: 16px; } body { padding: 12px; } .subtitle { font-size: 0.8rem; } .steps { flex-wrap: wrap; gap: 4px; } .step { flex: 1 0 45%; } .step::before { display: none; } }
   </style>
 </head>
 <body>

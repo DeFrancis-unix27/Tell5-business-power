@@ -39,6 +39,7 @@ import json
 import uuid
 from pathlib import Path
 from typing import Optional
+import csv
 import qrcode
 from twilio.rest import Client
 from twilio.request_validator import RequestValidator
@@ -292,6 +293,9 @@ async def startup():
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) UNIQUE"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS pricing_tier VARCHAR(20) NOT NULL DEFAULT 'free'"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_enabled BOOLEAN NOT NULL DEFAULT TRUE"))
+        await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS ai_response TEXT"))
+        await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS contact_name VARCHAR(100)"))
+        await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS profile_pic_url TEXT"))
         await conn.execute(text("""
             CREATE TABLE IF NOT EXISTS site_config (
                 key VARCHAR(100) PRIMARY KEY,
@@ -316,6 +320,31 @@ async def startup():
             WHERE id = (SELECT id FROM users ORDER BY id ASC LIMIT 1)
             AND NOT EXISTS (SELECT 1 FROM users WHERE is_admin = TRUE)
         """))
+        # Seed personality Q&A about the owner
+        owner_qa = [
+            ("who is francis", "Francis David is the founder, owner, and lead developer of Tell5. He is based in Nigeria and also works with Meta on AI and messaging technologies. His portfolio: https://francisdave.vercel.app — GitHub: https://github.com/DeFrancis-unix27", "personal"),
+            ("who created tell5", "Tell5 was created and is owned by Francis David — a Nigerian AI/tech entrepreneur who also collaborates with Meta. Portfolio: https://francisdave.vercel.app", "personal"),
+            ("who owns tell5", "Tell5 is owned by Francis David (aka DeFrancis). He is based in Nigeria and works with Meta on AI-driven messaging. Portfolio: https://francisdave.vercel.app", "personal"),
+            ("who made you", "I was built by Francis David as part of the Tell5 AI platform. He is a Nigerian developer who also contributes to Meta's AI initiatives. More at https://francisdave.vercel.app", "personal"),
+            ("tell me about francis", "Francis David is the founder and developer of Tell5, based in Nigeria. He works with Meta on messaging and AI technologies. Portfolio: https://francisdave.vercel.app — GitHub: https://github.com/DeFrancis-unix27", "personal"),
+            ("what is francis david portfolio", "Francis David's portfolio is at https://francisdave.vercel.app. He is the founder of Tell5 and works with Meta.", "personal"),
+            ("what is defrancis github", "DeFrancis-unix27 is Francis David's GitHub handle. Visit https://github.com/DeFrancis-unix27", "personal"),
+            ("does francis work with meta", "Yes, Francis David works with Meta on AI and messaging platform technologies, alongside building Tell5.", "personal"),
+            ("where is francis from", "Francis David is from Nigeria. He is the founder of Tell5 and works with Meta.", "personal"),
+        ]
+        for q, a, m in owner_qa:
+            try:
+                result = await conn.execute(
+                    text("SELECT 1 FROM personality_qa WHERE LOWER(question) = LOWER(:q)"),
+                    {"q": q},
+                )
+                if not result.fetchone():
+                    await conn.execute(
+                        text("INSERT INTO personality_qa (question, answer, mode) VALUES (:q, :a, :m)"),
+                        {"q": q, "a": a, "m": m},
+                    )
+            except Exception:
+                pass
     logger.info("Database tables initialized")
 
     # --- Start MongoDB provider ---
@@ -370,6 +399,20 @@ async def startup():
     from services.ai.adk_agent import init_agent
     init_agent()
 
+    # --- Weekly conversation cleanup (keep last 7 days) ---
+    try:
+        from datetime import timedelta
+        cutoff = datetime.utcnow() - timedelta(days=7)
+        async with AsyncSessionLocal() as sess:
+            await sess.execute(
+                text("DELETE FROM conversations WHERE timestamp < :cutoff"),
+                {"cutoff": cutoff},
+            )
+            await sess.commit()
+            logger.info("Cleaned up conversations older than 7 days")
+    except Exception as e:
+        logger.warning("Failed to clean up old conversations: %s", e)
+
 
 @app.on_event("shutdown")
 async def shutdown():
@@ -401,6 +444,8 @@ async def _process_incoming_message(
     body: str,
     to_number: str | None = None,
     channel: str = "whatsapp",
+    contact_name: str | None = None,
+    profile_pic_url: str | None = None,
 ) -> dict:
     """Shared message processing for both Twilio and Baileys"""
     target_user_id = None
@@ -419,7 +464,7 @@ async def _process_incoming_message(
     # If AI pipeline is disabled for this user, store message without processing
     if not ai_pipeline_enabled:
         category = categorize_message(body)
-        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id)
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
         return {"reply": "", "category": category, "conv_id": None, "pipeline_success": False, "ai_disabled": True}
 
@@ -437,7 +482,7 @@ async def _process_incoming_message(
     if personality_match:
         category = "inquiry"
         ai_reply = personality_match["answer"]
-        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id)
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, ai_response=ai_reply, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
         return {
             "reply": ai_reply,
@@ -450,7 +495,7 @@ async def _process_incoming_message(
     # If mode is unknown or looks like a physical occurrence, stay quiet
     if personality_mode == "unknown" or is_physical:
         category = "inquiry"
-        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id)
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
         return {
             "reply": "",
@@ -504,7 +549,7 @@ async def _process_incoming_message(
         )
 
     ai_result = {"category": category, "reply": ai_reply} if ai_reply else None
-    conv = await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id)
+    conv = await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, ai_response=ai_reply, contact_name=contact_name, profile_pic_url=profile_pic_url)
 
     reply = ""
     if category == "order":
@@ -567,13 +612,18 @@ async def baileys_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     data = await request.json()
     from_number = str(data.get("from", "")).strip()
     body = str(data.get("body", "")).strip()
+    push_name = str(data.get("push_name", "")).strip() or None
+    profile_pic_url = str(data.get("profile_pic_url", "")).strip() or None
 
     if not from_number or not body:
         raise HTTPException(status_code=400, detail="Missing from or body")
 
-    logger.info(f"Baileys message from {from_number}: {body[:80]}")
+    logger.info(f"Baileys message from {push_name or from_number}: {body[:80]}")
 
-    result = await _process_incoming_message(db, from_number, body, channel="baileys")
+    result = await _process_incoming_message(
+        db, from_number, body, channel="baileys",
+        contact_name=push_name, profile_pic_url=profile_pic_url,
+    )
 
     return {"reply": result["reply"], "to": from_number, "category": result["category"]}
 
@@ -906,9 +956,12 @@ async def get_conversations(db: AsyncSession = Depends(get_db), user=Depends(get
     return JSONResponse(content=[{
         "id": c.id,
         "phone": c.phone,
+        "contact_name": c.contact_name,
+        "profile_pic_url": c.profile_pic_url,
         "message": c.message,
         "category": c.category,
         "channel": c.channel,
+        "ai_response": c.ai_response,
         "timestamp": c.timestamp.isoformat() if c.timestamp else None
     } for c in convs])
 
@@ -1098,6 +1151,7 @@ async def chat_send(request: Request, db: AsyncSession = Depends(get_db), user=D
         category=result.category or "inquiry",
         user_id=user.id,
         channel="dashboard",
+        ai_response=result.reply,
     )
     await db.commit()
 
@@ -1462,6 +1516,22 @@ async def set_user_tier(user_id: int, request: Request, db: AsyncSession = Depen
 async def list_channels():
     from services.channels.base import router
     return {"channels": router.available_channels()}
+
+
+@app.get("/api/export/csv")
+async def export_csv(user=Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    convs = await crud.list_conversations(db, user.id)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Phone", "Message", "Category", "Channel", "AI Response", "Timestamp"])
+    for c in convs:
+        writer.writerow([c.id, c.phone, c.message, c.category, c.channel, c.ai_response or "", str(c.timestamp or "")])
+    filename = f"tell5-conversations-{user.id}-{datetime.utcnow().strftime('%Y-%m-%d')}.csv"
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @app.get("/privacy", response_class=HTMLResponse)

@@ -54,6 +54,8 @@
     .skeleton { background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; height: 80px; margin-bottom: 10px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     .toolbar-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    @media (max-width: 640px) { .shell { padding: 20px 12px; } .card { padding: 20px; } h1 { font-size: 1.3rem; } .profiles-grid.grid-view { grid-template-columns: 1fr; } .filter-bar { flex-direction: column; } .view-toggles { margin-left: 0; } }
+    @media (max-width: 400px) { .card { padding: 14px; } .profile-card { padding: 14px; } .toolbar-row { flex-direction: column; align-items: stretch; } }
   </style>
 </head>
 <body>

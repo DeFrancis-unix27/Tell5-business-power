@@ -505,8 +505,8 @@
       justify-content: center;
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.65rem;
-      font-weight: 600;
-      color: var(--accent);
+      font-weight: 700;
+      color: #fff;
       flex-shrink: 0;
     }
 
@@ -603,8 +603,8 @@
       justify-content: center;
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.58rem;
-      font-weight: 600;
-      color: var(--blue);
+      font-weight: 700;
+      color: #fff;
       flex-shrink: 0;
     }
 
@@ -654,17 +654,18 @@
     }
 
     /* ═══════ RESPONSIVE ═══════ */
-    @media (max-width: 1024px) {
-      .content-grid { grid-template-columns: 1fr 300px; }
+    @media (max-width: 1100px) {
+      .content-grid { grid-template-columns: 1fr; }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 860px) {
       :root { --sidebar: 0px; }
       .sidebar {
         position: fixed;
-        left: -240px;
+        left: -260px;
         top: 58px;
-        width: 240px;
+        width: 260px;
         height: calc(100vh - 58px);
         z-index: 200;
         transition: left 0.25s ease;
@@ -672,20 +673,60 @@
       }
       .sidebar.open { left: 0; }
       .app { grid-template-columns: 1fr; }
-      .topbar-brand { width: auto; border-right: none; padding: 0 16px; }
-      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .topbar-brand { width: auto; border-right: none; padding: 0 12px; }
+      .topbar-right { gap: 4px; }
+      .top-btn { font-size: 0.55rem; padding: 5px 8px; }
       .content-grid { grid-template-columns: 1fr; }
-      .right-col { flex-direction: row; flex-wrap: wrap; }
-      .right-col > .panel { flex: 1; min-width: 260px; }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .kpi-value { font-size: 1.4rem; }
+      .right-col { flex-direction: column; }
       .menu-btn { display: flex !important; }
     }
 
     @media (max-width: 520px) {
-      .main { padding: 16px; }
-      .kpi-row { gap: 8px; }
-      .kpi-value { font-size: 1.6rem; }
+      .main { padding: 12px; }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+      .kpi { padding: 12px; }
+      .kpi-value { font-size: 1.2rem; }
+      .kpi-label { font-size: 0.5rem; }
+      .page-title { font-size: 1rem; }
+      .page-date { display: none; }
       .clock { display: none; }
-      .right-col > .panel { flex: 1 1 100%; }
+      .topbar { padding: 0 8px 0 0; }
+      .topbar-center { padding: 0 8px; }
+      .topbar-greeting { font-size: 0.7rem; }
+      .live-pill { font-size: 0.5rem; padding: 3px 6px; }
+      .top-btn { font-size: 0.5rem; padding: 4px 6px; }
+      .top-btn-ghost { padding: 4px 6px; }
+      #whatsapp-btn { display: none; }
+      .conv-item { padding: 8px 10px; grid-template-columns: 28px 1fr; }
+      .conv-avatar { width: 28px; height: 28px; font-size: 0.55rem; }
+      .conv-phone { font-size: 0.65rem; }
+      .conv-msg { font-size: 0.7rem; }
+      .cat-tag { font-size: 0.5rem; padding: 2px 5px; }
+      .panel-head { padding: 10px 12px; }
+      .panel-title { font-size: 0.6rem; }
+      .chat-input-row { flex-direction: column; }
+      .chat-input-row input { width: 100%; }
+      .chat-msgs { max-height: 200px; }
+      .modal { padding: 20px; width: 95%; }
+      .topbar-right .top-btn-ghost:not(#whatsapp-btn) { display: none; }
+      .sidebar { width: 220px; left: -220px; }
+      .sidebar-item { padding: 7px 14px; font-size: 0.75rem; }
+    }
+
+    @media (max-width: 380px) {
+      .main { padding: 8px; }
+      .kpi-row { grid-template-columns: 1fr 1fr; gap: 4px; }
+      .kpi { padding: 10px 8px; }
+      .kpi-value { font-size: 1rem; }
+      .topbar-brand { padding: 0 8px; }
+      .brand-name { font-size: 1rem; }
+      .topbar-greeting { font-size: 0.6rem; }
+      .live-pill span:not(.live-dot) { display: none; }
+      .live-pill { width: 20px; padding: 4px; justify-content: center; }
+      .conv-list { max-height: 300px; }
+      .orders-list { max-height: 200px; }
     }
 
     .menu-btn {
@@ -813,17 +854,17 @@
         <span class="s-icon">📊</span>
         Overview
       </a>
-      <button class="sidebar-item" onclick="">
+      <button class="sidebar-item" onclick="document.querySelector('.conv-list').scrollIntoView({behavior:'smooth'});setTimeout(()=>document.querySelector('.conv-item')?.focus(),300)">
         <span class="s-icon">💬</span>
         Conversations
         <span class="s-badge s-badge-green" id="sb-convs">—</span>
       </button>
-      <button class="sidebar-item" onclick="">
+      <button class="sidebar-item" onclick="document.querySelector('.orders-list')?.scrollIntoView({behavior:'smooth'})">
         <span class="s-icon">📦</span>
         Orders
         <span class="s-badge s-badge-green" id="sb-orders">—</span>
       </button>
-      <button class="sidebar-item" onclick="">
+      <button class="sidebar-item" onclick="showComplaints()">
         <span class="s-icon">🚨</span>
         Complaints
         <span class="s-badge s-badge-red" id="sb-complaints">—</span>
@@ -845,7 +886,7 @@
       </button>
 
       <div class="sidebar-footer">
-        <div class="sidebar-user">
+        <div class="sidebar-user" onclick="openSettings()" style="cursor:pointer;">
           <div class="user-avatar" id="user-avatar">—</div>
           <div>
             <div class="user-name" id="user-name">Loading…</div>
@@ -866,7 +907,10 @@
         <div>
           <div class="page-title">Overview</div>
         </div>
-        <div class="page-date" id="page-date">—</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="top-btn top-btn-ghost" onclick="exportCsv()" title="Export your conversations as CSV">Export CSV</button>
+          <div class="page-date" id="page-date">—</div>
+        </div>
       </div>
 
       <!-- KPIs -->
@@ -998,7 +1042,9 @@
           const name = u.first_name || u.email?.split('@')[0] || 'there';
           document.getElementById('greeting-text').innerHTML = `${g}, <span>${esc(name)}</span> 👋`;
           document.getElementById('user-name').textContent = name;
-          document.getElementById('user-avatar').textContent = (u.first_name?.[0] || u.email?.[0] || '?').toUpperCase();
+          const avatarInitial = (u.first_name?.[0] || u.email?.[0] || '?').toUpperCase();
+          document.getElementById('user-avatar').textContent = avatarInitial;
+          document.getElementById('user-avatar').style.background = avatarColor(u.email || u.first_name);
           return;
         }
       } catch {}
@@ -1014,10 +1060,22 @@
     }
 
     /* ── Helpers ── */
+    const AVATAR_COLORS = ['#00e5b0','#3b82f6','#f97316','#a78bfa','#facc15','#ef4444','#06b6d4','#84cc16'];
+
     function initials(str) {
-      if (!str) return '??';
-      const digits = String(str).replace(/\D/g, '');
-      return digits.slice(-2) || str.slice(0, 2).toUpperCase();
+      if (!str) return '?';
+      const s = String(str).trim();
+      const c = s[0].toUpperCase();
+      if (/[A-Za-z]/.test(c)) return c;
+      const digits = s.replace(/\D/g, '');
+      return digits[0] || '?';
+    }
+
+    function avatarColor(str) {
+      if (!str) return AVATAR_COLORS[0];
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
     }
 
     function esc(v) {
@@ -1108,6 +1166,24 @@
       });
     }
 
+    /* ── Export CSV ── */
+    async function exportCsv() {
+      try {
+        const res = await fetch('/api/export/csv', { credentials: 'same-origin' });
+        if (!res.ok) { showToast('Export failed', 'error'); return; }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = res.headers.get('content-disposition')?.split('filename="')[1]?.split('"')[0] || 'tell5-export.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Conversations exported', 'success');
+      } catch { showToast('Export failed', 'error'); }
+    }
+
     /* ── Logout ── */
     async function logout() {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
@@ -1183,15 +1259,20 @@
         } else {
           convsEl.innerHTML = '';
           convs.forEach((c, i) => {
+            const displayName = c.contact_name || c.phone || '—';
+            const avatarSrc = c.profile_pic_url;
+            const avatarEl = avatarSrc
+              ? `<img src="${esc(avatarSrc)}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+              : `<div class="conv-avatar" style="background:${avatarColor(c.contact_name || c.phone)}">${esc(initials(c.contact_name || c.phone))}</div>`;
             const div = document.createElement('div');
             div.className = 'conv-item';
             div.style.animationDelay = `${i * 25}ms`;
             div.onclick = () => openConvModal(i);
             div.innerHTML = `
-              <div class="conv-avatar">${esc(initials(c.phone))}</div>
+              ${avatarEl}
               <div class="conv-body">
                 <div class="conv-top">
-                  <span class="conv-phone">${esc(c.phone || '—')}</span>
+                  <span class="conv-phone">${esc(displayName)}</span>
                   <span class="conv-time">${esc(relTime(c.timestamp))}</span>
                 </div>
                 <div class="conv-msg">${esc(c.message || '')}</div>
@@ -1215,7 +1296,7 @@
             div.className = 'order-item';
             const ini = initials(o.customer_name || o.phone || '');
             div.innerHTML = `
-              <div class="order-avatar">${esc(ini)}</div>
+              <div class="order-avatar" style="background:${avatarColor(o.customer_name || o.phone)}">${esc(ini)}</div>
               <div class="order-body">
                 <div class="order-name">${esc(o.customer_name || o.phone || '—')}</div>
                 <div class="order-detail">${esc(o.item || '—')} · qty ${esc(o.quantity ?? '—')}</div>
@@ -1339,7 +1420,7 @@
     function openConvModal(idx) {
       const c = convData[idx];
       if (!c) return;
-      document.getElementById('conv-from').textContent = c.phone || '—';
+      document.getElementById('conv-from').textContent = c.contact_name || c.phone || '—';
       document.getElementById('conv-category').textContent = c.category || '—';
       document.getElementById('conv-time').textContent = c.timestamp || '—';
       document.getElementById('conv-message').textContent = c.message || '—';
@@ -1347,6 +1428,33 @@
       document.getElementById('conv-modal').classList.add('open');
     }
     function closeConvModal() { document.getElementById('conv-modal').classList.remove('open'); }
+
+    /* ── Notifications toggle ── */
+    function toggleNotif() {
+      const btn = document.getElementById('notif-toggle-btn');
+      const on = btn.classList.contains('on');
+      btn.classList.toggle('on');
+      localStorage.setItem('tell5_notif_enabled', on ? '0' : '1');
+      showToast(on ? 'Notifications disabled' : 'Notifications enabled', 'info');
+    }
+
+    /* ── Complaints modal ── */
+    function showComplaints() {
+      const complaints = (convData || []).filter(c => (c.category || '').toLowerCase().includes('complaint'));
+      if (complaints.length === 0) {
+        showToast('No complaints found', 'info');
+        return;
+      }
+      const list = complaints.map(c =>
+        `<div style="padding:10px 0;border-bottom:1px solid var(--border2);font-size:0.82rem;">
+          <div style="color:var(--sub);font-size:0.65rem;font-family:'IBM Plex Mono',monospace;">${esc(c.phone || '—')} · ${esc(relTime(c.timestamp))}</div>
+          <div style="margin-top:4px;">${esc(c.message || '')}</div>
+        </div>`
+      ).join('');
+      document.getElementById('complaints-list').innerHTML = list;
+      document.getElementById('complaints-modal').classList.add('open');
+    }
+    function closeComplaintsModal() { document.getElementById('complaints-modal').classList.remove('open'); }
 
     /* ── Wire sidebar settings button ── */
     document.querySelectorAll('.sidebar-item').forEach(el => {
@@ -1457,6 +1565,15 @@
     </div>
   </div>
 
+  <!-- ══ Complaints Modal ══ -->
+  <div class="modal-overlay" id="complaints-modal" onclick="if(event.target===this)closeComplaintsModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeComplaintsModal()">✕</button>
+      <div class="modal-title">Complaints</div>
+      <div id="complaints-list" style="max-height:400px;overflow-y:auto;"></div>
+    </div>
+  </div>
+
   <!-- ══ Settings Modal ══ -->
   <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
     <div class="modal">
@@ -1484,7 +1601,7 @@
           <div class="toggle-label">Notifications</div>
           <div class="toggle-desc">Receive alerts for new orders and complaints.</div>
         </div>
-        <button class="toggle-btn on" id="notif-toggle-btn"></button>
+        <button class="toggle-btn on" id="notif-toggle-btn" onclick="toggleNotif()"></button>
       </div>
     </div>
   </div>
