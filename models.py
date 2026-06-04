@@ -60,6 +60,7 @@ class User(Base):
     is_active = Column(Boolean, nullable=False, default=True)
     is_admin = Column(Boolean, nullable=False, default=False)
     ai_reply_enabled = Column(Boolean, nullable=False, default=True)
+    ai_enabled = Column(Boolean, nullable=False, default=True)
     pricing_tier = Column(String(20), nullable=False, default="free")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

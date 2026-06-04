@@ -54,6 +54,39 @@ async def get_user_conversations(
     )
 
 
+async def store_user_profile(
+    db_name: str,
+    user_id: int,
+    name: str,
+    personality_words: str,
+    distance_setting: str,
+) -> bool:
+    p = _mongo_provider
+    if not p or not p.is_ready:
+        return False
+    doc = {
+        "user_id": user_id,
+        "name": name,
+        "personality_words": personality_words,
+        "distance_setting": distance_setting,
+        "onboarding_complete": True,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    modified = await p.update_one("user_profiles", {"user_id": user_id}, {"$set": doc})
+    if modified == 0:
+        doc["created_at"] = datetime.now(timezone.utc).isoformat()
+        await p.insert_one("user_profiles", doc)
+    return True
+
+
+async def get_user_profile(db_name: str, user_id: int) -> dict | None:
+    p = _mongo_provider
+    if not p or not p.is_ready:
+        return None
+    docs = await p.find_documents("user_profiles", filter={"user_id": user_id}, limit=1)
+    return docs[0] if docs else None
+
+
 async def build_mongo_context(
     db_name: str,
     from_number: str,

@@ -1307,9 +1307,10 @@
     /* ── Settings modal ── */
     function openSettings() {
       fetch('/api/auth/me').then(r=>r.json()).then(d => {
-        const enabled = d.user?.ai_reply_enabled !== false;
-        const btn = document.getElementById('ai-toggle-btn');
-        btn.classList.toggle('on', enabled);
+        const replyEnabled = d.user?.ai_reply_enabled !== false;
+        const pipelineEnabled = d.user?.ai_enabled !== false;
+        document.getElementById('ai-toggle-btn').classList.toggle('on', replyEnabled);
+        document.getElementById('ai-pipeline-toggle-btn').classList.toggle('on', pipelineEnabled);
       }).catch(() => {});
       document.getElementById('settings-modal').classList.add('open');
     }
@@ -1322,6 +1323,15 @@
         btn.classList.toggle('on', d.ai_reply_enabled);
         showToast(d.ai_reply_enabled ? 'AI auto-reply enabled' : 'AI auto-reply disabled', 'info');
       } catch { showToast('Failed to toggle AI reply', 'error'); }
+    }
+    async function toggleAiPipeline() {
+      const btn = document.getElementById('ai-pipeline-toggle-btn');
+      try {
+        const r = await fetch('/api/user/ai-toggle', { method:'POST', credentials:'same-origin' });
+        const d = await r.json();
+        btn.classList.toggle('on', d.ai_enabled);
+        showToast(d.ai_enabled ? 'AI pipeline enabled' : 'AI pipeline disabled. Messages stored only.', 'info');
+      } catch { showToast('Failed to toggle AI pipeline', 'error'); }
     }
 
     /* ── Conversation detail modal ── */
@@ -1343,6 +1353,45 @@
       if (el.textContent.trim() === 'Settings') el.onclick = openSettings;
     });
 
+    /* ── Onboarding ── */
+    async function checkOnboarding() {
+      try {
+        const res = await fetch('/api/onboarding/status', { credentials: 'same-origin' });
+        const data = await res.json();
+        if (!data.onboarding_complete) {
+          document.getElementById('onboarding-modal').classList.add('open');
+        }
+      } catch {}
+    }
+
+    async function submitOnboarding() {
+      const name = document.getElementById('onb-name').value.trim();
+      const words = document.getElementById('onb-words').value.trim();
+      const distance = document.getElementById('onb-distance').value;
+      if (!name || !words || !distance) {
+        showToast('Please fill in all fields', 'error');
+        return;
+      }
+      try {
+        const res = await fetch('/api/onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ name, personality_words: words, distance_setting: distance }),
+        });
+        if (res.ok) {
+          document.getElementById('onboarding-modal').classList.remove('open');
+          showToast('Welcome to Tell5!', 'success');
+        } else {
+          const err = await res.json();
+          showToast(err.detail || 'Onboarding failed', 'error');
+        }
+      } catch {
+        showToast('Failed to save onboarding', 'error');
+      }
+    }
+
+    checkOnboarding();
     fetchData();
     checkWhatsApp();
     setInterval(fetchData, 10000);
@@ -1380,11 +1429,47 @@
     </div>
   </div>
 
+  <!-- ══ Onboarding Modal ══ -->
+  <div class="modal-overlay" id="onboarding-modal" style="z-index:900;">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-title" style="font-size:1.2rem;margin-bottom:8px;">Welcome to Tell5</div>
+      <p style="font-size:0.82rem;color:var(--sub2);line-height:1.6;margin-bottom:20px;">
+        Before we begin, I need to know three things about you.
+      </p>
+      <div class="modal-section">
+        <div class="modal-label">1. What is your name?</div>
+        <input type="text" id="onb-name" placeholder="Your name" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.85rem;font-family:inherit;margin-top:4px;" />
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">2. Describe your personality in three words</div>
+        <input type="text" id="onb-words" placeholder="e.g., calm, curious, funny" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.85rem;font-family:inherit;margin-top:4px;" />
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">3. How close do you want our conversations to feel?</div>
+        <select id="onb-distance" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.85rem;font-family:inherit;margin-top:4px;">
+          <option value="">Choose one...</option>
+          <option value="professional & distant">Professional &amp; Distant</option>
+          <option value="balanced & friendly">Balanced &amp; Friendly</option>
+          <option value="casual & personal">Casual &amp; Personal</option>
+        </select>
+      </div>
+      <button onclick="submitOnboarding()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#0a0c0f;font-weight:800;font-size:0.9rem;cursor:pointer;margin-top:8px;">Get Started</button>
+    </div>
+  </div>
+
   <!-- ══ Settings Modal ══ -->
   <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
     <div class="modal">
       <button class="modal-close" onclick="closeSettings()">✕</button>
       <div class="modal-title">Settings</div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">AI Pipeline</div>
+          <div class="toggle-desc">When enabled, incoming messages are processed by the AI pipeline. Disable to store messages only.</div>
+        </div>
+        <button class="toggle-btn on" id="ai-pipeline-toggle-btn" onclick="toggleAiPipeline()"></button>
+      </div>
 
       <div class="toggle-row">
         <div class="toggle-info">

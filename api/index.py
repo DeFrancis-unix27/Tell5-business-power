@@ -206,6 +206,7 @@ def public_user(user) -> dict:
         "phone": user.phone,
         "is_admin": bool(user.is_admin),
         "ai_reply_enabled": bool(getattr(user, "ai_reply_enabled", True)),
+        "ai_enabled": bool(getattr(user, "ai_enabled", True)),
         "has_google": bool(getattr(user, "google_id", None)),
     }
 
@@ -290,6 +291,7 @@ async def startup():
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_reply_enabled BOOLEAN NOT NULL DEFAULT TRUE"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) UNIQUE"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS pricing_tier VARCHAR(20) NOT NULL DEFAULT 'free'"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_enabled BOOLEAN NOT NULL DEFAULT TRUE"))
         await conn.execute(text("""
             CREATE TABLE IF NOT EXISTS site_config (
                 key VARCHAR(100) PRIMARY KEY,
@@ -402,15 +404,24 @@ async def _process_incoming_message(
 ) -> dict:
     """Shared message processing for both Twilio and Baileys"""
     target_user_id = None
-    ai_enabled = True
+    ai_reply_enabled = True
+    ai_pipeline_enabled = True
     if to_number:
         normalized_to = str(to_number).replace("whatsapp:", "").replace(" ", "").strip()
         target_user = await crud.get_user_by_phone(db, normalized_to)
         if target_user:
             target_user_id = target_user.id
-            ai_enabled = bool(getattr(target_user, "ai_reply_enabled", True))
+            ai_reply_enabled = bool(getattr(target_user, "ai_reply_enabled", True))
+            ai_pipeline_enabled = bool(getattr(target_user, "ai_enabled", True))
 
     phone = from_number
+
+    # If AI pipeline is disabled for this user, store message without processing
+    if not ai_pipeline_enabled:
+        category = categorize_message(body)
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id)
+        await db.commit()
+        return {"reply": "", "category": category, "conv_id": None, "pipeline_success": False, "ai_disabled": True}
 
     # ── Personality: match Q&A first ──
     from services.ai.personality import match_qa, detect_mode, is_physical_occurrence, load_qa_cache
@@ -449,13 +460,32 @@ async def _process_incoming_message(
             "personality_mode": "quiet",
         }
 
+    # Load user personality profile from MongoDB to shape AI responses
+    personality_context = {}
+    if Config.MDB_MCP_CONNECTION_STRING and target_user_id:
+        try:
+            from services.ai.mongodb_tools import get_user_profile
+            profile = await get_user_profile(Config.MDB_MCP_DB_NAME, target_user_id)
+            if profile:
+                personality_context = {
+                    "user_name": profile.get("name", ""),
+                    "personality_words": profile.get("personality_words", ""),
+                    "distance_setting": profile.get("distance_setting", ""),
+                }
+                logger.info("Loaded personality profile for user %d", target_user_id)
+        except Exception as e:
+            logger.warning("Failed to load personality profile: %s", e)
+
     from services.ai.pipeline import run_pipeline
     import uuid
     message_id = str(uuid.uuid4())
-    pipeline_result = await run_pipeline(body, message_id=message_id, from_number=phone, user_id=target_user_id)
+    pipeline_result = await run_pipeline(
+        body, message_id=message_id, from_number=phone, user_id=target_user_id,
+        context=personality_context if personality_context else None,
+    )
 
     # If AI replies are disabled for this user, clear the auto-generated reply
-    if not ai_enabled:
+    if not ai_reply_enabled:
         pipeline_result.reply = None
     category = pipeline_result.category or categorize_message(body)
     ai_reply = pipeline_result.reply
@@ -688,6 +718,53 @@ async def ai_reply_toggle(user=Depends(get_current_user), db: AsyncSession = Dep
     await db.flush()
     logger.info("User %d AI reply toggled to %s", user.id, user.ai_reply_enabled)
     return {"ok": True, "ai_reply_enabled": bool(user.ai_reply_enabled)}
+
+
+@app.post("/api/user/ai-toggle")
+async def ai_toggle(user=Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    user.ai_enabled = not user.ai_enabled
+    await db.flush()
+    logger.info("User %d AI pipeline toggled to %s", user.id, user.ai_enabled)
+    return {"ok": True, "ai_enabled": bool(user.ai_enabled)}
+
+
+# ── Onboarding ──
+
+@app.get("/api/onboarding/status")
+async def onboarding_status(user=Depends(get_current_user)):
+    from services.ai.mongodb_tools import get_user_profile
+    profile = None
+    if Config.MDB_MCP_CONNECTION_STRING:
+        try:
+            profile = await get_user_profile(Config.MDB_MCP_DB_NAME, user.id)
+        except Exception as e:
+            logger.warning("Failed to check onboarding: %s", e)
+    return {"onboarding_complete": profile is not None}
+
+
+@app.post("/api/onboarding")
+async def submit_onboarding(request: Request, user=Depends(get_current_user)):
+    body = await request.json()
+    name = str(body.get("name", "")).strip()
+    personality_words = str(body.get("personality_words", "")).strip()
+    distance_setting = str(body.get("distance_setting", "")).strip()
+
+    if not name or not personality_words or not distance_setting:
+        raise HTTPException(status_code=400, detail="All fields are required")
+    if distance_setting not in ("professional & distant", "balanced & friendly", "casual & personal"):
+        raise HTTPException(status_code=400, detail="Invalid distance setting")
+
+    from services.ai.mongodb_tools import store_user_profile
+    if Config.MDB_MCP_CONNECTION_STRING:
+        try:
+            ok = await store_user_profile(Config.MDB_MCP_DB_NAME, user.id, name, personality_words, distance_setting)
+            if ok:
+                logger.info("User %d onboarding saved to MongoDB", user.id)
+                return {"ok": True}
+        except Exception as e:
+            logger.warning("Failed to store onboarding in MongoDB: %s", e)
+
+    raise HTTPException(status_code=500, detail="MongoDB not available for profile storage")
 
 
 @app.get("/api/auth/google")
