@@ -3,7 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tell5 Dashboard</title>
+  <title>Tell5 Dashboard - WhatsApp Operations</title>
+  <meta name="description" content="Manage WhatsApp conversations, orders, AI replies, business profiles, and automation workflows in Tell5." />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#060809" />
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/tell5-icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -77,26 +82,12 @@
       width: var(--sidebar);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       padding: 0 20px;
       height: 100%;
       border-right: 1px solid var(--border);
       flex-shrink: 0;
       text-decoration: none;
-    }
-
-    .brand-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
-      animation: breathe 2.4s ease-in-out infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes breathe {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50%      { opacity: .4; transform: scale(.7); }
     }
 
     .brand-name {
@@ -744,6 +735,43 @@
     .chat-typing span:nth-child(2) { animation-delay:0.2s; }
     .chat-typing span:nth-child(3) { animation-delay:0.4s; }
     @keyframes typing { 0%,60%,100% { opacity:0.3; transform:scale(1); } 30% { opacity:1; transform:scale(1.3); } }
+    .toast-container { position:fixed; bottom:24px; right:24px; z-index:999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+    .toast-msg { padding:12px 18px; border-radius:10px; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; pointer-events:auto; animation:toastIn 0.3s ease both; max-width:320px; }
+    .toast-msg.success { background:rgba(0,229,176,0.12); color:var(--accent); border:1px solid rgba(0,229,176,0.25); }
+    .toast-msg.error { background:rgba(239,68,68,0.12); color:var(--danger); border:1px solid rgba(239,68,68,0.25); }
+    .toast-msg.info { background:rgba(59,130,246,0.12); color:var(--blue); border:1px solid rgba(59,130,246,0.25); }
+    @keyframes toastIn { from { opacity:0; transform:translateY(16px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }
+    .kbd-hint { position:fixed; bottom:80px; right:24px; z-index:998; font-family:'IBM Plex Mono',monospace; font-size:0.55rem; color:var(--sub); background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:6px 12px; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+    .kbd-hint.show { opacity:1; }
+    .kbd-hint kbd { display:inline-block; padding:1px 5px; border-radius:3px; background:var(--muted); color:var(--sub2); font-size:0.55rem; border:1px solid var(--border2); margin:0 2px; }
+    .skeleton-line { height:12px; border-radius:6px; background:linear-gradient(90deg,var(--muted) 25%,var(--border) 50%,var(--muted) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; margin-bottom:8px; }
+    .skeleton-line:last-child { width:60%; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ═══════ MODAL ═══════ */
+    .modal-overlay { position:fixed; inset:0; z-index:800; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.25s; }
+    .modal-overlay.open { opacity:1; pointer-events:auto; }
+    .modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); width:90%; max-width:520px; max-height:80vh; overflow-y:auto; padding:28px; position:relative; animation:modalIn 0.25s ease both; }
+    @keyframes modalIn { from { opacity:0; transform:translateY(20px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+    .modal-close { position:absolute; top:16px; right:16px; width:28px; height:28px; border-radius:50%; background:var(--surface2); border:1px solid var(--border); color:var(--sub2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.75rem; transition:all 0.15s; }
+    .modal-close:hover { background:var(--muted); color:var(--text); }
+    .modal-title { font-size:1.05rem; font-weight:800; letter-spacing:-0.03em; margin-bottom:16px; padding-right:28px; }
+    .modal-section { margin-bottom:16px; }
+    .modal-label { font-family:'IBM Plex Mono',monospace; font-size:0.58rem; color:var(--sub); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:5px; }
+    .modal-value { font-size:0.85rem; color:var(--text); line-height:1.6; word-break:break-word; background:var(--bg); border-radius:var(--r-sm); padding:10px 12px; }
+    .modal-value.mono { font-family:'IBM Plex Mono',monospace; font-size:0.75rem; }
+    .modal-divider { height:1px; background:var(--border); margin:16px 0; }
+
+    /* Toggle switch */
+    .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; }
+    .toggle-row:not(:last-child) { border-bottom:1px solid var(--border); }
+    .toggle-info { flex:1; }
+    .toggle-label { font-size:0.85rem; font-weight:700; }
+    .toggle-desc { font-size:0.72rem; color:var(--sub2); margin-top:2px; }
+    .toggle-btn { position:relative; width:44px; height:24px; border-radius:12px; background:var(--muted); border:1px solid var(--border2); cursor:pointer; transition:all 0.2s; flex-shrink:0; }
+    .toggle-btn.on { background:var(--accent); border-color:rgba(0,229,176,0.4); }
+    .toggle-btn::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:var(--text); transition:transform 0.2s; }
+    .toggle-btn.on::after { transform:translateX(20px); }
   </style>
 </head>
 <body>
@@ -753,7 +781,7 @@
     <!-- ═══════ TOPBAR ═══════ -->
     <header class="topbar">
       <a class="topbar-brand" href="/">
-        <div class="brand-dot"></div>
+        <img src="/static/tell5-icon.svg" alt="Tell5" style="width:28px;height:28px;border-radius:6px;flex-shrink:0;" />
         <span class="brand-name">Tell5</span>
       </a>
 
@@ -1148,6 +1176,7 @@
         /* Conversations */
         const convsEl = document.getElementById('conversations');
         document.getElementById('conv-count').textContent = convLen;
+        convData = convs || [];
 
         if (!convs || convLen === 0) {
           convsEl.innerHTML = '<div class="empty">No conversations yet</div>';
@@ -1157,6 +1186,7 @@
             const div = document.createElement('div');
             div.className = 'conv-item';
             div.style.animationDelay = `${i * 25}ms`;
+            div.onclick = () => openConvModal(i);
             div.innerHTML = `
               <div class="conv-avatar">${esc(initials(c.phone))}</div>
               <div class="conv-body">
@@ -1251,9 +1281,127 @@
       btn.textContent = 'Send';
     }
 
+    function showToast(msg, type) {
+      const el = document.createElement('div');
+      el.className = 'toast-msg ' + (type || 'info');
+      el.textContent = msg;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 3500);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !e.target.matches('input,textarea,select')) {
+        e.preventDefault();
+        document.getElementById('chat-input').focus();
+      }
+    });
+
+    let kbdTimer;
+    document.addEventListener('keydown', () => {
+      const h = document.getElementById('kbd-hint');
+      h.classList.add('show');
+      clearTimeout(kbdTimer);
+      kbdTimer = setTimeout(() => h.classList.remove('show'), 3000);
+    });
+
+    /* ── Settings modal ── */
+    function openSettings() {
+      fetch('/api/auth/me').then(r=>r.json()).then(d => {
+        const enabled = d.user?.ai_reply_enabled !== false;
+        const btn = document.getElementById('ai-toggle-btn');
+        btn.classList.toggle('on', enabled);
+      }).catch(() => {});
+      document.getElementById('settings-modal').classList.add('open');
+    }
+    function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+    async function toggleAiReply() {
+      const btn = document.getElementById('ai-toggle-btn');
+      try {
+        const r = await fetch('/api/user/ai-reply-toggle', { method:'POST', credentials:'same-origin' });
+        const d = await r.json();
+        btn.classList.toggle('on', d.ai_reply_enabled);
+        showToast(d.ai_reply_enabled ? 'AI auto-reply enabled' : 'AI auto-reply disabled', 'info');
+      } catch { showToast('Failed to toggle AI reply', 'error'); }
+    }
+
+    /* ── Conversation detail modal ── */
+    let convData = [];
+    function openConvModal(idx) {
+      const c = convData[idx];
+      if (!c) return;
+      document.getElementById('conv-from').textContent = c.phone || '—';
+      document.getElementById('conv-category').textContent = c.category || '—';
+      document.getElementById('conv-time').textContent = c.timestamp || '—';
+      document.getElementById('conv-message').textContent = c.message || '—';
+      document.getElementById('conv-response').textContent = c.ai_response || c.reply || 'No AI response';
+      document.getElementById('conv-modal').classList.add('open');
+    }
+    function closeConvModal() { document.getElementById('conv-modal').classList.remove('open'); }
+
+    /* ── Wire sidebar settings button ── */
+    document.querySelectorAll('.sidebar-item').forEach(el => {
+      if (el.textContent.trim() === 'Settings') el.onclick = openSettings;
+    });
+
     fetchData();
     checkWhatsApp();
-    setInterval(fetchData, 5000);
+    setInterval(fetchData, 10000);
   </script>
+  <div class="toast-container" id="toast-container"></div>
+  <div class="kbd-hint" id="kbd-hint">Press <kbd>C</kbd> to chat</div>
+
+  <!-- ══ Conversation Detail Modal ══ -->
+  <div class="modal-overlay" id="conv-modal" onclick="if(event.target===this)closeConvModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeConvModal()">✕</button>
+      <div class="modal-title">Message Details</div>
+      <div class="modal-section">
+        <div class="modal-label">From</div>
+        <div class="modal-value mono" id="conv-from">—</div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">Category</div>
+        <div class="modal-value" id="conv-category">—</div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">Time</div>
+        <div class="modal-value mono" id="conv-time">—</div>
+      </div>
+      <div class="modal-divider"></div>
+      <div class="modal-section">
+        <div class="modal-label">Message</div>
+        <div class="modal-value" id="conv-message">—</div>
+      </div>
+      <div class="modal-divider"></div>
+      <div class="modal-section">
+        <div class="modal-label">AI Response</div>
+        <div class="modal-value" id="conv-response">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Settings Modal ══ -->
+  <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+      <div class="modal-title">Settings</div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">AI Auto-Reply</div>
+          <div class="toggle-desc">When enabled, incoming WhatsApp messages get automatic AI responses. Disable to review messages before replying.</div>
+        </div>
+        <button class="toggle-btn on" id="ai-toggle-btn" onclick="toggleAiReply()"></button>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Notifications</div>
+          <div class="toggle-desc">Receive alerts for new orders and complaints.</div>
+        </div>
+        <button class="toggle-btn on" id="notif-toggle-btn"></button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

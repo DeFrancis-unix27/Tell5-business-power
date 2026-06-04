@@ -3,20 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Business Profile — Tell5</title>
-  <link rel="icon" href="/static/tell5-icon.svg">
+  <title>Business Profile - Tell5</title>
+  <meta name="description" content="View a Tell5 business profile, available products, services, prices, and contact-ready marketplace details." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#060809" />
+  <meta property="og:type" content="profile" />
+  <meta property="og:title" content="Business Profile - Tell5" />
+  <meta property="og:description" content="Explore this Tell5 business profile and product listing." />
+  <meta property="og:image" content="/static/tell5-icon.svg" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/tell5-icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0c0f; --surface: #0f1318; --border: #1e2530;
-      --muted: #2a3340; --text: #e2e8f0; --sub: #64748b;
-      --accent: #00e5b0; --danger: #ef4444;
+      --bg: #060809; --surface: #0c1014; --surface2: #111820;
+      --border: #1a2330; --border2: #243040; --muted: #1e2d3d;
+      --text: #e8f0f8; --sub: #5a7a94; --sub2: #8aa0b4;
+      --accent: #00e5b0; --blue: #3b82f6; --orange: #f97316; --danger: #ef4444;
+      --r: 14px; --r-sm: 8px;
     }
-    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+    body { background: var(--bg); color: var(--text); font-family: 'Cabinet Grotesk', sans-serif; min-height: 100vh; }
     .shell { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px; margin-bottom: 20px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 32px; margin-bottom: 20px; }
     h1 { font-size: 1.8rem; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
     .tag { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; }
     .desc { color: #94a3b8; line-height: 1.7; margin-bottom: 20px; }
@@ -25,18 +36,27 @@
     .meta-item span { color: var(--text); }
     h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--accent); }
     .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-    .product { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-    .product-name { font-weight: 600; margin-bottom: 4px; }
-    .product-desc { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--sub); margin-bottom: 8px; }
-    .product-price { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: var(--accent); font-weight: 600; }
-    .empty { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--sub); padding: 20px 0; }
-    .nav-link { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--accent); text-decoration: none; }
-    .nav-link:hover { text-decoration: underline; }
+    .product { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 16px; }
+    .product + .product { margin-top: 8px; }
+    .product-name { font-weight: 700; }
+    .product-price { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--accent); }
+    .meta-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .cta-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: var(--r-sm); font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none; text-decoration: none; transition: all 0.2s; font-family: 'IBM Plex Mono', monospace; }
+    .cta-whatsapp { background: #25D366; color: #060809; }
+    .cta-whatsapp:hover { background: #20bd5a; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(37,211,102,0.3); }
+    .cta-share { background: var(--muted); color: var(--text); border: 1px solid var(--border); }
+    .cta-share:hover { border-color: var(--sub); transform: translateY(-1px); }
   </style>
 </head>
 <body>
   <div class="shell">
-    <a href="/discover" class="nav-link">&larr; Back to discover</a>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <img src="/static/tell5-icon.svg" alt="Tell5" style="width:28px;height:28px;border-radius:6px;" />
+        <span style="font-size:1rem;font-weight:900;letter-spacing:-0.04em;color:var(--accent);">Tell5</span>
+      </a>
+      <a href="/discover" class="nav-link">&larr; Discover</a>
+    </div>
     <div class="card" id="profile-card">
       <div class="tag">Business Profile</div>
       <h1 id="business-name">—</h1>
@@ -45,6 +65,16 @@
         <div class="meta-item">Location: <span id="address">—</span></div>
       </div>
       <p class="desc" id="description">—</p>
+      <div class="cta-row">
+        <a class="cta-btn cta-whatsapp" id="wa-cta" href="#" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Contact via WhatsApp
+        </a>
+        <button class="cta-btn cta-share" onclick="shareProfile()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+          Share
+        </button>
+      </div>
       <h2>Products & Services</h2>
       <div class="product-grid" id="products">
         <div class="empty">Loading products…</div>
@@ -63,13 +93,19 @@
           document.getElementById('category').textContent = data.category || '—';
           document.getElementById('address').textContent = data.address || '—';
           document.getElementById('description').textContent = data.description || '—';
+          const waBtn = document.getElementById('wa-cta');
+          if (data.phone) {
+            waBtn.href = 'https://wa.me/' + data.phone.replace(/\D/g, '');
+          } else {
+            waBtn.style.display = 'none';
+          }
           const productsEl = document.getElementById('products');
           if (data.products && data.products.length > 0) {
             productsEl.innerHTML = data.products.map(p => `
               <div class="product">
-                <div class="product-name">${p.name}</div>
-                <div class="product-desc">${p.description || ''}</div>
-                <div class="product-price">${p.price ? p.currency + ' ' + p.price : '—'}</div>
+                <div class="product-name">${esc(p.name)}</div>
+                <div class="product-desc">${esc(p.description || '')}</div>
+                <div class="product-price">${p.price ? esc(p.currency) + ' ' + esc(p.price) : '—'}</div>
               </div>
             `).join('');
           } else {
@@ -79,6 +115,19 @@
         .catch(() => {
           document.getElementById('business-name').textContent = 'Profile not found';
         });
+    }
+
+    function shareProfile() {
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({ title: document.getElementById('business-name').textContent, url });
+      } else {
+        navigator.clipboard.writeText(url).then(() => alert('Link copied!')).catch(() => {});
+      }
+    }
+
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
     }
   </script>
 </body>

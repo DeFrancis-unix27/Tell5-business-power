@@ -33,11 +33,11 @@ class MongoDBProvider:
     async def start(self):
         from motor.motor_asyncio import AsyncIOMotorClient
 
-        logger.info("Connecting to MongoDB: %s", self._connection_string[:30] + "...")
+        logger.info("Connecting to MongoDB: %s", self._connection_string[:60] + "...")
         self._client = AsyncIOMotorClient(
             self._connection_string,
-            serverSelectionTimeoutMS=10000,
-            connectTimeoutMS=10000,
+            serverSelectionTimeoutMS=15000,
+            connectTimeoutMS=15000,
         )
         # Verify connectivity
         await self._client.admin.command("ping")

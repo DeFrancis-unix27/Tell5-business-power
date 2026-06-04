@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Business Profile — Tell5</title>
-  <link rel="icon" href="/static/tell5-icon.svg">
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -73,12 +73,31 @@
     .inline-form button { padding: 8px 16px; border-radius: var(--r-sm); border: none; background: var(--accent); color: #060809; font-weight: 700; cursor: pointer; }
     #profile-url { margin-top: 12px; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; text-align: center; display: none; }
     #profile-url a { color: var(--accent); }
+    .char-count { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--sub); text-align: right; margin-top: 4px; }
+    .char-count.warn { color: var(--orange); }
+    .char-count.over { color: var(--danger); }
+    .image-upload { border: 2px dashed var(--border2); border-radius: var(--r-sm); padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
+    .image-upload:hover { border-color: var(--accent); background: rgba(0,229,176,0.03); }
+    .image-upload.has-image { border-style: solid; border-color: var(--accent); padding: 8px; }
+    .image-upload img { max-width: 100%; max-height: 160px; border-radius: 6px; display: block; margin: 0 auto; }
+    .image-upload .upload-placeholder { color: var(--sub); font-size: 0.82rem; }
+    .image-upload .upload-placeholder .icon { font-size: 1.6rem; margin-bottom: 8px; }
+    .preview-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-top: 20px; display: none; }
+    .preview-card.show { display: block; }
+    .preview-card h3 { font-size: 0.8rem; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+    .preview-name { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+    .preview-meta { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--sub); margin: 6px 0; }
+    .preview-desc { color: var(--sub2); font-size: 0.82rem; line-height: 1.6; margin-top: 8px; }
   </style>
 </head>
 <body>
   <div class="shell">
     <a href="/dashboard" class="nav-back">&larr; Back to Dashboard</a>
     <div class="card">
+      <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;margin-bottom:16px;">
+        <img src="/static/tell5-icon.svg" alt="Tell5" style="width:28px;height:28px;border-radius:6px;" />
+        <span style="font-size:1.15rem;font-weight:900;letter-spacing:-0.04em;color:var(--accent);">Tell5</span>
+      </a>
       <h1>Business Profile</h1>
       <p class="sub">Set up your business to appear on the Tell5 discover page and let customers find you.</p>
 
@@ -110,8 +129,21 @@
       </div>
 
       <div class="field">
+        <label>Business image</label>
+        <div class="image-upload" id="image-upload" onclick="document.getElementById('image-input').click()">
+          <input type="file" id="image-input" accept="image/*" style="display:none" onchange="previewImage(event)" />
+          <div class="upload-placeholder" id="upload-placeholder">
+            <div class="icon">🖼</div>
+            <div>Click to upload business image</div>
+          </div>
+          <img id="image-preview" style="display:none" />
+        </div>
+      </div>
+
+      <div class="field">
         <label>Description</label>
-        <textarea id="biz-desc" placeholder="Tell customers about your business…"></textarea>
+        <textarea id="biz-desc" placeholder="Tell customers about your business…" oninput="updateCharCount()"></textarea>
+        <div class="char-count" id="char-count">0 / 500</div>
       </div>
 
       <div class="field">
@@ -120,6 +152,13 @@
           <input type="checkbox" id="biz-public" checked style="width:18px;height:18px;accent-color:var(--accent);" />
           <span style="color:var(--sub2);font-size:0.85rem;">Show on discover page</span>
         </div>
+      </div>
+
+      <div class="preview-card" id="preview-card">
+        <h3>Preview</h3>
+        <div class="preview-name" id="preview-name">Your Business Name</div>
+        <div class="preview-meta" id="preview-meta">Category · Location</div>
+        <div class="preview-desc" id="preview-desc">Description will appear here…</div>
       </div>
 
       <div class="btn-row">
@@ -258,6 +297,43 @@
     function esc(v) {
       return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
     }
+
+    function updateCharCount() {
+      const el = document.getElementById('biz-desc');
+      const count = el.value.length;
+      const cc = document.getElementById('char-count');
+      cc.textContent = count + ' / 500';
+      cc.className = 'char-count' + (count > 500 ? ' over' : count > 400 ? ' warn' : '');
+    }
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const preview = document.getElementById('image-preview');
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        document.getElementById('upload-placeholder').style.display = 'none';
+        document.getElementById('image-upload').classList.add('has-image');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updatePreview() {
+      const name = document.getElementById('biz-name').value.trim() || 'Your Business Name';
+      const cat = document.getElementById('biz-category').value;
+      const addr = document.getElementById('biz-address').value.trim();
+      const desc = document.getElementById('biz-desc').value.trim() || 'Description will appear here…';
+      document.getElementById('preview-name').textContent = name;
+      document.getElementById('preview-meta').textContent = [cat, addr].filter(Boolean).join(' · ') || 'Category · Location';
+      document.getElementById('preview-desc').textContent = desc;
+      document.getElementById('preview-card').classList.toggle('show', !!(name || cat || addr || desc));
+    }
+
+    ['biz-name', 'biz-category', 'biz-address', 'biz-desc'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updatePreview);
+    });
 
     loadProfile();
   </script>

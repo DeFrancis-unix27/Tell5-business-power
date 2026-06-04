@@ -9,7 +9,7 @@ from google.genai import types
 # Configuration
 # ==================================================================================================
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
 
 ALLOWED_CATEGORIES = {
     "order",

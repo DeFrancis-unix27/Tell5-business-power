@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete as sa_delete
 from models import Conversation, Order, Notification, User
 from datetime import datetime
 from typing import List
@@ -186,6 +186,31 @@ async def delete_product(db: AsyncSession, product_id: int) -> bool:
     if not product:
         return False
     product.is_available = False
+    await db.flush()
+    return True
+
+
+async def list_personality_qa(db: AsyncSession) -> List["PersonalityQA"]:
+    from models import PersonalityQA
+    q = await db.execute(select(PersonalityQA).order_by(PersonalityQA.created_at.desc()))
+    return q.scalars().all()
+
+
+async def add_personality_qa(db: AsyncSession, question: str, answer: str, mode: str = "business") -> "PersonalityQA":
+    from models import PersonalityQA
+    qa = PersonalityQA(question=question, answer=answer, mode=mode)
+    db.add(qa)
+    await db.flush()
+    return qa
+
+
+async def delete_personality_qa(db: AsyncSession, qa_id: int) -> bool:
+    from models import PersonalityQA
+    q = await db.execute(select(PersonalityQA).where(PersonalityQA.id == qa_id))
+    qa = q.scalar_one_or_none()
+    if not qa:
+        return False
+    await db.delete(qa)
     await db.flush()
     return True
 

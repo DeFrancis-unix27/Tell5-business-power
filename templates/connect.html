@@ -84,14 +84,46 @@
     .info-note strong { color: var(--text); }
     .info-note code { font-family: 'IBM Plex Mono', monospace; font-size: 0.75em; color: var(--accent); }
     .info-note a { color: var(--accent); }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .steps { display: flex; gap: 0; margin-bottom: 20px; position: relative; }
+    .step { flex: 1; text-align: center; position: relative; padding: 0 4px; }
+    .step::before { content: ''; position: absolute; top: 14px; left: 50%; right: -50%; height: 2px; background: var(--border2); z-index: 0; }
+    .step:last-child::before { display: none; }
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); border: 2px solid var(--border2); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; font-size: 0.65rem; color: var(--sub); position: relative; z-index: 1; transition: all 0.3s; }
+    .step.active .step-dot { border-color: var(--accent); background: rgba(0,229,176,0.1); color: var(--accent); }
+    .step.done .step-dot { border-color: var(--accent); background: var(--accent); color: #060809; }
+    .step.done::before { background: var(--accent); }
+    .step-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.06em; }
+    .step.active .step-label { color: var(--accent); }
+    .step.done .step-label { color: var(--accent); }
   </style>
 </head>
 <body>
   <div class="card" id="app">
+    <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;margin-bottom:16px;">
+      <img src="/static/tell5-icon.svg" alt="Tell5" style="width:28px;height:28px;border-radius:6px;" />
+      <span style="font-size:1.15rem;font-weight:900;letter-spacing:-0.04em;color:var(--accent);">Tell5</span>
+    </a>
     <h1>Connect WhatsApp</h1>
     <p class="subtitle">Choose how you want to receive and reply to WhatsApp messages.</p>
 
     <div id="global-status" class="status-box">Loading status…</div>
+
+    <div class="steps" id="steps">
+      <div class="step active" id="step-1">
+        <div class="step-dot">1</div>
+        <div class="step-label">Connect</div>
+      </div>
+      <div class="step" id="step-2">
+        <div class="step-dot">2</div>
+        <div class="step-label">Scan QR</div>
+      </div>
+      <div class="step" id="step-3">
+        <div class="step-dot">3</div>
+        <div class="step-label">Ready</div>
+      </div>
+    </div>
 
     <div class="tabs">
       <button class="tab active" data-tab="personal">Personal QR</button>
@@ -139,6 +171,8 @@
     let pollInterval = null;
 
     async function refresh() {
+      const btn = document.querySelector('.btn-primary');
+      btn.classList.add('spin');
       const statusEl = document.getElementById('baileys-status');
       const imgEl = document.getElementById('qr-image');
       const textEl = document.getElementById('qr-text');
@@ -149,6 +183,7 @@
 
         updateGlobalStatus(data);
         updateTwilioStatus(data);
+        updateSteps(data);
 
         if (data.baileys.connected) {
           statusEl.textContent = '✓ WhatsApp is connected via Baileys.';
@@ -180,6 +215,27 @@
       } catch (err) {
         document.getElementById('baileys-status').textContent = 'Unable to reach the Baileys service. Is the bot running?';
         document.getElementById('baileys-status').style.borderLeftColor = 'var(--danger)';
+      } finally {
+        btn.classList.remove('spin');
+      }
+    }
+
+    function updateSteps(data) {
+      const s1 = document.getElementById('step-1');
+      const s2 = document.getElementById('step-2');
+      const s3 = document.getElementById('step-3');
+      if (data.baileys.connected || data.twilio.configured) {
+        s1.classList.add('done'); s1.classList.remove('active');
+        s2.classList.add('done'); s2.classList.remove('active');
+        s3.classList.add('done'); s3.classList.remove('active');
+      } else if (data.baileys.qr_image) {
+        s1.classList.add('done'); s1.classList.remove('active');
+        s2.classList.add('active'); s2.classList.remove('done');
+        s3.classList.remove('active', 'done');
+      } else if (data.baileys.is_running) {
+        s1.classList.add('active'); s1.classList.remove('done');
+        s2.classList.remove('active', 'done');
+        s3.classList.remove('active', 'done');
       }
     }
 

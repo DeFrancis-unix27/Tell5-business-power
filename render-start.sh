@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# Don't use set -e — bot failure should not crash the app
 
 # Load nvm (installed by render-build.sh)
 export NVM_DIR="$HOME/.nvm"

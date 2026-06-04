@@ -239,6 +239,17 @@ async def run_pipeline(
         except Exception as e:
             logger.warning("Failed to build MongoDB context: %s", e)
 
+    # Enrich context with Discovery Engine knowledge base search
+    if router.is_configured("discovery_engine"):
+        try:
+            from services.ai.discovery_engine import search_knowledge
+            knowledge = await search_knowledge(message, page_size=3)
+            if knowledge:
+                context["discovery_engine"] = knowledge
+                logger.info("Merged %d Discovery Engine results into pipeline context", len(knowledge))
+        except Exception as e:
+            logger.warning("Failed to search Discovery Engine: %s", e)
+
     pipeline_order = router.get_pipeline_order()
     start_total = time.monotonic()
 

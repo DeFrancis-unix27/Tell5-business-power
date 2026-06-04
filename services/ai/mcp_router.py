@@ -26,6 +26,7 @@ class MCPRouter:
             "groq": bool(Config.GROQ_API_KEY),
             "mistral": bool(Config.MISTRAL_API_KEY),
             "openrouter": bool(Config.OPENROUTER_API_KEY),
+            "discovery_engine": bool(Config.AGENT_BUILDER_DATA_STORE),
         }
         return key_map.get(provider, False)
 

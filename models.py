@@ -38,18 +38,29 @@ class Notification(Base):
     payload = Column(Text, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
+    @property
+    def ntype(self) -> str:
+        return self.notification_type
+
+    @ntype.setter
+    def ntype(self, value: str) -> None:
+        self.notification_type = value
+
 
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, index=True, nullable=False)
+    google_id = Column(String(255), unique=True, nullable=True, index=True)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     phone = Column(String(50), nullable=True)
     password_hash = Column(Text, nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
     is_admin = Column(Boolean, nullable=False, default=False)
+    ai_reply_enabled = Column(Boolean, nullable=False, default=True)
+    pricing_tier = Column(String(20), nullable=False, default="free")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -95,6 +106,23 @@ class PipelineLog(Base):
     errors = Column(Text, nullable=True)
     success = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class PersonalityQA(Base):
+    __tablename__ = "personality_qa"
+
+    id = Column(Integer, primary_key=True, index=True)
+    question = Column(Text, nullable=False)
+    answer = Column(Text, nullable=False)
+    mode = Column(String(20), nullable=False, default="business")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class SiteConfig(Base):
+    __tablename__ = "site_config"
+
+    key = Column(String(100), primary_key=True)
+    value = Column(Text, nullable=False, default="")
 
 
 class AIXListing(Base):

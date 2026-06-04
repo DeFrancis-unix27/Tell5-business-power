@@ -1,26 +1,32 @@
 import pytest
 import pytest_asyncio
 import os
+
+TEST_ENV = {
+    "TWILIO_ACCOUNT_SID": "test_sid",
+    "TWILIO_AUTH_TOKEN": "test_token",
+    "TWILIO_PHONE_NUMBER": "whatsapp:+1234567890",
+    "SESSION_SECRET": "test-session-secret-at-least-32-characters-long!!!",
+    "DATABASE_URL": "sqlite+aiosqlite:///:memory:",
+    "DEBUG": "True",
+    "ENVIRONMENT": "test",
+    "COOKIE_SECURE": "False",
+}
+
+for key, value in TEST_ENV.items():
+    os.environ[key] = value
+
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import StaticPool
 from db import Base, get_db
 from api.index import app
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture
 def test_env_setup():
     """Set test environment variables"""
-    test_vars = {
-        "TWILIO_ACCOUNT_SID": "test_sid",
-        "TWILIO_AUTH_TOKEN": "test_token",
-        "TWILIO_PHONE_NUMBER": "whatsapp:+1234567890",
-        "SESSION_SECRET": "test-session-secret-at-least-32-characters-long!!!",
-        "DATABASE_URL": "sqlite+aiosqlite:///:memory:",
-        "DEBUG": "True",
-        "ENVIRONMENT": "test",
-        "COOKIE_SECURE": "False",
-    }
+    test_vars = TEST_ENV
     original_vars = {}
     for key, value in test_vars.items():
         original_vars[key] = os.environ.get(key)
@@ -64,7 +70,8 @@ async def test_db():
 @pytest_asyncio.fixture
 async def client(test_env_setup, test_db):
     """Create test client"""
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
 

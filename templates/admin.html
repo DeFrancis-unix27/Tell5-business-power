@@ -4,7 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tell5 Admin</title>
-  <link rel="icon" href="static/tell5-icon.svg" type="image/x-icon">
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#060809" />
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/tell5-icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -322,6 +325,12 @@
       td, th { padding: 8px 8px; }
     }
 
+    .search-input { width:200px; padding:7px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:0.65rem; outline:none; transition:border-color 0.15s; }
+    .search-input:focus { border-color:var(--accent); }
+    .admin-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .export-btn { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; padding:7px 12px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--sub); cursor:pointer; transition:all 0.15s; text-transform:uppercase; letter-spacing:0.07em; }
+    .export-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .admin-counter { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:var(--sub); margin-left:auto; }
     /* safe area */
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .shell { padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
@@ -333,9 +342,12 @@
 
     <!-- Header -->
     <header>
-      <div>
-        <div class="brand-name">Tell5 Admin</div>
-        <div class="brand-sub">Business setup, users, AI &amp; message health</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <img src="/static/tell5-icon.svg" alt="Tell5" style="width:36px;height:36px;border-radius:8px;flex-shrink:0;" />
+        <div>
+          <div class="brand-name">Tell5 Admin</div>
+          <div class="brand-sub">Business setup, users, AI &amp; message health</div>
+        </div>
       </div>
       <div class="header-actions">
         <a class="header-btn" href="/dashboard">Dashboard</a>
@@ -385,6 +397,22 @@
               <span id="ai-status" class="badge">Checking</span>
               <span>Gemini can help classify messages and draft better replies.</span>
             </li>
+            <li>
+              <span id="discovery-status" class="badge">Checking</span>
+              <span>Google Agent Builder knowledge base <span id="discovery-actions" style="display:none">· <a href="#" onclick="syncDiscovery()" style="color:var(--accent)">Sync now</a></span></span>
+            </li>
+            <li>
+              <span id="adk-status" class="badge">Checking</span>
+              <span>ADK agent (customer support agent with MongoDB tools)</span>
+            </li>
+            <li>
+              <span id="personality-status" class="badge">Checking</span>
+              <span>AI personality Q&A &nbsp;<span id="personality-count"></span></span>
+            </li>
+            <li>
+              <span id="pricing-checklist-badge" class="badge">Checking</span>
+              <span>Pricing mode (toggle in panel below)</span>
+            </li>
             <li>Use the public landing page for signup, then send owners straight to the dashboard.</li>
             <li>Before launch, replace placeholder Terms and Privacy pages with reviewed documents.</li>
             <li>For paid onboarding, connect each approved WhatsApp sender to this webhook: <code>/webhook/whatsapp</code></li>
@@ -405,7 +433,53 @@
       </div>
     </div>
 
+    <!-- Personality Q&A -->
+    <div class="panel" style="margin-bottom:14px;">
+      <div class="panel-header">
+        <span class="panel-title">AI Personality Q&A</span>
+        <span style="flex:1"></span>
+        <button class="header-btn" onclick="loadQA()" style="font-size:0.7rem;">Refresh</button>
+      </div>
+      <div class="panel-body">
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <input type="text" id="qa-question" placeholder="Question…" style="flex:2;min-width:160px;padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.8rem;" />
+          <input type="text" id="qa-answer" placeholder="Answer…" style="flex:3;min-width:200px;padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.8rem;" />
+          <select id="qa-mode" style="padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.8rem;">
+            <option value="business">Business</option>
+            <option value="personal">Personal</option>
+          </select>
+          <button class="header-btn" onclick="addQA()" style="font-size:0.7rem;">+ Add</button>
+        </div>
+        <div id="qa-list" style="font-size:0.8rem;max-height:200px;overflow-y:auto;">
+          <span class="muted-cell">Loading…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Billing / Pricing -->
+    <div class="panel" style="margin-bottom:14px;">
+      <div class="panel-header">
+        <span class="panel-title">Billing / Pricing Mode</span>
+        <span style="flex:1"></span>
+        <span id="pricing-badge" class="badge warn">Loading</span>
+      </div>
+      <div class="panel-body">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.85rem;">
+            <input type="checkbox" id="pricing-toggle" onchange="togglePricing()" />
+            Enable pricing &amp; feature limits
+          </label>
+          <span style="font-size:0.75rem;color:var(--sub);">When off, all features are free and unlimited.</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Table Panels -->
+    <div class="admin-toolbar">
+      <input type="text" class="search-input" id="admin-search" placeholder="Search users / conversations…" oninput="filterTables()" />
+      <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+      <span class="admin-counter" id="admin-counter"></span>
+    </div>
     <div class="table-grid">
       <div class="panel">
         <div class="panel-header"><span class="panel-title">Recent Users</span></div>
@@ -413,10 +487,10 @@
           <div class="table-wrap">
             <table>
               <thead>
-                <tr><th>Name</th><th>Email</th><th>Role</th></tr>
+                <tr><th>Name</th><th>Email</th><th>Role</th><th>Tier</th></tr>
               </thead>
               <tbody id="user-list">
-                <tr><td colspan="3" class="muted-cell" style="padding:20px 16px;text-align:center">Loading…</td></tr>
+                <tr><td colspan="4" class="muted-cell" style="padding:20px 16px;text-align:center">Loading…</td></tr>
               </tbody>
             </table>
           </div>
@@ -483,24 +557,185 @@
       aiSt.textContent  = data.ai_enabled ? 'Enabled' : 'Fallback mode';
       aiSt.className    = 'badge ' + (data.ai_enabled ? 'ok' : 'warn');
 
+      const deEl = document.getElementById('discovery-status');
+      const deActions = document.getElementById('discovery-actions');
+      if (data.discovery_configured) {
+        deEl.textContent = 'Synced';
+        deEl.className = 'badge ok';
+        deActions.style.display = 'inline';
+      } else {
+        deEl.textContent = 'Not configured';
+        deEl.className = 'badge warn';
+      }
+
+      const adkEl = document.getElementById('adk-status');
+      adkEl.textContent = data.adk_configured ? 'Ready' : 'Needs Gemini key';
+      adkEl.className = 'badge ' + (data.adk_configured ? 'ok' : 'warn');
+
+      const pEl = document.getElementById('personality-status');
+      const pCount = data.personality_qa_count || 0;
+      pEl.textContent = pCount > 0 ? 'Active' : 'No Q&A';
+      pEl.className = 'badge ' + (pCount > 0 ? 'ok' : 'warn');
+      document.getElementById('personality-count').textContent = pCount > 0 ? `(${pCount} pairs)` : '';
+
+      loadQA();
+      loadBillingStatus().then(() => {
+        const badge = document.getElementById('pricing-checklist-badge');
+        const toggle = document.getElementById('pricing-toggle');
+        badge.textContent = toggle && toggle.checked ? 'Active' : 'Off (free mode)';
+        badge.className = 'badge ' + (toggle && toggle.checked ? 'ok' : 'warn');
+      });
+
+      adminData = data;
+      renderTables(data.recent_users || [], data.recent_conversations || []);
+    }
+
+    let adminData = {};
+
+    function filterTables() {
+      const q = document.getElementById('admin-search').value.toLowerCase();
+      const users = adminData.recent_users || [];
+      const convs = adminData.recent_conversations || [];
+      const filteredUsers = q ? users.filter(u => (u.first_name||'').toLowerCase().includes(q) || (u.last_name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q)) : users;
+      const filteredConvs = q ? convs.filter(c => (c.phone||'').toLowerCase().includes(q) || (c.category||'').toLowerCase().includes(q)) : convs;
+      renderTables(filteredUsers, filteredConvs);
+    }
+
+    function renderTables(users, convs) {
       document.getElementById('user-list').innerHTML =
-        (data.recent_users || []).map(u => `
+        users.map(u => `
           <tr>
             <td>${esc(u.first_name)} ${esc(u.last_name)}</td>
             <td>${esc(u.email)}</td>
             <td><span class="role-badge ${u.is_admin ? 'admin' : ''}">${u.is_admin ? 'Admin' : 'Staff'}</span></td>
+            <td><select class="tier-select" data-user-id="${u.id}" onchange="setUserTier(${u.id}, this.value)" style="padding:2px 4px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.65rem;">
+              <option value="free" ${(u.pricing_tier||'free') === 'free' ? 'selected' : ''}>Free</option>
+              <option value="growth" ${(u.pricing_tier||'') === 'growth' ? 'selected' : ''}>Growth</option>
+              <option value="enterprise" ${(u.pricing_tier||'') === 'enterprise' ? 'selected' : ''}>Enterprise</option>
+            </select></td>
           </tr>
         `).join('') ||
-        '<tr><td colspan="3" class="muted-cell" style="padding:18px 16px;text-align:center">No users yet</td></tr>';
-
+        '<tr><td colspan="4" class="muted-cell" style="padding:18px 16px;text-align:center">No users</td></tr>';
       document.getElementById('conv-list').innerHTML =
-        (data.recent_conversations || []).map(c => `
+        convs.map(c => `
           <tr>
             <td>${esc(c.phone)}</td>
             <td><span class="cat-badge">${esc(c.category)}</span></td>
           </tr>
         `).join('') ||
-        '<tr><td colspan="2" class="muted-cell" style="padding:18px 16px;text-align:center">No conversations yet</td></tr>';
+        '<tr><td colspan="2" class="muted-cell" style="padding:18px 16px;text-align:center">No conversations</td></tr>';
+      document.getElementById('admin-counter').textContent = users.length + ' users · ' + convs.length + ' convs';
+    }
+
+    function exportCSV() {
+      const users = adminData.recent_users || [];
+      if (!users.length) return;
+      const headers = ['Name', 'Email', 'Role'];
+      const rows = users.map(u => [esc(u.first_name + ' ' + u.last_name), esc(u.email), u.is_admin ? 'Admin' : 'Staff']);
+      const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'tell5-users-' + new Date().toISOString().slice(0,10) + '.csv';
+      a.click();
+    }
+
+    async function loadQA() {
+      try {
+        const res = await fetch('/api/personality/qa', { credentials: 'same-origin' });
+        const list = await res.json();
+        const el = document.getElementById('qa-list');
+        if (!list.length) {
+          el.innerHTML = '<span class="muted-cell">No Q&A pairs. Add some above.</span>';
+          return;
+        }
+        el.innerHTML = list.map(q => `
+          <div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span class="badge ${q.mode === 'personal' ? 'warn' : 'ok'}" style="flex-shrink:0;">${q.mode}</span>
+            <span style="flex:1;color:var(--text);"><strong>Q:</strong> ${esc(q.question)}</span>
+            <span style="flex:2;color:var(--sub);"><strong>A:</strong> ${esc(q.answer)}</span>
+            <button class="header-btn" onclick="deleteQA(${q.id})" style="font-size:0.6rem;color:#ef4444;">✕</button>
+          </div>
+        `).join('');
+      } catch { document.getElementById('qa-list').innerHTML = '<span class="muted-cell">Failed to load</span>'; }
+    }
+
+    async function addQA() {
+      const question = document.getElementById('qa-question').value.trim();
+      const answer = document.getElementById('qa-answer').value.trim();
+      const mode = document.getElementById('qa-mode').value;
+      if (!question || !answer) return;
+      try {
+        const res = await fetch('/api/personality/qa', {
+          method: 'POST', credentials: 'same-origin',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({question, answer, mode}),
+        });
+        if (res.ok) {
+          document.getElementById('qa-question').value = '';
+          document.getElementById('qa-answer').value = '';
+          loadQA();
+        }
+      } catch {}
+    }
+
+    async function deleteQA(id) {
+      if (!confirm('Delete this Q&A pair?')) return;
+      try {
+        const res = await fetch(`/api/personality/qa/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+        if (res.ok) loadQA();
+      } catch {}
+    }
+
+    async function loadBillingStatus() {
+      try {
+        const res = await fetch('/api/billing/status', { credentials: 'same-origin' });
+        const data = await res.json();
+        const badge = document.getElementById('pricing-badge');
+        const toggle = document.getElementById('pricing-toggle');
+        toggle.checked = data.pricing_enabled;
+        badge.textContent = data.pricing_enabled ? 'Limits Active' : 'Unlimited';
+        badge.className = 'badge ' + (data.pricing_enabled ? 'ok' : 'warn');
+      } catch {}
+    }
+
+    async function togglePricing() {
+      const enabled = document.getElementById('pricing-toggle').checked;
+      try {
+        await fetch('/api/billing/toggle', {
+          method: 'POST', credentials: 'same-origin',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({enabled}),
+        });
+        loadBillingStatus();
+      } catch {}
+    }
+
+    async function setUserTier(userId, tier) {
+      await fetch(`/api/billing/users/${userId}/tier`, {
+        method: 'POST', credentials: 'same-origin',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tier}),
+      }).catch(() => {});
+    }
+
+    async function syncDiscovery() {
+      const btn = document.querySelector('#discovery-actions a');
+      const original = btn.textContent;
+      btn.textContent = 'Syncing…';
+      btn.style.pointerEvents = 'none';
+      try {
+        const res = await fetch('/api/discovery/sync', { method: 'POST', credentials: 'same-origin' });
+        const data = await res.json();
+        if (data.ok) {
+          btn.textContent = '✓ Synced ' + data.synced + '/' + data.total;
+          setTimeout(() => { btn.textContent = 'Sync now'; btn.style.pointerEvents = ''; }, 3000);
+        } else {
+          btn.textContent = 'Failed';
+        }
+      } catch {
+        btn.textContent = 'Error';
+      }
     }
 
     loadAdmin();

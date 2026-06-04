@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import Response, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from db import engine, Base, get_db
+from db import engine, Base, get_db, AsyncSessionLocal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from config import Config
@@ -59,7 +59,7 @@ else:
     validator = None
 
 # Sentry error tracking (only in production)
-if Config.SENTRY_DSN:
+if Config.SENTRY_DSN and Config.ENVIRONMENT == "production":
     sentry_sdk.init(
         dsn=Config.SENTRY_DSN,
         environment=Config.ENVIRONMENT,
@@ -136,14 +136,14 @@ def categorize_message(text: str) -> str:
     if not text or len(text) < 1:
         return None
     t = text.lower()
+    if any(w in t for w in ["complain", "complaint", "issue", "damaged", "bad", "wrong"]):
+        return "complaint"
+    if any(w in t for w in ["thanks", "thank", "love", "great", "excellent", "feedback"]):
+        return "feedback"
     if any(w in t for w in ["order", "buy", "purchase"]):
         return "order"
-    if any(w in t for w in ["price", "how", "info", "details", "when"]):
+    if any(w in t for w in ["price", "how", "info", "details", "when", "cost"]):
         return "inquiry"
-    if any(w in t for w in ["not", "complain", "complaint", "issue", "bad", "wrong"]):
-        return "complaint"
-    if any(w in t for w in ["thanks", "thank", "love", "good", "great", "feedback"]):
-        return "feedback"
     return "inquiry"
 
 
@@ -205,6 +205,8 @@ def public_user(user) -> dict:
         "last_name": user.last_name,
         "phone": user.phone,
         "is_admin": bool(user.is_admin),
+        "ai_reply_enabled": bool(getattr(user, "ai_reply_enabled", True)),
+        "has_google": bool(getattr(user, "google_id", None)),
     }
 
 
@@ -277,11 +279,32 @@ async def startup():
     # create tables if missing
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        if conn.dialect.name != "postgresql":
+            logger.info("Database tables initialized")
+            return
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"))
         await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS user_id INTEGER"))
         await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS channel VARCHAR(50) DEFAULT 'whatsapp'"))
         await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER"))
         await conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS channel VARCHAR(50) DEFAULT 'whatsapp'"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_reply_enabled BOOLEAN NOT NULL DEFAULT TRUE"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) UNIQUE"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS pricing_tier VARCHAR(20) NOT NULL DEFAULT 'free'"))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS site_config (
+                key VARCHAR(100) PRIMARY KEY,
+                value TEXT NOT NULL DEFAULT ''
+            )
+        """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS personality_qa (
+                id SERIAL PRIMARY KEY,
+                question TEXT NOT NULL,
+                answer TEXT NOT NULL,
+                mode VARCHAR(20) NOT NULL DEFAULT 'business',
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        """))
         admin_email = (Config.ADMIN_EMAIL or "").strip().lower()
         if admin_email:
             await conn.execute(text("UPDATE users SET is_admin = TRUE WHERE lower(email) = :email"), {"email": admin_email})
@@ -311,6 +334,40 @@ async def startup():
     else:
         logger.info("MDB_MCP_CONNECTION_STRING not set, skipping MongoDB")
 
+    # --- Start Discovery Engine client ---
+    from services.ai.discovery_engine import DiscoveryEngineClient, set_client
+    de_client = DiscoveryEngineClient()
+    await de_client.start()
+    set_client(de_client)
+    app.state.discovery_engine = de_client
+
+    # --- Load pricing mode ---
+    try:
+        async with AsyncSessionLocal() as sess:
+            from models import SiteConfig
+            from sqlalchemy import select
+            q = await sess.execute(select(SiteConfig).where(SiteConfig.key == "pricing_enabled"))
+            cfg = q.scalar_one_or_none()
+            if cfg and cfg.value == "true":
+                from services.billing import set_pricing_enabled
+                set_pricing_enabled(True)
+    except Exception as e:
+        logger.warning("Failed to load pricing config: %s", e)
+
+    # --- Init personality Q&A cache ---
+    try:
+        from services.ai.personality import load_qa_cache
+        async with AsyncSessionLocal() as sess:
+            await load_qa_cache(sess)
+            app.state._qa_cache_loaded = True
+    except Exception as e:
+        logger.warning("Failed to load personality Q&A cache: %s", e)
+        app.state._qa_cache_loaded = False
+
+    # --- Init ADK agent ---
+    from services.ai.adk_agent import init_agent
+    init_agent()
+
 
 @app.on_event("shutdown")
 async def shutdown():
@@ -318,6 +375,17 @@ async def shutdown():
     if mcp:
         await mcp.close()
         logger.info("MongoDB provider stopped")
+    de = getattr(app.state, "discovery_engine", None)
+    if de:
+        await de.close()
+        logger.info("Discovery Engine client stopped")
+    # Dispose SQLAlchemy engine to avoid stale connections on reload
+    try:
+        from db import engine
+        await engine.dispose()
+        logger.info("Database engine disposed")
+    except Exception:
+        pass
 
 
 def validate_twilio_request(request_url: str, post_data: dict, signature: str) -> bool:
@@ -334,18 +402,61 @@ async def _process_incoming_message(
 ) -> dict:
     """Shared message processing for both Twilio and Baileys"""
     target_user_id = None
+    ai_enabled = True
     if to_number:
         normalized_to = str(to_number).replace("whatsapp:", "").replace(" ", "").strip()
         target_user = await crud.get_user_by_phone(db, normalized_to)
         if target_user:
             target_user_id = target_user.id
+            ai_enabled = bool(getattr(target_user, "ai_reply_enabled", True))
 
     phone = from_number
+
+    # ── Personality: match Q&A first ──
+    from services.ai.personality import match_qa, detect_mode, is_physical_occurrence, load_qa_cache
+    if not hasattr(app.state, "_qa_cache_loaded") or not app.state._qa_cache_loaded:
+        await load_qa_cache(db)
+        app.state._qa_cache_loaded = True
+
+    personality_match = match_qa(body)
+    personality_mode = detect_mode(body)
+    is_physical = is_physical_occurrence(body)
+
+    # If a personality Q&A matches, use the stored answer directly
+    if personality_match:
+        category = "inquiry"
+        ai_reply = personality_match["answer"]
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id)
+        await db.commit()
+        return {
+            "reply": ai_reply,
+            "category": category,
+            "conv_id": None,
+            "pipeline_success": True,
+            "personality_mode": personality_match["mode"],
+        }
+
+    # If mode is unknown or looks like a physical occurrence, stay quiet
+    if personality_mode == "unknown" or is_physical:
+        category = "inquiry"
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id)
+        await db.commit()
+        return {
+            "reply": "",
+            "category": category,
+            "conv_id": None,
+            "pipeline_success": True,
+            "personality_mode": "quiet",
+        }
 
     from services.ai.pipeline import run_pipeline
     import uuid
     message_id = str(uuid.uuid4())
     pipeline_result = await run_pipeline(body, message_id=message_id, from_number=phone, user_id=target_user_id)
+
+    # If AI replies are disabled for this user, clear the auto-generated reply
+    if not ai_enabled:
+        pipeline_result.reply = None
     category = pipeline_result.category or categorize_message(body)
     ai_reply = pipeline_result.reply
 
@@ -571,6 +682,83 @@ async def send_reset(request: Request, db: AsyncSession = Depends(get_db)):
     return {"ok": True, "message": "Check your email for a reset link."}
 
 
+@app.post("/api/user/ai-reply-toggle")
+async def ai_reply_toggle(user=Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    user.ai_reply_enabled = not user.ai_reply_enabled
+    await db.flush()
+    logger.info("User %d AI reply toggled to %s", user.id, user.ai_reply_enabled)
+    return {"ok": True, "ai_reply_enabled": bool(user.ai_reply_enabled)}
+
+
+@app.get("/api/auth/google")
+async def google_login(request: Request):
+    if not Config.GOOGLE_OAUTH_CLIENT_ID:
+        raise HTTPException(status_code=501, detail="Google OAuth not configured")
+    from authlib.integrations.starlette_client import OAuth
+    oauth = OAuth()
+    oauth.register(
+        name="google",
+        client_id=Config.GOOGLE_OAUTH_CLIENT_ID,
+        client_secret=Config.GOOGLE_OAUTH_CLIENT_SECRET,
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid email profile"},
+    )
+    redirect_uri = str(Config.OAUTH_REDIRECT_URI)
+    if not redirect_uri.startswith("http"):
+        redirect_uri = str(request.base_url).rstrip("/") + redirect_uri
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@app.get("/api/auth/google/callback")
+async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
+    if not Config.GOOGLE_OAUTH_CLIENT_ID:
+        raise HTTPException(status_code=501, detail="Google OAuth not configured")
+    from authlib.integrations.starlette_client import OAuth
+    oauth = OAuth()
+    oauth.register(
+        name="google",
+        client_id=Config.GOOGLE_OAUTH_CLIENT_ID,
+        client_secret=Config.GOOGLE_OAUTH_CLIENT_SECRET,
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid email profile"},
+    )
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except Exception as e:
+        logger.warning("Google OAuth callback failed: %s", e)
+        raise HTTPException(status_code=400, detail="OAuth authentication failed")
+    userinfo = token.get("userinfo")
+    if not userinfo:
+        userinfo = token
+    email = str(userinfo.get("email", "")).lower().strip()
+    google_id = str(userinfo.get("sub", ""))
+    first_name = str(userinfo.get("given_name", userinfo.get("name", "Google")[:100]))
+    last_name = str(userinfo.get("family_name", "User")[:100])
+    if not email:
+        raise HTTPException(status_code=400, detail="Email not provided by Google")
+    user = await crud.get_user_by_email(db, email)
+    if not user:
+        import secrets
+        from auth import hash_password
+        user = crud.User(
+            email=email,
+            google_id=google_id,
+            first_name=first_name,
+            last_name=last_name,
+            password_hash=hash_password(secrets.token_urlsafe(32)),
+        )
+        db.add(user)
+        await db.flush()
+        logger.info("Created new user via Google OAuth: %s", email)
+    else:
+        if not user.google_id:
+            user.google_id = google_id
+            await db.flush()
+    response = RedirectResponse(url="/dashboard")
+    set_auth_cookie(response, user.id)
+    return response
+
+
 @app.post("/api/ai/draft-reply")
 async def ai_draft_reply(request: Request, user=Depends(get_current_user)):
     data = await request.json()
@@ -583,6 +771,13 @@ async def ai_draft_reply(request: Request, user=Depends(get_current_user)):
     return {"reply": reply, "ai_enabled": ai_configured()}
 
 
+async def _count_personality_qa(db: AsyncSession) -> int:
+    from models import PersonalityQA
+    from sqlalchemy import select, func
+    q = await db.execute(select(func.count(PersonalityQA.id)))
+    return q.scalar() or 0
+
+
 @app.get("/api/admin/summary")
 async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
     convs = await crud.list_conversations(db)
@@ -591,6 +786,8 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
     s = await crud.stats(db)
     from services.ai.groq_client import groq_configured
     from services.ai.mistral_client import mistral_configured
+    from services.ai.discovery_engine import get_client as get_de_client
+    from services.ai.adk_agent import is_configured as adk_configured
     from models import PipelineLog, BusinessProfile
     from sqlalchemy import select, func
     pl_q = await db.execute(select(func.count(PipelineLog.id)))
@@ -606,6 +803,9 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
         "groq_enabled": groq_configured(),
         "mistral_enabled": mistral_configured(),
         "twilio_configured": is_twilio_enabled(),
+        "discovery_configured": bool(get_de_client() and get_de_client().configured),
+        "adk_configured": adk_configured(),
+        "personality_qa_count": await _count_personality_qa(db),
         "pipeline_runs": pipeline_count,
         "business_profiles": biz_count,
         "channels": ["whatsapp"],
@@ -998,6 +1198,185 @@ async def trigger_archive(db: AsyncSession = Depends(get_db), user=Depends(get_a
     from services.archival import run_weekly_archive
     result = await run_weekly_archive(db)
     return result
+
+
+@app.get("/api/discovery/status")
+async def discovery_engine_status(user=Depends(get_admin_user)):
+    from services.ai.discovery_engine import get_client
+    client = get_client()
+    if not client or not client.configured:
+        return {"configured": False, "ready": False, "data_store": None}
+    return {
+        "configured": True,
+        "ready": True,
+        "project": Config.GOOGLE_CLOUD_PROJECT,
+        "location": Config.AGENT_BUILDER_LOCATION,
+        "data_store": Config.AGENT_BUILDER_DATA_STORE,
+    }
+
+
+@app.post("/api/discovery/create-datastore")
+async def create_discovery_datastore(user=Depends(get_admin_user)):
+    from services.ai.discovery_engine import get_client
+    client = get_client()
+    if not client:
+        raise HTTPException(status_code=501, detail="Discovery Engine not configured")
+    store_id = Config.AGENT_BUILDER_DATA_STORE or "tell5-knowledge-base"
+    ok = await client.ensure_data_store(store_id, "Tell5 Knowledge Base")
+    if not ok:
+        raise HTTPException(status_code=500, detail="Failed to create data store")
+    return {"ok": True, "data_store_id": store_id}
+
+
+@app.post("/api/discovery/sync")
+async def sync_to_discovery(db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
+    from services.ai.discovery_engine import get_client, sync_business_profile_to_discovery, sync_product_to_discovery
+    client = get_client()
+    if not client or not client.configured:
+        raise HTTPException(status_code=501, detail="Discovery Engine not configured")
+    from sqlalchemy import select
+    from models import BusinessProfile, Product
+    profiles = (await db.execute(select(BusinessProfile))).scalars().all()
+    synced = 0
+    for bp in profiles:
+        products = (await db.execute(select(Product).where(Product.business_id == bp.id))).scalars().all()
+        prod_list = [{"id": p.id, "name": p.name, "price": p.price, "currency": p.currency} for p in products]
+        ok = await sync_business_profile_to_discovery(
+            profile_id=bp.id,
+            business_name=bp.business_name,
+            description=bp.description,
+            category=bp.category,
+            address=bp.address,
+            products=prod_list,
+        )
+        if ok:
+            synced += 1
+    return {"ok": True, "synced": synced, "total": len(profiles)}
+
+
+@app.get("/api/adk/status")
+async def adk_status():
+    from services.ai.adk_agent import is_configured
+    return {"adk_configured": is_configured(), "gemini_key_set": bool(Config.GEMINI_API_KEY)}
+
+
+@app.post("/api/adk/chat")
+async def adk_chat(request: Request):
+    from services.ai.adk_agent import ask_agent, is_configured
+    if not is_configured():
+        raise HTTPException(status_code=501, detail="ADK agent not configured")
+    body = await request.json()
+    message = body.get("message", "")
+    if not message:
+        raise HTTPException(status_code=400, detail="message is required")
+    user_id = body.get("user_id", "anonymous")
+    reply = await ask_agent(message, user_id=user_id)
+    return {"reply": reply}
+
+
+# ── Personality Q&A ──
+
+@app.get("/api/personality/qa")
+async def get_personality_qa(db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
+    return await crud.list_personality_qa(db)
+
+
+@app.post("/api/personality/qa")
+async def add_personality_qa(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
+    body = await request.json()
+    question = body.get("question", "").strip()
+    answer = body.get("answer", "").strip()
+    mode = body.get("mode", "business")
+    if not question or not answer:
+        raise HTTPException(status_code=400, detail="question and answer are required")
+    if mode not in ("business", "personal"):
+        raise HTTPException(status_code=400, detail="mode must be business or personal")
+    qa = await crud.add_personality_qa(db, question, answer, mode)
+    await db.commit()
+    return {"id": qa.id, "question": qa.question, "answer": qa.answer, "mode": qa.mode}
+
+
+@app.delete("/api/personality/qa/{qa_id}")
+async def delete_personality_qa(qa_id: int, db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
+    ok = await crud.delete_personality_qa(db, qa_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Q&A not found")
+    await db.commit()
+    return {"ok": True}
+
+
+@app.post("/api/personality/reload")
+async def reload_personality(db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
+    from services.ai.personality import load_qa_cache
+    await load_qa_cache(db)
+    return {"ok": True}
+
+
+# ── Billing / Pricing ──
+
+@app.get("/api/billing/status")
+async def billing_status(db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
+    from services.billing import pricing_enabled, TIER_FEATURES
+    async with db as session:
+        from models import SiteConfig
+        from sqlalchemy import select
+        q = await session.execute(select(SiteConfig).where(SiteConfig.key == "pricing_enabled"))
+        cfg = q.scalar_one_or_none()
+    enabled = cfg is not None and cfg.value == "true"
+    return {
+        "pricing_enabled": enabled,
+        "tiers": {k: v for k, v in TIER_FEATURES.items()},
+    }
+
+
+@app.post("/api/billing/toggle")
+async def billing_toggle(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
+    from services.billing import set_pricing_enabled
+    body = await request.json()
+    enabled = body.get("enabled", False)
+    from models import SiteConfig
+    from sqlalchemy import select
+    q = await db.execute(select(SiteConfig).where(SiteConfig.key == "pricing_enabled"))
+    cfg = q.scalar_one_or_none()
+    if cfg:
+        cfg.value = "true" if enabled else "false"
+    else:
+        db.add(SiteConfig(key="pricing_enabled", value="true" if enabled else "false"))
+    await db.commit()
+    set_pricing_enabled(enabled)
+    return {"pricing_enabled": enabled}
+
+
+@app.get("/api/billing/users")
+async def billing_users(db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
+    from sqlalchemy import select
+    from models import User
+    q = await db.execute(select(User).order_by(User.created_at.desc()))
+    users = q.scalars().all()
+    return [{
+        "id": u.id,
+        "email": u.email,
+        "first_name": u.first_name,
+        "last_name": u.last_name,
+        "pricing_tier": u.pricing_tier or "free",
+    } for u in users]
+
+
+@app.post("/api/billing/users/{user_id}/tier")
+async def set_user_tier(user_id: int, request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
+    body = await request.json()
+    tier = body.get("tier", "free")
+    if tier not in ("free", "growth", "enterprise"):
+        raise HTTPException(status_code=400, detail="Invalid tier")
+    from sqlalchemy import select
+    from models import User
+    q = await db.execute(select(User).where(User.id == user_id))
+    u = q.scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="User not found")
+    u.pricing_tier = tier
+    await db.commit()
+    return {"ok": True, "tier": tier}
 
 
 @app.get("/api/channels")

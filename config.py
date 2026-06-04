@@ -1,8 +1,32 @@
+import json
 import os
+import tempfile
 from typing import Optional
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _materialize_google_credentials_json() -> None:
+    """Support hosts that store the service-account JSON as an env secret."""
+    raw_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip()
+    existing_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
+
+    if not raw_json or existing_path:
+        return
+
+    try:
+        json.loads(raw_json)
+    except json.JSONDecodeError:
+        return
+
+    path = os.path.join(tempfile.gettempdir(), "tell5-google-credentials.json")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(raw_json)
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = path
+
+
+_materialize_google_credentials_json()
 
 
 class Config:
@@ -17,7 +41,7 @@ class Config:
 
     # AI API Keys
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", "").strip() or None
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite").strip()
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview").strip()
     GROQ_API_KEY: Optional[str] = os.getenv("GROQ_API_KEY", "").strip() or None
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
     MISTRAL_API_KEY: Optional[str] = os.getenv("MISTRAL_API_KEY", "").strip() or None
@@ -29,6 +53,17 @@ class Config:
     MDB_MCP_CONNECTION_STRING: Optional[str] = os.getenv("MDB_MCP_CONNECTION_STRING", "").strip() or None
     MDB_MCP_READ_ONLY: bool = os.getenv("MDB_MCP_READ_ONLY", "false").lower() in {"1", "true", "yes"}
     MDB_MCP_DB_NAME: str = os.getenv("MDB_MCP_DB_NAME", "tell5").strip()
+
+    # Google OAuth
+    GOOGLE_OAUTH_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "").strip() or None
+    GOOGLE_OAUTH_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", "").strip() or None
+    OAUTH_REDIRECT_URI: str = os.getenv("OAUTH_REDIRECT_URI", "/api/auth/google/callback").strip()
+
+    # Google Cloud Agent Builder / Discovery Engine
+    GOOGLE_APPLICATION_CREDENTIALS_JSON: Optional[str] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip() or None
+    GOOGLE_CLOUD_PROJECT: str = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
+    AGENT_BUILDER_LOCATION: str = os.getenv("AGENT_BUILDER_LOCATION", "global").strip()
+    AGENT_BUILDER_DATA_STORE: Optional[str] = os.getenv("AGENT_BUILDER_DATA_STORE", "").strip() or None
 
     # Flags
     DEBUG: bool = os.getenv("DEBUG", "false").lower() in {"1", "true", "yes"}

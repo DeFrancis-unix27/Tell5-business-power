@@ -47,5 +47,8 @@ env/
 *.log
 logs/
 
+# Service account keys
+json/
+
 # Node modules (if using npm)
 node_modules/

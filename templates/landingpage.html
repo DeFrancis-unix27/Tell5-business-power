@@ -3,9 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tell5 — WhatsApp Operations Platform</title>
+  <title>Tell5 - AI WhatsApp Agent for Business Operations</title>
+  <meta name="description" content="Tell5 turns WhatsApp messages into orders, customer workflows, AI replies, business discovery, and actionable operations for small businesses." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#060809" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Tell5 - AI WhatsApp Agent for Business Operations" />
+  <meta property="og:description" content="Automate WhatsApp customer conversations, classify intent, track orders, and connect businesses through an AI-powered marketplace network." />
+  <meta property="og:image" content="/static/tell5-icon.svg" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Tell5 - AI WhatsApp Agent" />
+  <meta name="twitter:description" content="An AI agent that helps businesses act on WhatsApp customer messages." />
+  <link rel="canonical" href="/" />
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/tell5-icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -26,14 +39,20 @@
       --danger:   #ef4444;
       --r: 14px;
       --r-sm: 8px;
+      --nav-h: 62px;
     }
 
     html { scroll-behavior: smooth; }
+    ::selection { background: rgba(0,229,176,0.25); color: var(--text); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--sub); }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Cabinet Grotesk', sans-serif;
+      font-family: 'Inter', sans-serif;
       min-height: 100vh;
       overflow-x: hidden;
     }
@@ -63,21 +82,7 @@
     .page { display: none; position: relative; z-index: 1; }
     .page.active { display: block; }
 
-    /* ═══════ NAV ═══════ */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 40px;
-      height: 62px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(6,8,9,0.8);
-      backdrop-filter: blur(16px);
-    }
-
+    /* ═══════ NAV BRAND ═══════ */
     .nav-brand {
       font-size: 1.35rem;
       font-weight: 900;
@@ -104,6 +109,28 @@
     }
 
     .nav-links { display: flex; align-items: center; gap: 6px; }
+
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      z-index: 210;
+    }
+    .nav-hamburger span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: var(--sub2);
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .nav-hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
+    .nav-hamburger.active span:nth-child(2) { opacity: 0; }
+    .nav-hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
 
     .nav-btn {
       font-family: 'IBM Plex Mono', monospace;
@@ -143,7 +170,11 @@
 
     /* ═══════ HERO ═══════ */
     .hero-wrap {
-      padding: 140px 40px 80px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: calc(100px + var(--nav-h)) 40px 80px;
       max-width: 1120px;
       margin: 0 auto;
     }
@@ -234,7 +265,7 @@
       gap: 8px;
       padding: 13px 28px;
       border-radius: var(--r-sm);
-      font-family: 'Cabinet Grotesk', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.92rem;
       font-weight: 800;
       cursor: pointer;
@@ -768,6 +799,8 @@
     }
 
     .feature-card:nth-child(3n)::after { display: none; }
+    @media (max-width: 900px) { .feature-card:nth-child(2n)::after { display: none; } }
+    @media (max-width: 640px) { .feature-card::after { display: none; } }
 
     .feature-card-bottom {
       border-top: 1px solid var(--border);
@@ -921,7 +954,7 @@
       width: 100%;
       padding: 12px;
       border-radius: var(--r-sm);
-      font-family: 'Cabinet Grotesk', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.88rem;
       font-weight: 800;
       cursor: pointer;
@@ -945,158 +978,124 @@
     }
 
     /* ═══════ AUTH PAGES ═══════ */
-    .auth-shell {
+    .auth-page {
       min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .auth-left {
-      background: var(--bg);
-      border-right: 1px solid var(--border);
-      padding: 40px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .auth-left::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(circle, rgba(0,229,176,0.06) 1px, transparent 1px);
-      background-size: 28px 28px;
-      pointer-events: none;
-    }
-
-    .auth-left-glow {
-      position: absolute;
-      width: 400px; height: 400px;
-      border-radius: 50%;
-      background: rgba(0,229,176,0.05);
-      filter: blur(80px);
-      bottom: -100px;
-      right: -100px;
-      pointer-events: none;
-    }
-
-    .auth-left-brand {
-      font-size: 1.5rem;
-      font-weight: 900;
-      color: var(--accent);
-      letter-spacing: -0.04em;
       display: flex;
       align-items: center;
-      gap: 8px;
-      position: relative;
-      z-index: 1;
+      justify-content: center;
+      padding: 24px;
     }
 
-    .auth-left-content {
-      position: relative;
-      z-index: 1;
-    }
-
-    .auth-left-h {
-      font-size: 1.9rem;
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      line-height: 1.15;
-      margin-bottom: 16px;
-      max-width: 320px;
-    }
-
-    .auth-left-h span { color: var(--accent); }
-
-    .auth-left-p {
-      font-size: 0.85rem;
-      color: var(--sub2);
-      line-height: 1.7;
-      max-width: 300px;
-      margin-bottom: 32px;
-    }
-
-    .auth-testimonial {
-      background: var(--surface2);
-      border: 1px solid var(--border2);
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: var(--r);
-      padding: 20px;
-      max-width: 320px;
+      padding: 36px 32px;
+      animation: fadeUp 0.5s ease both;
+      position: relative;
     }
 
-    .auth-testimonial-text {
-      font-size: 0.82rem;
-      color: var(--text);
-      line-height: 1.65;
-      margin-bottom: 14px;
-      font-style: italic;
-    }
-
-    .auth-testimonial-author {
+    .auth-card-brand {
       display: flex;
       align-items: center;
       gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--accent);
+      text-decoration: none;
+      margin-bottom: 28px;
     }
 
-    .auth-avatar {
+    .auth-card-brand img {
       width: 32px; height: 32px;
+      border-radius: 8px;
+    }
+
+    .auth-title {
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 4px;
+    }
+
+    .auth-sub {
+      font-size: 0.82rem;
+      color: var(--sub2);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .auth-testi {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r-sm);
+      padding: 14px;
+      margin-top: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .auth-testi-text {
+      font-size: 0.74rem;
+      color: var(--sub2);
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    .auth-testi-avatar {
+      width: 30px; height: 30px;
+      min-width: 30px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), var(--blue));
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.7rem;
+      font-size: 0.6rem;
       font-weight: 800;
       color: #060809;
-      flex-shrink: 0;
     }
 
-    .auth-author-name {
-      font-size: 0.78rem;
+    .auth-testi-name {
+      font-size: 0.72rem;
       font-weight: 700;
+      white-space: nowrap;
     }
 
-    .auth-author-co {
+    .auth-testi-role {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       color: var(--sub);
     }
 
-    .auth-left-footer {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.6rem;
-      color: var(--sub);
-      position: relative;
-      z-index: 1;
+    .auth-perks {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
     }
 
-    .auth-right {
+    .auth-perk {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: var(--sub2);
+    }
+
+    .auth-perk-icon {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(0,229,176,0.1);
+      border: 1px solid rgba(0,229,176,0.2);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 60px 40px;
-      background: var(--surface);
-    }
-
-    .auth-form-wrap {
-      width: 100%;
-      max-width: 400px;
-      animation: fadeUp 0.5s ease both;
-    }
-
-    .auth-form-title {
-      font-size: 1.6rem;
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      margin-bottom: 6px;
-    }
-
-    .auth-form-sub {
-      font-size: 0.82rem;
-      color: var(--sub2);
-      margin-bottom: 32px;
+      color: var(--accent);
+      font-size: 0.6rem;
+      flex-shrink: 0;
     }
 
     .form-group {
@@ -1143,7 +1142,7 @@
       color: #060809;
       border: none;
       border-radius: var(--r-sm);
-      font-family: 'Cabinet Grotesk', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.9rem;
       font-weight: 800;
       cursor: pointer;
@@ -1157,6 +1156,16 @@
     }
 
     .form-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .google-btn {
+      width: 100%; padding: 11px; border-radius: var(--r-sm);
+      background: var(--bg); border: 1px solid var(--border2);
+      color: var(--text); font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: all 0.18s; margin-top: 8px;
+    }
+    .google-btn:hover { border-color: var(--sub); background: var(--surface2); }
 
     .form-divider {
       display: flex;
@@ -1261,29 +1270,257 @@
       color: var(--sub);
     }
 
+    /* ═══════ NAV (FIXED) ═══════ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: var(--nav-h);
+      background: rgba(6,8,9,0.82);
+      backdrop-filter: blur(14px) saturate(1.4);
+      -webkit-backdrop-filter: blur(14px) saturate(1.4);
+      border-bottom: 1px solid var(--border);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    nav.hidden { transform: translateY(-100%); }
+
+    /* ═══════ SCROLL PROGRESS ═══════ */
+    .scroll-progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), #1fffd0);
+      z-index: 1000;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* ═══════ HERO SCROLL INDICATOR ═══════ */
+    .hero-wrap { position: relative; }
+    .scroll-indicator {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      opacity: 0.5;
+      transition: opacity 0.5s;
+      animation: floatDown 2.4s ease-in-out infinite;
+    }
+    .scroll-indicator.faded { opacity: 0; pointer-events: none; }
+    @keyframes floatDown {
+      0%,100% { transform: translateX(-50%) translateY(0); }
+      50%     { transform: translateX(-50%) translateY(8px); }
+    }
+    .scroll-indicator span {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.5rem;
+      color: var(--sub);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .scroll-arrow {
+      width: 16px; height: 16px;
+      border-right: 2px solid var(--sub);
+      border-bottom: 2px solid var(--sub);
+      transform: rotate(45deg);
+      opacity: 0.6;
+    }
+
+    /* ═══════ SECTION DIVIDERS ═══════ */
+    .section-divider {
+      position: relative;
+      height: 1px;
+      max-width: 1120px;
+      margin: 0 auto;
+      background: linear-gradient(90deg, transparent, var(--border2) 15%, var(--border2) 85%, transparent);
+    }
+    .section-divider::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 2px;
+      opacity: 0.35;
+    }
+
+    /* ═══════ FEATURE CARD GLOW ═══════ */
+    .feature-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+      background: radial-gradient(500px circle at var(--mx,50%) var(--my,50%), rgba(0,229,176,0.07), transparent 60%);
+    }
+    .feature-card:hover::before { opacity: 1; }
+
+    /* ═══════ PRICING CARD ENHANCEMENTS ═══════ */
+    .pricing-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .pricing-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+      background: radial-gradient(600px circle at var(--mx,50%) var(--my,50%), rgba(0,229,176,0.04), transparent 60%);
+    }
+    .pricing-card:hover::before { opacity: 1; }
+    .pricing-card.hot::after {
+      content: '';
+      position: absolute;
+      top: -80%; left: -80%;
+      width: 260%; height: 260%;
+      background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(0,229,176,0.025) 60deg, transparent 120deg);
+      animation: spin 8s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ═══════ CTA BUTTON PULSE ═══════ */
+    .cta-big-btn { position: relative; }
+    .cta-big-btn::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: inherit;
+      border: 2px solid var(--accent);
+      opacity: 0;
+      animation: pulseRing 2.4s ease-out infinite;
+    }
+    @keyframes pulseRing {
+      0%   { transform: scale(1);    opacity: 0.5; }
+      100% { transform: scale(1.12); opacity: 0; }
+    }
+
+    /* ═══════ STAGGER DELAYS ═══════ */
+    [data-animate][data-delay="1"] { transition-delay: 0.1s; }
+    [data-animate][data-delay="2"] { transition-delay: 0.2s; }
+    [data-animate][data-delay="3"] { transition-delay: 0.3s; }
+    [data-animate][data-delay="4"] { transition-delay: 0.4s; }
+    [data-animate][data-delay="5"] { transition-delay: 0.5s; }
+
     /* ═══════ RESPONSIVE ═══════ */
     @media (max-width: 900px) {
-      .auth-shell { grid-template-columns: 1fr; }
-      .auth-left { display: none; }
       .features-grid { grid-template-columns: 1fr 1fr; }
-      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
       .chart-row { grid-template-columns: 1fr; }
+      .dash-layout { grid-template-columns: 1fr; }
+      .dash-sidebar { display: none; }
     }
 
     @media (max-width: 640px) {
-      nav { padding: 0 20px; }
-      .hero-wrap { padding: 120px 20px 60px; }
-      .mockup-section, .features-section, .pricing-section { padding: 60px 20px; }
+      nav { padding: 0 16px; }
+      .nav-hamburger { display: flex; }
+      .nav-links {
+        position: fixed;
+        top: 62px; left: 0; right: 0;
+        flex-direction: column;
+        background: rgba(6,8,9,0.96);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 20px;
+        gap: 8px;
+        transform: translateY(-110%);
+        transition: transform 0.25s ease;
+        z-index: 190;
+      }
+      .nav-links.open { transform: translateY(0); }
+      .nav-btn { width: 100%; justify-content: center; }
+      .hero-wrap { padding: calc(80px + var(--nav-h)) 20px 60px; min-height: 100vh; }
+      .mockup-section, .features-section, .pricing-section, .testi-section, .cta-section { padding: 50px 20px; }
       .features-grid { grid-template-columns: 1fr; }
       .pricing-grid { grid-template-columns: 1fr; }
-      .stat { padding: 0 20px; }
-      .stat:not(:first-child) { padding-left: 20px; }
+      .stats-row { flex-direction: column; gap: 20px; }
+      .stat { padding: 0 !important; border-right: none !important; border-bottom: 1px solid var(--border); padding-bottom: 20px !important; }
+      .stat:last-child { border-bottom: none; padding-bottom: 0 !important; }
+      .hero-h1 { font-size: clamp(2rem, 10vw, 2.6rem); }
+      .mockup-frame { border-radius: var(--r-sm); }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .chart-row { grid-template-columns: 1fr; }
+      .cta-card { padding: 32px 24px; }
       footer { flex-direction: column; gap: 10px; text-align: center; }
+      .btt { bottom: 16px; right: 16px; width: 36px; height: 36px; font-size: 0.9rem; }
     }
 
+    @media (max-width: 480px) {
+      .auth-card { padding: 28px 20px; }
+      .auth-card-brand { margin-bottom: 20px; }
+      .auth-title { font-size: 1.2rem; }
+      .auth-sub { font-size: 0.78rem; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 420px) {
+      .hero-wrap { padding: calc(70px + var(--nav-h)) 16px 50px; }
+      .stat-n { font-size: 1.6rem; }
+      .section-h2 { font-size: 1.3rem; }
+      .pricing-card { padding: 20px; }
+      .auth-page { padding: 16px; }
+    }
+
+    /* ═══════ SCROLL ANIMATIONS ═══════ */
+    [data-animate] { opacity:0; transform:translateY(24px); transition:opacity 0.6s ease, transform 0.6s ease; }
+    [data-animate].visible { opacity:1; transform:translateY(0); }
+    [data-animate].visible[data-speed="slow"] { transition-duration:0.9s; }
+    [data-animate].visible[data-speed="fast"] { transition-duration:0.35s; }
+
+    /* ═══════ BACK TO TOP ═══════ */
+    .btt { position:fixed; bottom:24px; right:24px; z-index:300; width:40px; height:40px; border-radius:50%; background:var(--surface2); border:1px solid var(--border2); cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--sub2); font-size:1.1rem; opacity:0; transform:translateY(12px); transition:all 0.25s; pointer-events:none; }
+    .btt.show { opacity:1; transform:translateY(0); pointer-events:auto; }
+    .btt:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* ═══════ TESTIMONIALS ═══════ */
+    .testi-section { padding:80px 40px; max-width:1120px; margin:0 auto; }
+    .testi-carousel { position:relative; overflow:hidden; margin-top:16px; }
+    .testi-track { display:flex; transition:transform 0.5s ease; }
+    .testi-slide { min-width:100%; padding:0 4px; }
+    .testi-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:32px; }
+    .testi-stars { color:#facc15; font-size:0.9rem; margin-bottom:12px; letter-spacing:2px; }
+    .testi-quote { font-size:0.95rem; color:var(--text); line-height:1.7; margin-bottom:20px; font-style:italic; }
+    .testi-author { display:flex; align-items:center; gap:12px; }
+    .testi-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--blue)); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:800; color:#060809; flex-shrink:0; }
+    .testi-name { font-size:0.85rem; font-weight:700; }
+    .testi-role { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:var(--sub); }
+    .testi-dots { display:flex; justify-content:center; gap:8px; margin-top:20px; }
+    .testi-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); border:none; cursor:pointer; transition:all 0.2s; padding:0; }
+    .testi-dot.active { background:var(--accent); width:24px; border-radius:4px; }
+
+    /* ═══════ CTA SECTION ═══════ */
+    .cta-section { padding:80px 40px; max-width:1120px; margin:0 auto; }
+    .cta-card { background:linear-gradient(160deg, rgba(0,229,176,0.06) 0%, var(--surface) 60%); border:1px solid rgba(0,229,176,0.2); border-radius:var(--r); padding:48px 40px; text-align:center; position:relative; overflow:hidden; }
+    .cta-card::before { content:''; position:absolute; width:400px; height:400px; border-radius:50%; background:rgba(0,229,176,0.04); filter:blur(80px); top:-200px; right:-100px; pointer-events:none; }
+    .cta-h2 { font-size:clamp(1.6rem,3vw,2.2rem); font-weight:900; letter-spacing:-0.04em; margin-bottom:12px; }
+    .cta-p { color:var(--sub2); font-size:0.9rem; max-width:480px; margin:0 auto 28px; line-height:1.7; }
+    .cta-big-btn { display:inline-flex; align-items:center; gap:10px; padding:16px 36px; border-radius:var(--r-sm); background:var(--accent); color:#060809; font-family:'Inter',sans-serif; font-size:1rem; font-weight:800; border:none; cursor:pointer; text-decoration:none; transition:all 0.2s; }
+    .cta-big-btn:hover { background:#1fffd0; box-shadow:0 8px 32px rgba(0,229,176,0.4); transform:translateY(-2px); }
   </style>
 </head>
 <body>
+
+  <div class="scroll-progress" id="scroll-progress"></div>
 
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
@@ -1294,10 +1531,13 @@
       <div class="nav-brand-dot"></div>
       Tell5
     </a>
-    <div class="nav-links">
+    <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNav()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="nav-links">
       <a class="nav-btn nav-ghost" href="/discover">Discover</a>
-      <button class="nav-btn nav-ghost" onclick="showPage('login')">Log in</button>
-      <button class="nav-btn nav-solid" id="nav-cta" onclick="showPage('signup')">Get started →</button>
+      <button class="nav-btn nav-ghost" onclick="closeNav();showPage('login')">Log in</button>
+      <button class="nav-btn nav-solid" id="nav-cta" onclick="closeNav();showPage('signup')">Get started →</button>
     </div>
   </nav>
 
@@ -1312,9 +1552,9 @@
       </div>
 
       <h1 class="hero-h1">
-        Your business<br>
-        on <span class="hl">WhatsApp</span>,<br>
-        fully automated.
+        Turn every<br>
+        WhatsApp message<br>
+        into <span class="hl">revenue</span>.
       </h1>
 
       <p class="hero-p">
@@ -1332,7 +1572,7 @@
         </button>
       </div>
 
-      <div class="stats-row">
+      <div class="stats-row" data-animate data-speed="slow">
         <div class="stat">
           <div class="stat-n">12<span>k+</span></div>
           <div class="stat-l">Active Businesses</div>
@@ -1350,10 +1590,15 @@
           <div class="stat-l">Customer Rating</div>
         </div>
       </div>
+
+      <div class="scroll-indicator" id="scroll-indicator">
+        <span>Scroll</span>
+        <div class="scroll-arrow"></div>
+      </div>
     </section>
 
     <!-- Dashboard mockup -->
-    <div class="mockup-section">
+    <div class="mockup-section" data-animate>
       <div class="section-label">Dashboard Preview</div>
       <div class="mockup-frame">
 
@@ -1535,37 +1780,39 @@
       </div>
     </div>
 
+    <div class="section-divider"></div>
+
     <!-- Features -->
-    <section class="features-section">
+    <section class="features-section" data-animate>
       <div class="section-eyebrow">Features</div>
       <h2 class="section-h2">Everything your team needs</h2>
       <div class="features-grid">
-        <div class="feature-card">
+        <div class="feature-card" data-animate data-delay="1">
           <div class="feat-icon-wrap">💬</div>
           <div class="feat-title">Conversation Inbox</div>
           <div class="feat-desc">All WhatsApp messages in one unified inbox. Filter by category, status, or agent in real time.</div>
         </div>
-        <div class="feature-card">
+        <div class="feature-card" data-animate data-delay="2">
           <div class="feat-icon-wrap">📦</div>
           <div class="feat-title">Order Tracking</div>
           <div class="feat-desc">Auto-parse orders from conversations and track them from placement to delivery — no manual entry.</div>
         </div>
-        <div class="feature-card">
+        <div class="feature-card" data-animate data-delay="3">
           <div class="feat-icon-wrap">📊</div>
           <div class="feat-title">Live Analytics</div>
           <div class="feat-desc">Real-time charts on conversation volume, category breakdown, and order funnel metrics.</div>
         </div>
-        <div class="feature-card feature-card-bottom">
+        <div class="feature-card feature-card-bottom" data-animate data-delay="4">
           <div class="feat-icon-wrap">🤖</div>
           <div class="feat-title">AI Auto-Categorise</div>
           <div class="feat-desc">Messages are instantly tagged as orders, complaints, inquiries, or support — no rules to write.</div>
         </div>
-        <div class="feature-card feature-card-bottom">
+        <div class="feature-card feature-card-bottom" data-animate data-delay="5">
           <div class="feat-icon-wrap">⚡</div>
           <div class="feat-title">Instant Alerts</div>
           <div class="feat-desc">Get notified the moment a high-priority complaint or failed order lands in your queue.</div>
         </div>
-        <div class="feature-card feature-card-bottom">
+        <div class="feature-card feature-card-bottom" data-animate data-delay="5">
           <div class="feat-icon-wrap">🔗</div>
           <div class="feat-title">Webhook API</div>
           <div class="feat-desc">Connect Tell5 to Shopify, Notion, Slack, and more — via webhooks and REST API.</div>
@@ -1573,59 +1820,134 @@
       </div>
     </section>
 
-    <!-- Pricing -->
-    <section class="pricing-section">
-      <div class="section-eyebrow">Pricing</div>
-      <h2 class="section-h2">Simple, honest pricing</h2>
-      <div class="pricing-grid">
-        <div class="pricing-card">
-          <div class="pricing-tier">Starter</div>
-          <div class="pricing-price-row">
-            <div class="pricing-price">Free</div>
+    <div class="section-divider"></div>
+
+    <!-- Testimonials -->
+    <section class="testi-section" data-animate>
+      <div class="section-eyebrow">Trusted by businesses</div>
+      <h2 class="section-h2">What our users say</h2>
+      <div class="testi-carousel">
+        <div class="testi-track" id="testi-track">
+          <div class="testi-slide">
+            <div class="testi-card">
+              <div class="testi-stars">★★★★★</div>
+              <div class="testi-quote">"Tell5 cut our response time from hours to seconds. Our customers love it and sales are up 34%."</div>
+              <div class="testi-author">
+                <div class="testi-avatar">AO</div>
+                <div>
+                  <div class="testi-name">Ada Okafor</div>
+                  <div class="testi-role">CEO, Freshmart Lagos</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="pricing-period">forever, no card needed</div>
+          <div class="testi-slide">
+            <div class="testi-card">
+              <div class="testi-stars">★★★★★</div>
+              <div class="testi-quote">"Managing WhatsApp orders was chaos before Tell5. Now everything is organized and our team responds instantly."</div>
+              <div class="testi-author">
+                <div class="testi-avatar">CK</div>
+                <div>
+                  <div class="testi-name">Chidi Kalu</div>
+                  <div class="testi-role">Operations Lead, Kalu Foods</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="testi-slide">
+            <div class="testi-card">
+              <div class="testi-stars">★★★★★</div>
+              <div class="testi-quote">"The AI categorization alone saves us hours daily. Orders get routed automatically and complaints never slip through."</div>
+              <div class="testi-author">
+                <div class="testi-avatar">FN</div>
+                <div>
+                  <div class="testi-name">Fatima Nwosu</div>
+                  <div class="testi-role">Founder, Bridge Logistics</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="testi-dots" id="testi-dots">
+          <button class="testi-dot active" data-index="0"></button>
+          <button class="testi-dot" data-index="1"></button>
+          <button class="testi-dot" data-index="2"></button>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- Pricing -->
+    <section class="pricing-section" data-animate>
+      <div class="section-eyebrow">Pricing</div>
+      <h2 class="section-h2">Free while we build</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card hot" data-animate data-delay="1">
+          <div class="hot-badge">Current Plan</div>
+          <div class="pricing-tier">Free</div>
+          <div class="pricing-price-row">
+            <div class="pricing-price">Always</div>
+          </div>
+          <div class="pricing-period">free, no card needed · forever</div>
           <ul class="pricing-feats">
-            <li><span class="feat-check">✓</span> Up to 500 messages/mo</li>
-            <li><span class="feat-check">✓</span> 1 WhatsApp number</li>
-            <li><span class="feat-check">✓</span> Basic dashboard</li>
+            <li><span class="feat-check">✓</span> AI message categorization</li>
+            <li><span class="feat-check">✓</span> AI auto-reply with toggle</li>
+            <li><span class="feat-check">✓</span> Personality Q&A matching</li>
+            <li><span class="feat-check">✓</span> Conversation inbox &amp; filtering</li>
             <li><span class="feat-check">✓</span> Order tracking</li>
+            <li><span class="feat-check">✓</span> Business profile &amp; products</li>
+            <li><span class="feat-check">✓</span> Dashboard with live analytics</li>
+            <li><span class="feat-check">✓</span> Multi-provider AI pipeline</li>
+            <li><span class="feat-check">✓</span> Webhook API</li>
+            <li><span class="feat-check">✓</span> Unlimited team members</li>
           </ul>
-          <button class="pricing-btn" onclick="showPage('signup')">Get started</button>
+          <button class="pricing-btn pricing-btn-accent" onclick="showPage('signup')">Get started</button>
         </div>
 
-        <div class="pricing-card hot">
-          <div class="hot-badge">Most Popular</div>
+        <div class="pricing-card" data-animate data-delay="2">
           <div class="pricing-tier">Growth</div>
           <div class="pricing-price-row">
-            <span class="pricing-currency">₦</span>
-            <div class="pricing-price">9,900</div>
+            <div class="pricing-price">Coming</div>
           </div>
-          <div class="pricing-period">per month · cancel anytime</div>
+          <div class="pricing-period">affordable pricing · launch later</div>
           <ul class="pricing-feats">
+            <li><span class="feat-check">✓</span> Everything in Free</li>
             <li><span class="feat-check">✓</span> Unlimited messages</li>
-            <li><span class="feat-check">✓</span> 3 WhatsApp numbers</li>
-            <li><span class="feat-check">✓</span> Full analytics suite</li>
-            <li><span class="feat-check">✓</span> AI categorisation</li>
+            <li><span class="feat-check">✓</span> Multiple WhatsApp numbers</li>
             <li><span class="feat-check">✓</span> Priority support</li>
+            <li><span class="feat-check">✓</span> Custom integrations</li>
           </ul>
-          <button class="pricing-btn pricing-btn-accent" onclick="showPage('signup')">Start free trial</button>
+          <button class="pricing-btn" onclick="showPage('signup')">Get notified</button>
         </div>
 
-        <div class="pricing-card">
+        <div class="pricing-card" data-animate data-delay="3">
           <div class="pricing-tier">Enterprise</div>
           <div class="pricing-price-row">
             <div class="pricing-price">Custom</div>
           </div>
-          <div class="pricing-period">contact us for a quote</div>
+          <div class="pricing-period">tailored for you</div>
           <ul class="pricing-feats">
-            <li><span class="feat-check">✓</span> Unlimited everything</li>
-            <li><span class="feat-check">✓</span> Unlimited numbers</li>
-            <li><span class="feat-check">✓</span> Dedicated agent</li>
-            <li><span class="feat-check">✓</span> Custom integrations</li>
+            <li><span class="feat-check">✓</span> Everything in Growth</li>
+            <li><span class="feat-check">✓</span> Dedicated AI agent (ADK)</li>
+            <li><span class="feat-check">✓</span> MongoDB MCP integration</li>
+            <li><span class="feat-check">✓</span> On-premise deployment</li>
             <li><span class="feat-check">✓</span> SLA guarantee</li>
           </ul>
-          <button class="pricing-btn" onclick="showPage('signup')">Talk to sales</button>
+          <button class="pricing-btn" onclick="showPage('signup')">Talk to us</button>
         </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" data-animate>
+      <div class="cta-card">
+        <h2 class="cta-h2">Start using Tell5 today</h2>
+        <p class="cta-p">AI-powered WhatsApp management with personality-driven responses, smart categorization, and a powerful dashboard — free while we build.</p>
+        <a class="cta-big-btn" onclick="showPage('signup')">
+          Get started free
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
       </div>
     </section>
 
@@ -1634,72 +1956,57 @@
       <div class="footer-brand">Tell5</div>
       <div class="footer-copy">© 2026 Tell5 · Built for African businesses.</div>
     </footer>
+
+    <!-- Back to top -->
+    <button class="btt" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
   </div>
 
   <!-- ══ LOGIN ══ -->
   <div id="page-login" class="page">
-    <div class="auth-shell">
-      <div class="auth-left">
-        <div class="auth-left-glow"></div>
-        <div class="auth-left-brand">
-          <div class="nav-brand-dot"></div>
+    <div class="auth-page">
+      <div class="auth-card">
+        <a class="auth-card-brand" href="/">
+          <img src="/static/tell5-icon.svg" alt="Tell5" />
           Tell5
+        </a>
+
+        <div class="auth-title">Welcome back</div>
+        <div class="auth-sub">Log in to your dashboard to pick up where you left off.</div>
+
+        <div class="form-error" id="login-error">Invalid email or password. Please try again.</div>
+
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input class="form-input" type="email" id="login-email" placeholder="you@company.com" autocomplete="email" />
         </div>
 
-        <div class="auth-left-content">
-          <h2 class="auth-left-h">
-            Welcome<br>back to<br><span>Tell5</span>
-          </h2>
-          <p class="auth-left-p">
-            Your conversations, orders, and customers — all in one place. Pick up right where you left off.
-          </p>
-
-          <div class="auth-testimonial">
-            <div class="auth-testimonial-text">
-              "Tell5 cut our response time from hours to seconds. Our customers love it and sales are up 34%."
-            </div>
-            <div class="auth-testimonial-author">
-              <div class="auth-avatar">AO</div>
-              <div>
-                <div class="auth-author-name">Ada Okafor</div>
-                <div class="auth-author-co">CEO, Freshmart Lagos</div>
-              </div>
-            </div>
+        <div class="form-group">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <label class="form-label">Password</label>
+            <a class="forgot-link" id="forgot-link" onclick="showForgotPassword()">Forgot password?</a>
           </div>
+          <input class="form-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
         </div>
 
-        <div class="auth-left-footer">© 2026 Tell5 · Built for African businesses.</div>
-      </div>
+        <button class="form-submit" id="login-btn" onclick="handleLogin()">Log in →</button>
 
-      <div class="auth-right">
-        <div class="auth-form-wrap">
-          <div class="auth-form-title">Log in</div>
-          <div class="auth-form-sub">Welcome back. Enter your details below.</div>
+        <button class="google-btn" onclick="window.location.href='/api/auth/google'">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.54 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.87 7.35 2.56 10.56l7.98-5.97z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.97C6.51 42.62 14.62 48 24 48z"/></svg>
+          Continue with Google
+        </button>
 
-          <div class="form-error" id="login-error">Invalid email or password. Please try again.</div>
+        <div class="form-divider"><span>or</span></div>
 
-          <div class="form-group">
-            <label class="form-label">Email address</label>
-            <input class="form-input" type="email" id="login-email" placeholder="you@company.com" autocomplete="email" />
-          </div>
+        <div class="form-switch">
+          Don't have an account? <a onclick="showPage('signup')">Sign up free</a>
+        </div>
 
-          <div class="form-group">
-            <div style="display:flex; justify-content:space-between; align-items:center">
-              <label class="form-label">Password</label>
-              <a class="forgot-link" id="forgot-link"
-                onclick="showForgotPassword()">
-                Forgot password?
-              </a>
-            </div>
-            <input class="form-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
-          </div>
-
-          <button class="form-submit" id="login-btn" onclick="handleLogin()">Log in →</button>
-
-          <div class="form-divider"><span>or</span></div>
-
-          <div class="form-switch">
-            Don't have an account? <a onclick="showPage('signup')">Sign up free</a>
+        <div class="auth-testi">
+          <div class="auth-testi-avatar">AO</div>
+          <div>
+            <div class="auth-testi-text">"Tell5 cut our response time from hours to seconds. Sales are up 34%."</div>
+            <div class="auth-testi-name">Ada Okafor</div>
+            <div class="auth-testi-role">CEO, Freshmart Lagos</div>
           </div>
         </div>
       </div>
@@ -1708,33 +2015,29 @@
 
   <!-- ══ FORGOT PASSWORD ══ -->
   <div id="page-forgot" class="page">
-    <div class="auth-shell">
-      <div class="auth-left">
-        <div class="auth-left-glow"></div>
-        <div class="auth-left-brand">
-          <div class="nav-brand-dot"></div>
+    <div class="auth-page">
+      <div class="auth-card">
+        <a class="auth-card-brand" href="/">
+          <img src="/static/tell5-icon.svg" alt="Tell5" />
           Tell5
+        </a>
+
+        <div class="auth-title">Reset password</div>
+        <div class="auth-sub">Enter your email and we'll send you a reset link. Back in action in seconds.</div>
+
+        <div class="form-error" id="reset-error">Something went wrong.</div>
+
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input class="form-input" type="email" id="reset-email" placeholder="you@company.com" autocomplete="email" />
         </div>
-        <div class="auth-left-content">
-          <h2 class="auth-left-h">Reset your<br><span>password</span></h2>
-          <p class="auth-left-p">Enter your email and we'll send you a reset link. Back in action in seconds.</p>
-        </div>
-        <div class="auth-left-footer">© 2026 Tell5 · Built for African businesses.</div>
-      </div>
-      <div class="auth-right">
-        <div class="auth-form-wrap">
-          <div class="auth-form-title">Reset password</div>
-          <div class="auth-form-sub">We'll send a reset link to your email.</div>
-          <div class="form-error" id="reset-error">Something went wrong.</div>
-          <div class="form-group">
-            <label class="form-label">Email address</label>
-            <input class="form-input" type="email" id="reset-email" placeholder="you@company.com" autocomplete="email" />
-          </div>
-          <button class="form-submit" id="reset-btn" onclick="handleReset()">Send reset link →</button>
-          <div class="form-divider"><span>or</span></div>
-          <div class="form-switch">
-            <a onclick="showPage('login')">Back to log in</a>
-          </div>
+
+        <button class="form-submit" id="reset-btn" onclick="handleReset()">Send reset link →</button>
+
+        <div class="form-divider"><span>or</span></div>
+
+        <div class="form-switch">
+          <a onclick="showPage('login')">Back to log in</a>
         </div>
       </div>
     </div>
@@ -1742,50 +2045,20 @@
 
   <!-- ══ SIGNUP ══ -->
   <div id="page-signup" class="page">
-    <div class="auth-shell">
-      <div class="auth-left">
-        <div class="auth-left-glow"></div>
-        <div class="auth-left-brand">
-          <div class="nav-brand-dot"></div>
+    <div class="auth-page">
+      <div class="auth-card">
+        <a class="auth-card-brand" href="/">
+          <img src="/static/tell5-icon.svg" alt="Tell5" />
           Tell5
-        </div>
+        </a>
 
-        <div class="auth-left-content">
-          <h2 class="auth-left-h">
-            Start<br>automating<br><span>today</span>
-          </h2>
-          <p class="auth-left-p">
-            Join 12,000+ African businesses using Tell5 to manage WhatsApp at scale. Free forever, no credit card needed.
-          </p>
+        <div class="auth-title">Create account</div>
+        <div class="auth-sub">Free forever. No credit card required. Join 12,000+ businesses.</div>
 
-          <div style="display:flex; flex-direction:column; gap:12px; max-width:300px;">
-            <div style="display:flex; align-items:center; gap:10px; font-size:0.8rem; color:var(--sub2);">
-              <div style="width:20px; height:20px; border-radius:50%; background:rgba(0,229,176,0.12); border:1px solid rgba(0,229,176,0.2); display:flex; align-items:center; justify-content:center; color:var(--accent); font-size:0.65rem; flex-shrink:0;">✓</div>
-              Free forever on Starter plan
-            </div>
-            <div style="display:flex; align-items:center; gap:10px; font-size:0.8rem; color:var(--sub2);">
-              <div style="width:20px; height:20px; border-radius:50%; background:rgba(0,229,176,0.12); border:1px solid rgba(0,229,176,0.2); display:flex; align-items:center; justify-content:center; color:var(--accent); font-size:0.65rem; flex-shrink:0;">✓</div>
-              Setup in under 5 minutes
-            </div>
-            <div style="display:flex; align-items:center; gap:10px; font-size:0.8rem; color:var(--sub2);">
-              <div style="width:20px; height:20px; border-radius:50%; background:rgba(0,229,176,0.12); border:1px solid rgba(0,229,176,0.2); display:flex; align-items:center; justify-content:center; color:var(--accent); font-size:0.65rem; flex-shrink:0;">✓</div>
-              No credit card required
-            </div>
-          </div>
-        </div>
+        <div class="form-error" id="signup-error">Please fill in all fields correctly.</div>
 
-        <div class="auth-left-footer">© 2026 Tell5 · Built for African businesses.</div>
-      </div>
-
-      <div class="auth-right">
-        <div class="auth-form-wrap">
-          <div class="auth-form-title">Create account</div>
-          <div class="auth-form-sub">Free forever. No credit card required.</div>
-
-          <div class="form-error" id="signup-error">Please fill in all fields correctly.</div>
-
-          <div class="form-row">
-            <div class="form-group">
+        <div class="form-row">
+          <div class="form-group">
               <label class="form-label">First name</label>
               <input class="form-input" type="text" id="signup-first" placeholder="Ada" autocomplete="given-name" />
             </div>
@@ -1823,6 +2096,11 @@
 
           <button class="form-submit" id="signup-btn" onclick="handleSignup()">Create account →</button>
 
+          <button class="google-btn" onclick="window.location.href='/api/auth/google'">
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.54 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.87 7.35 2.56 10.56l7.98-5.97z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.97C6.51 42.62 14.62 48 24 48z"/></svg>
+            Sign up with Google
+          </button>
+
           <div class="form-divider"><span>already have an account?</span></div>
 
           <div class="form-switch">
@@ -1836,7 +2114,6 @@
         </div>
       </div>
     </div>
-  </div>
 
   <script>
     async function apiRequest(url, payload) {
@@ -1851,7 +2128,17 @@
       return d;
     }
 
+    function toggleNav() {
+      document.getElementById('nav-links').classList.toggle('open');
+      document.getElementById('nav-hamburger').classList.toggle('active');
+    }
+    function closeNav() {
+      document.getElementById('nav-links').classList.remove('open');
+      document.getElementById('nav-hamburger').classList.remove('active');
+    }
+
     function showPage(id) {
+      closeNav();
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       const el = document.getElementById('page-' + id);
       if (el) { el.classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -1952,6 +2239,117 @@
       if (document.getElementById('page-login').classList.contains('active'))  handleLogin();
       if (document.getElementById('page-signup').classList.contains('active')) handleSignup();
     });
+
+    /* ── Scroll Animations ── */
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
+
+    /* ── Counter Animation ── */
+    function animateCounter(el, target) {
+      const isK = String(target).includes('k') || String(target).includes('K');
+      const numericTarget = parseFloat(String(target).replace(/[kK+%★]/g, ''));
+      if (isNaN(numericTarget)) return;
+      const suffix = String(target).replace(/[\d.]/g, '');
+      let current = 0;
+      const step = Math.ceil(numericTarget / 40);
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= numericTarget) {
+          current = numericTarget;
+          clearInterval(interval);
+        }
+        el.innerHTML = (Number.isInteger(numericTarget) ? Math.floor(current) : current.toFixed(1)) + suffix;
+      }, 30);
+    }
+
+    const statsObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelectorAll('.stat-n').forEach(el => animateCounter(el, el.textContent));
+          statsObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    const statsRow = document.querySelector('.stats-row');
+    if (statsRow) statsObserver.observe(statsRow);
+
+    /* ── Testimonial Carousel ── */
+    let testiIndex = 0;
+    function goToSlide(idx) {
+      testiIndex = idx;
+      const track = document.getElementById('testi-track');
+      track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+      document.querySelectorAll('.testi-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+    let testiInterval = setInterval(() => {
+      const dots = document.querySelectorAll('.testi-dot');
+      if (dots.length) goToSlide((testiIndex + 1) % dots.length);
+    }, 5000);
+    document.querySelectorAll('.testi-dot').forEach(d => {
+      d.addEventListener('click', () => goToSlide(parseInt(d.dataset.index)));
+    });
+
+    /* ── Unified Scroll Handler ── */
+    let lastScrollY = 0;
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const sy = window.scrollY;
+          const nav = document.querySelector('nav');
+          const btt = document.getElementById('btt');
+          const indicator = document.getElementById('scroll-indicator');
+          const progress = document.getElementById('scroll-progress');
+          const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+
+          /* Back to top */
+          btt.classList.toggle('show', sy > 600);
+
+          /* Scroll indicator fade */
+          if (indicator) indicator.classList.toggle('faded', sy > 200);
+
+          /* Scroll progress */
+          if (progress) progress.style.width = maxScroll > 0 ? (sy / maxScroll * 100) + '%' : '0%';
+
+          /* Scroll-aware nav */
+          if (sy > 80) {
+            nav.classList.toggle('hidden', sy > lastScrollY);
+          } else {
+            nav.classList.remove('hidden');
+          }
+          lastScrollY = sy;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    /* ── Cursor glow on cards ── */
+    document.querySelectorAll('.feature-card, .pricing-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--mx', x + '%');
+        card.style.setProperty('--my', y + '%');
+      });
+    });
+
+    /* ── Pause testimonial carousel on hover ── */
+    const testiCarousel = document.querySelector('.testi-carousel');
+    if (testiCarousel) {
+      testiCarousel.addEventListener('mouseenter', () => { clearInterval(testiInterval); testiInterval = null; });
+      testiCarousel.addEventListener('mouseleave', () => {
+        if (!testiInterval) testiInterval = setInterval(() => {
+          const dots = document.querySelectorAll('.testi-dot');
+          if (dots.length) goToSlide((testiIndex + 1) % dots.length);
+        }, 5000);
+      });
+    }
   </script>
 </body>
 </html>
