@@ -79,6 +79,31 @@ async def delete_user_by_id(db: AsyncSession, user_id: int) -> User | None:
         await db.flush()
     return user
 
+async def get_user_profile_pg(db: AsyncSession, user_id: int) -> "UserProfile | None":
+    from models import UserProfile
+    q = await db.execute(select(UserProfile).where(UserProfile.user_id == user_id))
+    return q.scalar_one_or_none()
+
+
+async def upsert_user_profile_pg(db: AsyncSession, user_id: int, name: str, personality_words: str, distance_setting: str) -> "UserProfile":
+    from models import UserProfile
+    existing = await get_user_profile_pg(db, user_id)
+    if existing:
+        existing.name = name
+        existing.personality_words = personality_words
+        existing.distance_setting = distance_setting
+    else:
+        existing = UserProfile(
+            user_id=user_id,
+            name=name,
+            personality_words=personality_words,
+            distance_setting=distance_setting,
+        )
+        db.add(existing)
+    await db.flush()
+    return existing
+
+
 async def create_user(
     db: AsyncSession,
     email: str,

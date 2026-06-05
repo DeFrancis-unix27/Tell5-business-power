@@ -144,6 +144,19 @@ class AIXListing(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    personality_words = Column(String(500), nullable=False)
+    distance_setting = Column(String(50), nullable=False)
+    onboarding_complete = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
 class KnowledgeEntry(Base):
     __tablename__ = "knowledge_entries"
 

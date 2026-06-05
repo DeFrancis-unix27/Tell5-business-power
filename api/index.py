@@ -358,6 +358,18 @@ async def startup():
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS user_profiles (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) NOT NULL UNIQUE,
+                name VARCHAR(255) NOT NULL,
+                personality_words VARCHAR(500) NOT NULL,
+                distance_setting VARCHAR(50) NOT NULL,
+                onboarding_complete BOOLEAN NOT NULL DEFAULT TRUE,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        """))
     logger.info("Database tables initialized")
 
     # --- Start MongoDB provider ---
@@ -451,6 +463,48 @@ def validate_twilio_request(request_url: str, post_data: dict, signature: str) -
     return validator.validate(request_url, post_data, signature)
 
 
+async def _get_onboarding_profile(db: AsyncSession | None, user_id: int) -> dict | None:
+    from services.ai.mongodb_tools import get_user_profile
+    if Config.MDB_MCP_CONNECTION_STRING:
+        try:
+            profile = await get_user_profile(Config.MDB_MCP_DB_NAME, user_id)
+            if profile:
+                return profile
+        except Exception as e:
+            logger.warning("Failed to check onboarding in MongoDB: %s", e)
+    if db:
+        try:
+            from crud import get_user_profile_pg
+            pg = await get_user_profile_pg(db, user_id)
+            if pg:
+                return {
+                    "name": pg.name,
+                    "personality_words": pg.personality_words,
+                    "distance_setting": pg.distance_setting,
+                }
+        except Exception as e:
+            logger.warning("Failed to check onboarding in PG: %s", e)
+    return None
+
+
+async def _save_onboarding_profile(db: AsyncSession, user_id: int, name: str, personality_words: str, distance_setting: str) -> bool:
+    ok = False
+    if Config.MDB_MCP_CONNECTION_STRING:
+        try:
+            from services.ai.mongodb_tools import store_user_profile
+            ok = await store_user_profile(Config.MDB_MCP_DB_NAME, user_id, name, personality_words, distance_setting)
+        except Exception as e:
+            logger.warning("Failed to store onboarding in MongoDB: %s", e)
+    if not ok:
+        try:
+            from crud import upsert_user_profile_pg
+            await upsert_user_profile_pg(db, user_id, name, personality_words, distance_setting)
+            ok = True
+        except Exception as e:
+            logger.warning("Failed to store onboarding in PG: %s", e)
+    return ok
+
+
 async def _process_incoming_message(
     db: AsyncSession,
     from_number: str,
@@ -531,12 +585,11 @@ async def _process_incoming_message(
         except Exception as e:
             logger.warning("Failed to load knowledge base: %s", e)
 
-    # Load user personality profile from MongoDB to shape AI responses
+    # Load user personality profile to shape AI responses
     personality_context = {}
-    if Config.MDB_MCP_CONNECTION_STRING and target_user_id:
+    if target_user_id:
         try:
-            from services.ai.mongodb_tools import get_user_profile
-            profile = await get_user_profile(Config.MDB_MCP_DB_NAME, target_user_id)
+            profile = await _get_onboarding_profile(db, target_user_id)
             if profile:
                 personality_context = {
                     "user_name": profile.get("name", ""),
@@ -817,19 +870,13 @@ async def ai_toggle(user=Depends(get_current_user), db: AsyncSession = Depends(g
 # ── Onboarding ──
 
 @app.get("/api/onboarding/status")
-async def onboarding_status(user=Depends(get_current_user)):
-    from services.ai.mongodb_tools import get_user_profile
-    profile = None
-    if Config.MDB_MCP_CONNECTION_STRING:
-        try:
-            profile = await get_user_profile(Config.MDB_MCP_DB_NAME, user.id)
-        except Exception as e:
-            logger.warning("Failed to check onboarding: %s", e)
+async def onboarding_status(user=Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    profile = await _get_onboarding_profile(db, user.id)
     return {"onboarding_complete": profile is not None}
 
 
 @app.post("/api/onboarding")
-async def submit_onboarding(request: Request, user=Depends(get_current_user)):
+async def submit_onboarding(request: Request, user=Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     body = await request.json()
     name = str(body.get("name", "")).strip()
     personality_words = str(body.get("personality_words", "")).strip()
@@ -840,17 +887,11 @@ async def submit_onboarding(request: Request, user=Depends(get_current_user)):
     if distance_setting not in ("professional & distant", "balanced & friendly", "casual & personal"):
         raise HTTPException(status_code=400, detail="Invalid distance setting")
 
-    from services.ai.mongodb_tools import store_user_profile
-    if Config.MDB_MCP_CONNECTION_STRING:
-        try:
-            ok = await store_user_profile(Config.MDB_MCP_DB_NAME, user.id, name, personality_words, distance_setting)
-            if ok:
-                logger.info("User %d onboarding saved to MongoDB", user.id)
-                return {"ok": True}
-        except Exception as e:
-            logger.warning("Failed to store onboarding in MongoDB: %s", e)
-
-    raise HTTPException(status_code=500, detail="MongoDB not available for profile storage")
+    ok = await _save_onboarding_profile(db, user.id, name, personality_words, distance_setting)
+    if not ok:
+        raise HTTPException(status_code=500, detail="Failed to save onboarding profile")
+    await db.commit()
+    return {"ok": True}
 
 
 @app.get("/api/auth/google")
