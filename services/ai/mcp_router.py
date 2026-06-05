@@ -37,7 +37,7 @@ router.register(tier=1, name="gemini", provider="gemini", config={"model": "gemi
 router.register(tier=2, name="groq", provider="groq", config={"model": "llama-3.3-70b-versatile"})
 
 # OpenRouter sits at tier 1.5 — acts as Gemini fallback and standalone provider
-router.register(tier=2, name="openrouter", provider="openrouter", config={"model": "meta-llama/llama-3.1-405b-instruct"})
+router.register(tier=2, name="openrouter", provider="openrouter", config={"model": "google/gemini-2.0-flash-exp:free"})
 
 router.register(tier=3, name="mistral", provider="mistral", config={"model": "mistral-large-latest"})
 router.register(tier=4, name="adk", provider="adk", config={"model": "gemini-2.5-flash-lite"})

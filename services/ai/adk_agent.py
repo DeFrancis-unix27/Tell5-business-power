@@ -116,13 +116,19 @@ if _adk_available:
         if not _runner:
             return
         try:
-            await _runner.session_service.get_session(
+            session_service = _runner.session_service
+            try:
+                await session_service.get_session(
+                    app_name="tell5", user_id=user_id, session_id="tell5-session"
+                )
+                return
+            except Exception:
+                pass
+            await session_service.create_session(
                 app_name="tell5", user_id=user_id, session_id="tell5-session"
             )
-        except Exception:
-            await _runner.session_service.create_session(
-                app_name="tell5", user_id=user_id, session_id="tell5-session"
-            )
+        except Exception as e:
+            logger.warning("ADK session setup failed: %s", e)
 
     async def ask_agent(user_message: str, user_id: str = "anonymous") -> str:
         if not _runner:

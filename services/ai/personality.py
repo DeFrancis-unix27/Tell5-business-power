@@ -9,12 +9,21 @@ BUSINESS_KEYWORDS = [
     "order", "buy", "price", "product", "service", "business", "shop",
     "delivery", "pay", "payment", "refund", "return", "stock",
     "catalog", "menu", "offer", "discount", "transaction",
+    "complaint", "complain", "complaints", "feedback", "review",
+    "support", "help", "problem", "issue", "damage", "wrong",
+    "want", "need", "looking for", "interested", "quote",
+    "available", "how much", "cost", "price list", "brochure",
+    "appointment", "booking", "reservation", "hours", "location",
+    "contact", "phone", "address", "open", "close",
 ]
 
 TELL5_KEYWORDS = [
     "tell5", "tell 5", "what can you do", "recommend", "suggestion",
     "what is tell5", "how does tell5 work", "tell5 features",
     "what do you offer", "capabilities", "help me",
+    "who created tell5", "who made tell5", "tell5 founder",
+    "francis", "francis david", "tell5 owner",
+    "tell5 pricing", "tell5 plan", "tell5 platform",
 ]
 
 PERSONAL_KEYWORDS = [
@@ -65,13 +74,12 @@ def detect_mode(message: str) -> str:
     return "unknown"
 
 
-def is_physical_occurrence(message: str) -> bool:
-    msg = message.lower()
-    physical_indicators = [
-        "i am", "i'm", "my", "me", "i feel", "i have", "i need",
+def should_block_message(message: str) -> bool:
+    """Block only clearly non-business personal chat."""
+    msg = message.lower().strip()
+    pure_personal = [
+        "i am", "i'm", "i feel", "i think", "my name",
         "where is", "what time", "when will", "how long",
         "there is", "there are", "it is", "it's",
-        "can you", "could you", "would you", "will you",
-        "tell me about yourself",
     ]
-    return any(indicator in msg for indicator in physical_indicators)
+    return any(msg.startswith(p) for p in pure_personal) and not any(kw in msg for kw in BUSINESS_KEYWORDS + TELL5_KEYWORDS)

@@ -12,7 +12,7 @@ async def groq_classify(text: str, categories: list[str]) -> Optional[str]:
         return None
     import httpx
 
-    prompt = f"""Classify the intent of this message into exactly one of: {', '.join(categories)}.
+    prompt = f"""You are Tell5's AI classifier. Categorize this message into: {', '.join(categories)}.
 
 Message: {text}
 
@@ -52,14 +52,18 @@ async def groq_generate_reply(
 
     context_str = ""
     if context:
-        context_str = f"\nContext: {json.dumps(context)}"
+        context_str = f"\nBusiness context: {json.dumps(context)}"
 
-    prompt = f"""You are a customer service agent for a WhatsApp business platform.
+    prompt = f"""You are Tell5 (tell5.app), a WhatsApp business platform AI assistant.
+Tell5 was created by Francis David, who is from Nigeria and also works with Meta.
+Tell5 helps businesses manage conversations, orders, complaints, and feedback via WhatsApp.
 
 Category: {category}
 Customer message: {message}{context_str}
 
-Write a short, helpful reply. Return JSON only:
+Write a short, helpful WhatsApp reply. If the customer asks about Tell5, answer using your Tell5 knowledge.
+If the message is personal and not about business, politely redirect to business topics.
+Return JSON only:
 {{"reply": "your reply here"}}"""
 
     try:

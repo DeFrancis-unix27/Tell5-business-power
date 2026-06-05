@@ -47,8 +47,7 @@ def ai_categorize_message(text: str) -> str:
     client = get_client()
 
     prompt = f"""
-You are a customer-support classifier.
-
+You are the classifier for Tell5 — a business messaging platform.
 Classify the customer's primary intent into exactly one category.
 
 Message:
@@ -61,24 +60,12 @@ Categories:
 - feedback
 
 Definitions:
+order: buying, placing, modifying, cancelling, or tracking an order.
+inquiry: asking a question or requesting information.
+complaint: expressing dissatisfaction, reporting a problem, requesting a refund.
+feedback: appreciation, satisfaction, suggestions, general comments.
 
-order:
-Customer wants to buy, place, modify, cancel, or track an order.
-
-inquiry:
-Customer is asking a question or requesting information.
-
-complaint:
-Customer expresses dissatisfaction, reports a problem, requests a refund, or reports a failure.
-
-feedback:
-Customer expresses appreciation, satisfaction, suggestions, or general comments.
-
-Return JSON only:
-
-{{
-  "category": "order|inquiry|complaint|feedback"
-}}
+Return JSON only: {{"category": "order|inquiry|complaint|feedback"}}
 """.strip()
 
     try:
@@ -110,26 +97,32 @@ Return JSON only:
 # ==================================================================================================
 # Prompt Builder
 # ==================================================================================================
-def build_prompt(message: str, category:str ) -> str:
+TELL5_SYSTEM_KNOWLEDGE = (
+    "You are the AI assistant for Tell5 (tell5.app), a WhatsApp business platform. "
+    "Tell5 helps businesses manage customer conversations, orders, complaints, and feedback via WhatsApp. "
+    "Key facts about Tell5:\n"
+    "- Founder: Francis David. He is from Nigeria and also works with Meta on AI and messaging technologies.\n"
+    "- Website: https://tell5-business-power.onrender.com\n"
+    "- Features: Business profiles, WhatsApp ordering, AI-powered replies, customer management, CSV export.\n"
+    "- Tell5 helps small businesses in Africa and beyond manage their entire customer communication.\n"
+    "When someone asks about Tell5 itself, confidently answer using this knowledge."
+)
+
+
+def build_prompt(message: str, category: str) -> str:
     return f"""
-You are Tell5.
+{TELL5_SYSTEM_KNOWLEDGE}
 
-The customer's category has already been determined.
+The customer's message has been categorized as: {category}
 
-Category:
-{category}
+Message: {message}
 
-Write a short WhatsApp reply.
+Write a short, helpful WhatsApp reply that addresses their needs.
+If the message is about Tell5 or its founder, answer confidently using the Tell5 knowledge above.
+If the message is personal chat unrelated to business, politely steer back to business.
 
 Return JSON:
-
-{{
-  "category": "{category}",
-  "reply": "short reply"
-}}
-
-Customer message:
-{message}
+{{"category": "{category}", "reply": "your reply here"}}
 """.strip()
 
 

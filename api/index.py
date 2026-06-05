@@ -1,6 +1,6 @@
 import os
 import sentry_sdk
-
+from datetime import datetime, timezone
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import Response, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -427,7 +427,7 @@ async def startup():
     # --- Weekly conversation cleanup (keep last 7 days) ---
     try:
         from datetime import timedelta
-        cutoff = datetime.utcnow() - timedelta(days=7)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=7)
         async with AsyncSessionLocal() as sess:
             await sess.execute(
                 text("DELETE FROM conversations WHERE timestamp < :cutoff"),
@@ -536,14 +536,12 @@ async def _process_incoming_message(
         return {"reply": "", "category": category, "conv_id": None, "pipeline_success": False, "ai_disabled": True}
 
     # ── Personality: match Q&A first ──
-    from services.ai.personality import match_qa, detect_mode, is_physical_occurrence, load_qa_cache
+    from services.ai.personality import match_qa, should_block_message, load_qa_cache
     if not hasattr(app.state, "_qa_cache_loaded") or not app.state._qa_cache_loaded:
         await load_qa_cache(db)
         app.state._qa_cache_loaded = True
 
     personality_match = match_qa(body)
-    personality_mode = detect_mode(body)
-    is_physical = is_physical_occurrence(body)
 
     # If a personality Q&A matches, use the stored answer directly
     if personality_match:
@@ -559,9 +557,8 @@ async def _process_incoming_message(
             "personality_mode": personality_match["mode"],
         }
 
-    # If mode is personal, unknown, or looks like a physical occurrence, stay quiet
-    # Only business questions and Tell5 recommendations get replies
-    if personality_mode != "business" or is_physical:
+    # Block only clearly non-business chat; everything else goes to AI
+    if should_block_message(body):
         category = "inquiry"
         await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
@@ -600,6 +597,18 @@ async def _process_incoming_message(
         except Exception as e:
             logger.warning("Failed to load personality profile: %s", e)
 
+    # Inject Tell5 Q&A knowledge into context for AI awareness
+    tell5_qa_context = {}
+    try:
+        from services.ai.personality import _qa_cache
+        if _qa_cache:
+            tell5_qa_context["tell5_knowledge"] = [
+                {"question": q["question"], "answer": q["answer"], "mode": q["mode"]}
+                for q in _qa_cache
+            ]
+    except Exception:
+        pass
+
     from services.ai.pipeline import run_pipeline
     import uuid
     message_id = str(uuid.uuid4())
@@ -608,6 +617,8 @@ async def _process_incoming_message(
         merged_context.update(personality_context)
     if knowledge_context:
         merged_context.update(knowledge_context)
+    if tell5_qa_context:
+        merged_context.update(tell5_qa_context)
     pipeline_result = await run_pipeline(
         body, message_id=message_id, from_number=phone, user_id=target_user_id,
         context=merged_context if merged_context else None,
@@ -1574,7 +1585,7 @@ async def export_csv(user=Depends(get_current_user), db: AsyncSession = Depends(
     writer.writerow(["ID", "Phone", "Message", "Category", "Channel", "AI Response", "Timestamp"])
     for c in convs:
         writer.writerow([c.id, c.phone, c.message, c.category, c.channel, c.ai_response or "", str(c.timestamp or "")])
-    filename = f"tell5-conversations-{user.id}-{datetime.utcnow().strftime('%Y-%m-%d')}.csv"
+    filename = f"tell5-conversations-{user.id}-{datetime.now(timezone.utc).strftime('%Y-%m-%d')}.csv"
     return Response(
         content=output.getvalue(),
         media_type="text/csv",

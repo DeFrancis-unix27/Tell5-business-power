@@ -48,7 +48,7 @@ class Config:
     MISTRAL_API_KEY: Optional[str] = os.getenv("MISTRAL_API_KEY", "").strip() or None
     MISTRAL_MODEL: str = os.getenv("MISTRAL_MODEL", "mistral-large-latest").strip()
     OPENROUTER_API_KEY: Optional[str] = os.getenv("OPENROUTER_API_KEY", "").strip() or None
-    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-405b-instruct").strip()
+    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-exp:free").strip()
     SENTRY_DSN: Optional[str] = os.getenv("SENTRY_DSN", "").strip() or None
     ADMIN_EMAIL: Optional[str] = os.getenv("ADMIN_EMAIL", "").strip() or None
     MDB_MCP_CONNECTION_STRING: Optional[str] = os.getenv("MDB_MCP_CONNECTION_STRING", "").strip() or None

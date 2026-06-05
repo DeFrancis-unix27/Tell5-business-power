@@ -450,6 +450,7 @@
           <select id="qa-mode" style="padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:0.8rem;">
             <option value="business">Business</option>
             <option value="personal">Personal</option>
+            <option value="tell5">Tell5 Platform</option>
           </select>
           <button class="header-btn" onclick="addQA()" style="font-size:0.7rem;">+ Add</button>
         </div>
@@ -654,7 +655,7 @@
         }
         el.innerHTML = list.map(q => `
           <div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
-            <span class="badge ${q.mode === 'personal' ? 'warn' : 'ok'}" style="flex-shrink:0;">${q.mode}</span>
+            <span class="badge ${q.mode === 'personal' ? 'warn' : q.mode === 'tell5' ? 'ok' : ''}" style="flex-shrink:0;">${q.mode}</span>
             <span style="flex:1;color:var(--text);"><strong>Q:</strong> ${esc(q.question)}</span>
             <span style="flex:2;color:var(--sub);"><strong>A:</strong> ${esc(q.answer)}</span>
             <button class="header-btn" onclick="deleteQA(${q.id})" style="font-size:0.6rem;color:#ef4444;">✕</button>
