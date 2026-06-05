@@ -19,6 +19,7 @@ function writeState(state) {
 let sock = null;
 let currentQr = null;
 let reconnectAttempts = 0;
+let lastActive = Date.now();
 
 async function forwardToApi(body) {
     const url = `${API_BASE}/api/baileys/webhook`;
@@ -61,6 +62,10 @@ async function startBot() {
         printQRInTerminal: false,
         markOnlineOnConnect: true,
         connectTimeoutMs: 30000,
+        keepAliveIntervalMs: 20000,
+        retryRequestDelayMs: 1000,
+        maxRetryCount: 5,
+        shouldSyncLogicMessage: () => false,
     });
 
     writeState({ connected: false, qr: null, message: "Connecting..." });
@@ -77,6 +82,8 @@ async function startBot() {
         if (connection === "open") {
             console.log("WhatsApp connected");
             currentQr = null;
+            reconnectAttempts = 0;
+            lastActive = Date.now();
             writeState({ connected: true, qr: null, message: "WhatsApp is connected." });
         }
 
@@ -104,6 +111,7 @@ async function startBot() {
     sock.ev.on("creds.update", saveCreds);
 
     sock.ev.on("messages.upsert", async (msg) => {
+        lastActive = Date.now();
         const m = msg.messages[0];
         if (!m.message || m.key.fromMe) return;
 
@@ -186,6 +194,31 @@ const server = http.createServer(async (req, res) => {
         return sendJson(500, { error: err.message });
     }
 });
+
+// Keep-alive ping every 25s — prevents WhatsApp from dropping idle connections
+setInterval(() => {
+    if (sock?.user) {
+        sock.sendPresenceUpdate("available").catch(err => {
+            console.error("Keep-alive ping failed:", err.message);
+        });
+    }
+}, 25000);
+
+// Health check: reconnect if no activity for 3 minutes
+setInterval(() => {
+    try {
+        const idle = Date.now() - lastActive;
+        if (sock?.user && idle > 180000) {
+            console.log(`Idle for ${Math.round(idle/1000)}s, reconnecting...`);
+            sock.end(new Error("Reconnecting due to inactivity"));
+        } else if (!sock?.user && reconnectAttempts < 3 && idle > 60000) {
+            console.log("Health check: no connection, restarting bot...");
+            startBot();
+        }
+    } catch (err) {
+        console.error("Health check error:", err.message);
+    }
+}, 60000);
 
 server.listen(BOT_PORT, () => {
     console.log(`WhatsApp bot listening on port ${BOT_PORT}`);

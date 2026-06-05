@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Help & Setup — Tell5</title>
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060809; --surface: #0c1014; --surface2: #111820;
+      --border: #1a2330; --border2: #243040; --muted: #1e2d3d;
+      --text: #e8f0f8; --sub: #5a7a94; --sub2: #8aa0b4;
+      --accent: #00e5b0; --blue: #3b82f6; --orange: #f97316; --danger: #ef4444;
+      --r: 14px; --r-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Cabinet Grotesk', sans-serif;
+      min-height: 100vh; position: relative;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: radial-gradient(rgba(0,229,176,0.05) 1px, transparent 1px);
+      background-size: 26px 26px; pointer-events: none; z-index: 0;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(16px,4vw,40px); height: 58px;
+      background: rgba(4,6,10,0.85); backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar a { text-decoration: none; display: flex; align-items: center; gap: 9px; color: var(--text); }
+    .topbar .logo { font-size: 1.15rem; font-weight: 900; letter-spacing: -0.04em; }
+    .topbar .logo em { font-style: normal; color: var(--accent); }
+    .shell { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 36px 20px 80px; }
+    h1 { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 4px; }
+    .subtitle { color: var(--sub2); font-size: 0.95rem; margin-bottom: 32px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 16px; overflow: hidden; }
+    .card-head { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid var(--border); background: rgba(4,6,10,0.3); }
+    .card-head .pip { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .card-head h2 { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text); }
+    .card-body { padding: 22px; }
+    .card-body p { color: var(--sub2); line-height: 1.75; margin-bottom: 14px; font-size: 0.88rem; }
+    .card-body p:last-child { margin-bottom: 0; }
+    .card-body ol, .card-body ul { padding-left: 20px; margin-bottom: 14px; }
+    .card-body li { color: var(--sub2); line-height: 1.75; font-size: 0.88rem; margin-bottom: 6px; }
+    .card-body li strong { color: var(--text); }
+    .tag { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; padding: 3px 9px; border-radius: 100px; background: rgba(0,229,176,0.08); color: var(--accent); border: 1px solid rgba(0,229,176,0.18); margin-bottom: 12px; }
+    code { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; background: var(--surface2); padding: 2px 7px; border-radius: 4px; color: var(--accent); border: 1px solid var(--border2); }
+    hr { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: var(--r-sm); font-family: 'Cabinet Grotesk', sans-serif; font-size: 0.82rem; font-weight: 800; cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: #060809; }
+    .btn-primary:hover { box-shadow: 0 4px 20px rgba(0,229,176,0.25); transform: translateY(-1px); }
+    @media (max-width: 640px) { .shell { padding: 24px 16px 60px; } h1 { font-size: 1.4rem; } .card-body { padding: 16px; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/">
+      <span class="logo">Tell<em>5</em></span>
+    </a>
+    <a href="/dashboard" style="font-size:0.8rem;font-weight:600;color:var(--sub2);">Dashboard</a>
+  </header>
+  <div class="shell">
+
+    <h1>Help & Setup</h1>
+    <p class="subtitle">Everything you need to connect WhatsApp and start using Tell5.</p>
+
+    <!-- ══ Method 1: Twilio ══ -->
+    <div class="card">
+      <div class="card-head"><div class="pip"></div><h2>Method 1: Twilio WhatsApp (Recommended)</h2></div>
+      <div class="card-body">
+        <div class="tag">Official WhatsApp Business API</div>
+        <p>Twilio gives you an official WhatsApp number. Messages are reliable and you don't need to keep a phone app connected.</p>
+        <ol>
+          <li><strong>Sign up</strong> at <a href="https://twilio.com/whatsapp" target="_blank" style="color:var(--accent);">twilio.com/whatsapp</a> (free trial available)</li>
+          <li><strong>Get your credentials:</strong> Account SID, Auth Token, and a WhatsApp-enabled phone number</li>
+          <li><strong>Configure the webhook:</strong> In Twilio Console → WhatsApp → Sandbox or your sender, set the webhook URL to:<br>
+          <code>https://tell5-business-power.onrender.com/api/twilio/webhook</code></li>
+          <li><strong>Set environment variables</strong> on Render or your <code>.env</code> file:<br>
+          <code>TWILIO_ACCOUNT_SID=your_sid</code><br>
+          <code>TWILIO_AUTH_TOKEN=your_token</code><br>
+          <code>TWILIO_PHONE_NUMBER=whatsapp:+14155238886</code></li>
+          <li><strong>Done!</strong> Messages from WhatsApp will be automatically processed by the AI pipeline.</li>
+        </ol>
+        <p style="margin-top:12px;">📘 <a href="https://www.twilio.com/docs/whatsapp" target="_blank" style="color:var(--accent);">Twilio WhatsApp API docs →</a></p>
+      </div>
+    </div>
+
+    <!-- ══ Method 2: Baileys ══ -->
+    <div class="card">
+      <div class="card-head"><div class="pip"></div><h2>Method 2: Baileys Bot (QR Code)</h2></div>
+      <div class="card-body">
+        <div class="tag">Free — No Twilio Account Needed</div>
+        <p>Baileys lets you connect your personal WhatsApp number by scanning a QR code. No monthly fees, but your phone must stay online.</p>
+        <ol>
+          <li>Go to the <strong>Connections</strong> page in your dashboard</li>
+          <li>Click <strong>"Start Baileys Bot"</strong> or wait for it to start automatically</li>
+          <li>A <strong>QR code</strong> will appear on screen</li>
+          <li>Open <strong>WhatsApp → Linked Devices → Link a Device</strong> on your phone</li>
+          <li>Scan the QR code displayed on the Connections page</li>
+          <li>Once scanned, Tell5 will show <strong>"WhatsApp is connected"</strong></li>
+        </ol>
+        <p style="color:var(--orange);font-size:0.82rem;">⚠️ The bot stays connected as long as the server runs. Render free tier may sleep after inactivity. Reload the page to wake it up.</p>
+        <p style="margin-top:12px;">📘 <a href="https://docs.baileys.tech" target="_blank" style="color:var(--accent);">Baileys documentation →</a></p>
+      </div>
+    </div>
+
+    <!-- ══ AI Pipeline ══ -->
+    <div class="card">
+      <div class="card-head"><div class="pip"></div><h2>How the AI Pipeline Works</h2></div>
+      <div class="card-body">
+        <p>Every incoming WhatsApp message goes through these steps:</p>
+        <ol>
+          <li><strong>Classification</strong> — The AI categorises the message as: <code>order</code>, <code>inquiry</code>, <code>complaint</code>, <code>feedback</code>, or <code>pending</code></li>
+          <li><strong>Context building</strong> — Your business knowledge, personality settings, and conversation history are loaded</li>
+          <li><strong>Reply generation</strong> — The AI writes a WhatsApp-appropriate reply using your business facts and personality</li>
+          <li><strong>Enrichment</strong> — The Google ADK agent optionally enhances the response</li>
+          <li><strong>Storage</strong> — The conversation is saved so you can review it in the dashboard</li>
+        </ol>
+        <p>💡 You can toggle the AI pipeline on/off in <strong>Settings</strong>. When off, messages are stored for manual reply.</p>
+      </div>
+    </div>
+
+    <!-- ══ Knowledge Base ══ -->
+    <div class="card">
+      <div class="card-head"><div class="pip"></div><h2>Training the AI</h2></div>
+      <div class="card-body">
+        <p>You can teach the AI about your business in two ways:</p>
+        <ul>
+          <li><strong>Knowledge Base</strong> — Add specific business facts (pricing, policies, hours, menu items). The AI reads these before replying.</li>
+          <li><strong>Personality Q&A</strong> (Admin) — Train the AI with question-and-answer pairs. When a customer asks a matched question, the AI uses your pre-written answer.</li>
+          <li><strong>Onboarding</strong> — Set your name, personality words, and conversation distance (professional ↔ casual). This shapes the AI's tone.</li>
+        </ul>
+        <p>All training data is injected into every AI reply automatically.</p>
+      </div>
+    </div>
+
+    <!-- ══ Categories ══ -->
+    <div class="card">
+      <div class="card-head"><div class="pip"></div><h2>Understanding Categories</h2></div>
+      <div class="card-body">
+        <ul>
+          <li><strong><code>order</code></strong> — Buying, placing, tracking, cancelling an order; delivery/shipping questions</li>
+          <li><strong><code>inquiry</code></strong> — Asking about products, prices, availability, hours, location, general information</li>
+          <li><strong><code>complaint</code></strong> — Reporting problems, damaged items, poor service, refunds, returns</li>
+          <li><strong><code>feedback</code></strong> — Thanks, appreciation, suggestions, positive comments</li>
+          <li><strong><code>pending</code></strong> — Message is unclear or doesn't fit the other categories. Click "Mark as Resolved" in the conversation modal to reclassify it.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ══ FAQ ══ -->
+    <div class="card">
+      <div class="card-head"><div class="pip"></div><h2>Frequently Asked Questions</h2></div>
+      <div class="card-body">
+        <p><strong>Q: Why am I not receiving messages?</strong><br>
+        A: If using Baileys, the bot may have disconnected. Go to Connections and scan the QR code again. If using Twilio, check your webhook URL is correct.</p>
+        <p><strong>Q: How do I reset the Baileys connection?</strong><br>
+        A: Delete the <code>services/whatsapp/auth/</code> folder and restart the bot. A new QR code will appear.</p>
+        <p><strong>Q: Can I use both Twilio and Baileys?</strong><br>
+        A: Yes! They work side by side. Twilio handles the official WhatsApp number, Baileys handles your personal number.</p>
+        <p><strong>Q: Does the AI cost money?</strong><br>
+        A: All AI providers are used at their free tiers (Gemini, Groq, OpenRouter). No charges.</p>
+        <p><strong>Q: My messages are always showing "pending"?</strong><br>
+        A: The AI classifies "pending" when it's unsure. You can click "Mark as Resolved / Done" in the conversation modal to reclassify it as an order.</p>
+        <p><strong>Q: How do I export my data?</strong><br>
+        A: Click "Export CSV" on the dashboard. Conversations older than 7 days are automatically deleted.</p>
+        <p><strong>Q: Tell5 was created by who?</strong><br>
+        A: Tell5 was created by <strong>Francis David</strong>, who is from Nigeria and also works with Meta on AI and messaging technologies.</p>
+      </div>
+    </div>
+
+    <hr>
+    <div style="text-align:center;">
+      <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+    </div>
+
+  </div>
+</body>
+</html>

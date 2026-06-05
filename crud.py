@@ -224,6 +224,43 @@ async def list_products(db: AsyncSession, business_id: int) -> List["Product"]:
     return q.scalars().all()
 
 
+async def search_businesses(db: AsyncSession, query: str, limit: int = 5) -> list[dict]:
+    from models import BusinessProfile, Product
+    from sqlalchemy import or_
+    q = await db.execute(
+        select(BusinessProfile).where(
+            BusinessProfile.is_public == True,
+            or_(
+                BusinessProfile.business_name.ilike(f"%{query}%"),
+                BusinessProfile.description.ilike(f"%{query}%"),
+                BusinessProfile.category.ilike(f"%{query}%"),
+            )
+        ).limit(limit)
+    )
+    profiles = q.scalars().all()
+    result = []
+    for p in profiles:
+        products = await db.execute(
+            select(Product).where(
+                Product.business_id == p.id,
+                Product.is_available == True
+            )
+        )
+        product_list = products.scalars().all()
+        result.append({
+            "id": p.id,
+            "business_name": p.business_name,
+            "description": p.description,
+            "category": p.category,
+            "address": p.address,
+            "phone": p.phone,
+            "website": p.website,
+            "logo_url": p.logo_url,
+            "products": [{"name": pr.name, "price": pr.price, "currency": pr.currency} for pr in product_list[:3]],
+        })
+    return result
+
+
 async def delete_product(db: AsyncSession, product_id: int) -> bool:
     from models import Product
     q = await db.execute(select(Product).where(Product.id == product_id))

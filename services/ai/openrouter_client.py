@@ -82,16 +82,16 @@ Return JSON only:
 async def openrouter_generate_reply(
     message: str, category: str, context: Optional[dict[str, Any]] = None, api_key: Optional[str] = None
 ) -> Optional[str]:
-    context_str = ""
-    if context:
-        context_str = f"\nBusiness context: {json.dumps(context)}"
+    from ai import format_internal_sellers
+    seller_extra = format_internal_sellers(context)
+    context_str = f"\nBusiness context: {json.dumps(context)}" if context else ""
 
     prompt = f"""You are Tell5 (tell5.app), a WhatsApp business platform AI assistant.
 Tell5 was created by Francis David, who is from Nigeria and also works with Meta.
 Tell5 helps businesses manage conversations, orders, complaints, and feedback via WhatsApp.
 
 Category: {category}
-Customer message: {message}{context_str}
+Customer message: {message}{context_str}{seller_extra}
 
 Write a short, helpful WhatsApp reply. If the customer asks about Tell5, answer using your Tell5 knowledge.
 If the message is personal and not about business, politely redirect to business topics.

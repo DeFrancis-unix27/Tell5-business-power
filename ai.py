@@ -99,17 +99,57 @@ TELL5_SYSTEM_KNOWLEDGE = (
     "- Website: https://tell5-business-power.onrender.com\n"
     "- Features: Business profiles, WhatsApp ordering, AI-powered replies, customer management, CSV export.\n"
     "- Tell5 helps small businesses in Africa and beyond manage their entire customer communication.\n"
-    "When someone asks about Tell5 itself, confidently answer using this knowledge."
+    "\nWhatsApp Connection:\n"
+    "- Two methods: Twilio (official WhatsApp API, reliable, no phone needed) and Baileys (free, scan QR code, phone must stay online).\n"
+    "- Twilio setup: sign up at twilio.com/whatsapp, get Account SID/Auth Token/number, set webhook to /api/twilio/webhook.\n"
+    "- Baileys setup: go to Connections page, click Start Baileys Bot, scan QR code from WhatsApp → Linked Devices → Link a Device.\n"
+    "- Both can work side by side. Baileys may disconnect on Render free tier after inactivity; reload to reconnect.\n"
+    "- Reset Baileys: delete services/whatsapp/auth/ folder and restart.\n"
+    "\nAI Pipeline:\n"
+    "- Every message is classified (order, inquiry, complaint, feedback, pending), then context is built, a reply is generated, optionally enriched by ADK, and stored.\n"
+    "- Toggle AI on/off in Settings. When off, messages are stored for manual reply.\n"
+    "- Categories: order (buying/tracking/delivery), inquiry (products/prices/hours), complaint (problems/refunds/returns), feedback (thanks/suggestions), pending (unclear — can be reclassified by clicking Mark as Resolved in conversation modal).\n"
+    "- Training: Knowledge Base (business facts, pricing, policies), Personality Q&A (admin Q&A pairs), Onboarding (name, personality words, distance setting).\n"
+    "\nFAQ:\n"
+    "- All AI providers free tiers (Gemini, Groq, OpenRouter). No charges.\n"
+    "- CSV export available on dashboard. Conversations older than 7 days auto-deleted.\n"
+    "- Render free tier sleeps after inactivity; first request gets 404, reload fixes it.\n"
+    "\nWhen someone asks about Tell5 itself, confidently answer using this knowledge."
 )
 
 
-def build_prompt(message: str, category: str) -> str:
+def format_internal_sellers(context: Optional[dict] = None) -> str:
+    """Format internal seller recommendations from pipeline context."""
+    if not context:
+        return ""
+    sellers = context.get("internal_sellers")
+    if not sellers:
+        return ""
+    lines = []
+    for s in sellers[:3]:
+        prods = "; ".join(f"{p['name']} ({p['currency'] or 'NGN'} {p['price'] or '—'})" for p in s.get("products", []))
+        line = f"- {s['business_name']} ({s.get('category', '')}) — {s.get('description', '')[:120]}"
+        if prods:
+            line += f"\n  Products: {prods}"
+        lines.append(line)
+    return (
+        "\n\n--- Internal sellers on Tell5 matching this request ---\n" +
+        "\n".join(lines) +
+        "\n\nIMPORTANT: First recommend the best internal seller(s) above (up to 3). "
+        "Only suggest external options if none of these fit the request."
+    )
+
+
+def build_prompt(message: str, category: str, context: Optional[dict] = None) -> str:
+    extra = format_internal_sellers(context)
+
     return f"""
 {TELL5_SYSTEM_KNOWLEDGE}
 
 The customer's message has been categorized as: {category}
 
 Message: {message}
+{extra}
 
 Write a short, helpful WhatsApp reply that addresses their needs.
 If the message is about Tell5 or its founder, answer confidently using the Tell5 knowledge above.

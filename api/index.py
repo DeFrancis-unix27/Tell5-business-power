@@ -43,6 +43,7 @@ import csv
 import qrcode
 from twilio.rest import Client
 from twilio.request_validator import RequestValidator
+from starlette.middleware.sessions import SessionMiddleware
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -72,6 +73,7 @@ if Config.SENTRY_DSN and Config.ENVIRONMENT == "production":
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(title="Tell5 - WhatsApp Workflow Agent")
+app.add_middleware(SessionMiddleware, secret_key=Config.SESSION_SECRET)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
     status_code=429,
@@ -629,6 +631,7 @@ async def _process_incoming_message(
     pipeline_result = await run_pipeline(
         body, message_id=message_id, from_number=phone, user_id=target_user_id,
         context=merged_context if merged_context else None,
+        db=db,
     )
 
     # If AI replies are disabled for this user, clear the auto-generated reply
@@ -1189,7 +1192,7 @@ async def trigger_pipeline(request: Request, db: AsyncSession = Depends(get_db))
 
     from services.ai.pipeline import run_pipeline
     message_id = str(uuid.uuid4())
-    result = await run_pipeline(message, message_id=message_id)
+    result = await run_pipeline(message, message_id=message_id, db=db)
 
     await crud.create_pipeline_log(
         db,
@@ -1224,7 +1227,7 @@ async def chat_send(request: Request, db: AsyncSession = Depends(get_db), user=D
     from services.ai.pipeline import run_pipeline
     import uuid
     message_id = str(uuid.uuid4())
-    result = await run_pipeline(message, message_id=message_id, from_number=f"chat:{user.id}", user_id=user.id)
+    result = await run_pipeline(message, message_id=message_id, from_number=f"chat:{user.id}", user_id=user.id, db=db)
 
     await crud.create_pipeline_log(
         db,
@@ -1357,6 +1360,7 @@ async def create_product(request: Request, db: AsyncSession = Depends(get_db), u
         name=name,
         description=str(data.get("description", "")).strip() or None,
         price=float(data["price"]) if data.get("price") else None,
+        currency=str(data.get("currency", "")).strip() or "NGN",
     )
     await db.commit()
     return {"id": product.id, "name": product.name, "created": True}
@@ -1423,6 +1427,14 @@ async def delete_product_route(product_id: int, db: AsyncSession = Depends(get_d
         raise HTTPException(status_code=404, detail="Product not found")
     await db.commit()
     return {"ok": True}
+
+
+@app.get("/api/business/search")
+async def search_businesses_api(q: str = "", db: AsyncSession = Depends(get_db)):
+    if not q.strip():
+        return []
+    results = await crud.search_businesses(db, q.strip(), limit=5)
+    return results
 
 
 @app.get("/api/business/discover")
@@ -1602,39 +1614,6 @@ async def update_conversation_category(conv_id: int, request: Request, db: Async
         raise HTTPException(status_code=500, detail="Failed to update")
     await db.commit()
     return {"ok": True, "category": new_category}
-
-
-# ── API Keys (MongoDB) ──────────────────────────────────────────────────
-
-@app.get("/api/keys")
-async def list_api_keys(user=Depends(get_current_user)):
-    if not mongodb_tools.get_mongo_provider():
-        return []
-    keys = await mongodb_tools.list_api_keys(Config.MDB_MCP_DB_NAME, user.id)
-    return keys
-
-
-@app.post("/api/keys")
-async def store_api_key(request: Request, user=Depends(get_current_user)):
-    data = await request.json()
-    provider = str(data.get("provider", "")).strip().lower()
-    api_key = str(data.get("api_key", "")).strip()
-    if not provider or not api_key:
-        raise HTTPException(status_code=400, detail="provider and api_key are required")
-    if provider not in ("gemini", "groq", "openrouter", "mistral"):
-        raise HTTPException(status_code=400, detail="Invalid provider. Allowed: gemini, groq, openrouter, mistral")
-    ok = await mongodb_tools.store_api_key(Config.MDB_MCP_DB_NAME, user.id, provider, api_key)
-    if not ok:
-        raise HTTPException(status_code=500, detail="Failed to store API key (MongoDB may be unavailable)")
-    return {"ok": True, "provider": provider}
-
-
-@app.delete("/api/keys/{provider}")
-async def delete_api_key(provider: str, user=Depends(get_current_user)):
-    ok = await mongodb_tools.delete_api_key(Config.MDB_MCP_DB_NAME, user.id, provider.lower())
-    if not ok:
-        raise HTTPException(status_code=404, detail="Key not found")
-    return {"ok": True}
 
 
 @app.get("/api/export/csv")

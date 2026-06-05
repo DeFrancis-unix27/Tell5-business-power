@@ -86,12 +86,12 @@ async def _call_with_retry(
 # ---------------------------------------------------------------------------
 # Tier runners
 # ---------------------------------------------------------------------------
-async def _run_gemini_tier(message: str, tier: int, api_key: Optional[str] = None) -> Optional[dict[str, Any]]:
+async def _run_gemini_tier(message: str, tier: int, context: Optional[dict] = None) -> Optional[dict[str, Any]]:
     category = await asyncio.to_thread(ai_categorize_message, message) or "inquiry"
-    prompt = build_prompt(message, category)
+    prompt = build_prompt(message, category, context)
 
     async def _gemini_call():
-        return await asyncio.to_thread(_generate_content, prompt, None, api_key)
+        return await asyncio.to_thread(_generate_content, prompt)
 
     text = await _call_with_retry(
         "gemini",
@@ -109,7 +109,7 @@ async def _run_gemini_tier(message: str, tier: int, api_key: Optional[str] = Non
             import ai as _ai
 
             async def _gemini_fallback():
-                return await asyncio.to_thread(_ai._generate_content, prompt, fallback_model, api_key)
+                return await asyncio.to_thread(_ai._generate_content, prompt, fallback_model)
 
             text = await _call_with_retry(
                 "gemini",
@@ -124,7 +124,7 @@ async def _run_gemini_tier(message: str, tier: int, api_key: Optional[str] = Non
         from services.ai.openrouter_client import openrouter_generate
 
         async def _or_fallback():
-            return await openrouter_generate(prompt, api_key=api_key)
+            return await openrouter_generate(prompt)
 
         text = await _call_with_retry(
             "openrouter",
@@ -149,7 +149,6 @@ async def _run_openrouter_tier(
     tier: int,
     context: Optional[dict[str, Any]],
     result: PipelineResult,
-    api_key: Optional[str] = None,
 ) -> Optional[dict[str, Any]]:
     from services.ai.openrouter_client import openrouter_classify, openrouter_generate_reply
 
@@ -157,9 +156,9 @@ async def _run_openrouter_tier(
     category = (gemini_output.get("category") if isinstance(gemini_output, dict) else None) or "inquiry"
 
     async def _classify():
-        return await openrouter_classify(message, ["order", "inquiry", "complaint", "feedback"], api_key=api_key)
+        return await openrouter_classify(message, ["order", "inquiry", "complaint", "feedback"])
     async def _generate():
-        return await openrouter_generate_reply(message, category, context, api_key=api_key)
+        return await openrouter_generate_reply(message, category, context)
 
     or_category = await _call_with_retry("openrouter", f"Tier {tier} OpenRouter classify", _classify, timeout=25)
     or_reply = await _call_with_retry("openrouter", f"Tier {tier} OpenRouter generate", _generate, timeout=25)
@@ -175,7 +174,6 @@ async def _run_groq_tier(
     tier: int,
     context: Optional[dict[str, Any]],
     result: PipelineResult,
-    api_key: Optional[str] = None,
 ) -> Optional[dict[str, Any]]:
     from services.ai.groq_client import groq_classify, groq_generate_reply
 
@@ -183,10 +181,10 @@ async def _run_groq_tier(
     category = gemini_output.get("category", "inquiry") if isinstance(gemini_output, dict) else "inquiry"
 
     async def classify():
-        return await groq_classify(message, ["order", "inquiry", "complaint", "feedback"], api_key=api_key)
+        return await groq_classify(message, ["order", "inquiry", "complaint", "feedback"])
 
     async def generate():
-        return await groq_generate_reply(message, category, context, api_key=api_key)
+        return await groq_generate_reply(message, category, context)
 
     groq_category = await _call_with_retry("groq", f"Tier {tier} Groq classify", classify, timeout=TIMEOUT_PER_TIER["groq"])
     groq_reply = await _call_with_retry("groq", f"Tier {tier} Groq generate", generate, timeout=TIMEOUT_PER_TIER["groq"])
@@ -241,13 +239,24 @@ async def run_pipeline(
     context: Optional[dict[str, Any]] = None,
     from_number: Optional[str] = None,
     user_id: Optional[int] = None,
+    db: Optional[Any] = None,
 ) -> PipelineResult:
     result = PipelineResult()
     result.message_id = message_id
     context = context or {}
 
+    # Search internal business profiles for relevant sellers and inject into context
+    if db is not None:
+        try:
+            from crud import search_businesses
+            sellers = await search_businesses(db, message)
+            if sellers:
+                context["internal_sellers"] = sellers
+                logger.info("Found %d matching internal sellers for: %s", len(sellers), message[:60])
+        except Exception as e:
+            logger.warning("Failed to search internal sellers: %s", e)
+
     # Build MongoDB context and merge into pipeline context
-    user_api_keys: dict[str, str] = {}
     if Config.MDB_MCP_CONNECTION_STRING and mongodb_tools.get_mongo_provider():
         try:
             mongo_ctx = await mongodb_tools.build_mongo_context(
@@ -258,16 +267,6 @@ async def run_pipeline(
             if mongo_ctx:
                 context["mongodb"] = mongo_ctx
                 logger.info("Merged MongoDB context (%d keys) into pipeline context", len(mongo_ctx))
-
-            # Load per-user API keys from MongoDB
-            if user_id:
-                for provider in ("gemini", "groq", "openrouter", "mistral"):
-                    key = await mongodb_tools.get_api_key(Config.MDB_MCP_DB_NAME, user_id, provider)
-                    if key:
-                        user_api_keys[provider] = key
-                if user_api_keys:
-                    context["user_api_keys"] = user_api_keys
-                    logger.info("Loaded user API keys for providers: %s", list(user_api_keys.keys()))
         except Exception as e:
             logger.warning("Failed to build MongoDB context: %s", e)
 
@@ -291,12 +290,11 @@ async def run_pipeline(
         if not model_info:
             continue
         provider = model_info["provider"]
-        if not router.is_configured(provider, user_api_keys):
+        if not router.is_configured(provider):
             result.tier_outputs[1] = {"skipped": True}
             continue
         try:
-            ak = user_api_keys.get(provider)
-            output = await _run_gemini_tier(message, 1, api_key=ak)
+            output = await _run_gemini_tier(message, 1, context)
             result.tier_outputs[1] = output
             if output and output.get("category"):
                 result.category = output["category"]
@@ -314,15 +312,14 @@ async def run_pipeline(
         if not model_info:
             continue
         provider = model_info["provider"]
-        if not router.is_configured(provider, user_api_keys):
+        if not router.is_configured(provider):
             continue
-        ak = user_api_keys.get(provider)
         if provider == "openrouter":
             tier_map["openrouter"] = 2
-            phase2.append(_run_openrouter_tier(message, 2, context, result, api_key=ak))
+            phase2.append(_run_openrouter_tier(message, 2, context, result))
         elif provider == "groq":
             tier_map["groq"] = 3
-            phase2.append(_run_groq_tier(message, 3, context, result, api_key=ak))
+            phase2.append(_run_groq_tier(message, 3, context, result))
 
     if phase2:
         phase2_results = await asyncio.gather(*phase2, return_exceptions=True)
@@ -345,10 +342,9 @@ async def run_pipeline(
         if not model_info:
             continue
         provider = model_info["provider"]
-        if not router.is_configured(provider, user_api_keys):
+        if not router.is_configured(provider):
             continue
         try:
-            ak = user_api_keys.get(provider)
             if provider == "mistral":
                 output = await _run_mistral_tier(message, result)
                 result.tier_outputs[4] = output

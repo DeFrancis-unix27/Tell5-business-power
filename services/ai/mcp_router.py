@@ -19,15 +19,15 @@ class MCPRouter:
         sorted_models = sorted(self._models.items(), key=lambda x: x[1]["tier"])
         return [name for name, _ in sorted_models]
 
-    def is_configured(self, provider: str, user_api_keys: Optional[dict[str, str]] = None) -> bool:
+    def is_configured(self, provider: str) -> bool:
         from config import Config
         key_map = {
-            "gemini": bool(Config.GEMINI_API_KEY or (user_api_keys or {}).get("gemini")),
-            "groq": bool(Config.GROQ_API_KEY or (user_api_keys or {}).get("groq")),
-            "mistral": bool(Config.MISTRAL_API_KEY or (user_api_keys or {}).get("mistral")),
-            "openrouter": bool(Config.OPENROUTER_API_KEY or (user_api_keys or {}).get("openrouter")),
+            "gemini": bool(Config.GEMINI_API_KEY),
+            "groq": bool(Config.GROQ_API_KEY),
+            "mistral": bool(Config.MISTRAL_API_KEY),
+            "openrouter": bool(Config.OPENROUTER_API_KEY),
             "discovery_engine": bool(Config.AGENT_BUILDER_DATA_STORE),
-            "adk": bool(Config.GEMINI_API_KEY or (user_api_keys or {}).get("gemini")),
+            "adk": bool(Config.GEMINI_API_KEY),
         }
         return key_map.get(provider, False)
 

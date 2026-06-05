@@ -191,6 +191,7 @@
         <div id="product-list"></div>
         <div class="inline-form">
           <input type="text" id="prod-name" placeholder="Product name" />
+          <input type="text" id="prod-currency" placeholder="NGN" style="max-width:60px;" value="NGN" />
           <input type="number" id="prod-price" placeholder="Price" style="max-width:120px;" />
           <button onclick="addProduct()">+ Add</button>
         </div>
@@ -238,7 +239,7 @@
         const res = await fetch('/api/business/products', { credentials: 'same-origin' });
         if (res.ok) {
           const data = await res.json();
-          renderProducts(data.products || []);
+          renderProducts(data || []);
         }
       } catch {}
     }
@@ -293,13 +294,14 @@
     async function addProduct() {
       const name = document.getElementById('prod-name').value.trim();
       const price = document.getElementById('prod-price').value.trim();
+      const currency = document.getElementById('prod-currency').value.trim().toUpperCase() || 'NGN';
       if (!name || !price) return;
       try {
         const res = await fetch('/api/business/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
-          body: JSON.stringify({ name, price: parseFloat(price) }),
+          body: JSON.stringify({ name, price: parseFloat(price), currency }),
         });
         if (!res.ok) throw new Error('Failed to add');
         document.getElementById('prod-name').value = '';

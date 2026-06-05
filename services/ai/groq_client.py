@@ -50,18 +50,18 @@ async def groq_generate_reply(
     key = api_key or Config.GROQ_API_KEY
     if not key:
         return None
+    from ai import format_internal_sellers
+    seller_extra = format_internal_sellers(context)
     import httpx
 
-    context_str = ""
-    if context:
-        context_str = f"\nBusiness context: {json.dumps(context)}"
+    context_str = f"\nBusiness context: {json.dumps(context)}" if context else ""
 
     prompt = f"""You are Tell5 (tell5.app), a WhatsApp business platform AI assistant.
 Tell5 was created by Francis David, who is from Nigeria and also works with Meta.
 Tell5 helps businesses manage conversations, orders, complaints, and feedback via WhatsApp.
 
 Category: {category}
-Customer message: {message}{context_str}
+Customer message: {message}{context_str}{seller_extra}
 
 Write a short, helpful WhatsApp reply. If the customer asks about Tell5, answer using your Tell5 knowledge.
 If the message is personal and not about business, politely redirect to business topics.
