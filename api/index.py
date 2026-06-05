@@ -85,6 +85,12 @@ except RuntimeError:
     logger.warning("static directory not found, skipping mount")
 
 
+@app.get("/favicon.ico")
+async def favicon():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/static/tell5-icon.svg")
+
+
 @app.get("/healthz")
 async def healthz():
     return {"ok": True}
