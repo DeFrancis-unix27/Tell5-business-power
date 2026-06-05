@@ -25,12 +25,14 @@ async def _call_openrouter(
     model: str = "",
     temperature: float = 0.2,
     max_tokens: int = 220,
+    api_key: Optional[str] = None,
 ) -> Optional[str]:
-    if not openrouter_configured():
+    key = api_key or Config.OPENROUTER_API_KEY
+    if not key:
         return None
 
     headers = {
-        "Authorization": f"Bearer {Config.OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
         "HTTP-Referer": "https://tell5.app",
         "X-Title": "Tell5",
@@ -58,7 +60,7 @@ async def _call_openrouter(
         return None
 
 
-async def openrouter_classify(text: str, categories: list[str]) -> Optional[str]:
+async def openrouter_classify(text: str, categories: list[str], api_key: Optional[str] = None) -> Optional[str]:
     prompt = f"""You are Tell5's AI classifier. Categorize this message into: {', '.join(categories)}.
 
 Message: {text}
@@ -66,7 +68,7 @@ Message: {text}
 Return JSON only:
 {{"category": "<category>"}}"""
 
-    content = await _call_openrouter(prompt, temperature=0.1, max_tokens=50)
+    content = await _call_openrouter(prompt, temperature=0.1, max_tokens=50, api_key=api_key)
     if not content:
         return None
 
@@ -78,7 +80,7 @@ Return JSON only:
 
 
 async def openrouter_generate_reply(
-    message: str, category: str, context: Optional[dict[str, Any]] = None
+    message: str, category: str, context: Optional[dict[str, Any]] = None, api_key: Optional[str] = None
 ) -> Optional[str]:
     context_str = ""
     if context:
@@ -96,7 +98,7 @@ If the message is personal and not about business, politely redirect to business
 Return JSON only:
 {{"reply": "your reply here"}}"""
 
-    content = await _call_openrouter(prompt, temperature=0.2, max_tokens=220)
+    content = await _call_openrouter(prompt, temperature=0.2, max_tokens=220, api_key=api_key)
     if not content:
         return None
 
@@ -107,6 +109,6 @@ Return JSON only:
         return None
 
 
-async def openrouter_generate(prompt: str) -> Optional[str]:
+async def openrouter_generate(prompt: str, api_key: Optional[str] = None) -> Optional[str]:
     """Direct generation for use as Gemini fallback."""
-    return await _call_openrouter(prompt, temperature=0.2, max_tokens=220)
+    return await _call_openrouter(prompt, temperature=0.2, max_tokens=220, api_key=api_key)

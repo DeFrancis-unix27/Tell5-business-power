@@ -54,6 +54,7 @@ class Config:
     MDB_MCP_CONNECTION_STRING: Optional[str] = os.getenv("MDB_MCP_CONNECTION_STRING", "").strip() or None
     MDB_MCP_READ_ONLY: bool = os.getenv("MDB_MCP_READ_ONLY", "false").lower() in {"1", "true", "yes"}
     MDB_MCP_DB_NAME: str = os.getenv("MDB_MCP_DB_NAME", "tell5").strip()
+    MDB_MCP_MODEL_API_KEYS: Optional[str] = os.getenv("MDB_MCP_MODEL_API_KEYS", "").strip() or None
 
     # Google OAuth
     GOOGLE_OAUTH_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "").strip() or None

@@ -7,8 +7,9 @@ def groq_configured() -> bool:
     return bool(Config.GROQ_API_KEY)
 
 
-async def groq_classify(text: str, categories: list[str]) -> Optional[str]:
-    if not groq_configured():
+async def groq_classify(text: str, categories: list[str], api_key: Optional[str] = None) -> Optional[str]:
+    key = api_key or Config.GROQ_API_KEY
+    if not key:
         return None
     import httpx
 
@@ -24,7 +25,7 @@ Return JSON only:
             resp = await client.post(
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {Config.GROQ_API_KEY}",
+                    "Authorization": f"Bearer {key}",
                     "Content-Type": "application/json",
                 },
                 json={
@@ -44,9 +45,10 @@ Return JSON only:
 
 
 async def groq_generate_reply(
-    message: str, category: str, context: Optional[dict[str, Any]] = None
+    message: str, category: str, context: Optional[dict[str, Any]] = None, api_key: Optional[str] = None
 ) -> Optional[str]:
-    if not groq_configured():
+    key = api_key or Config.GROQ_API_KEY
+    if not key:
         return None
     import httpx
 
@@ -71,7 +73,7 @@ Return JSON only:
             resp = await client.post(
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {Config.GROQ_API_KEY}",
+                    "Authorization": f"Bearer {key}",
                     "Content-Type": "application/json",
                 },
                 json={

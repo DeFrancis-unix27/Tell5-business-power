@@ -1,156 +1,892 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Business Profile - Tell5</title>
-  <meta name="description" content="View a Tell5 business profile, available products, services, prices, and contact-ready marketplace details." />
-  <meta name="robots" content="index,follow" />
-  <meta name="theme-color" content="#060809" />
-  <meta property="og:type" content="profile" />
-  <meta property="og:title" content="Business Profile - Tell5" />
-  <meta property="og:description" content="Explore this Tell5 business profile and product listing." />
-  <meta property="og:image" content="/static/tell5-icon.svg" />
-  <meta name="twitter:card" content="summary" />
-  <link rel="icon" href="/static/tell5-icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/static/tell5-icon.svg">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Business Profile — Tell5</title>
+  <meta name="description" content="View this Tell5 business profile, products and services, and connect instantly via WhatsApp."/>
+  <meta name="theme-color" content="#04060a"/>
+  <meta property="og:type" content="profile"/>
+  <meta property="og:title" content="Business Profile — Tell5"/>
+  <meta property="og:description" content="Explore this Tell5 business and connect via WhatsApp."/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #060809; --surface: #0c1014; --surface2: #111820;
-      --border: #1a2330; --border2: #243040; --muted: #1e2d3d;
-      --text: #e8f0f8; --sub: #5a7a94; --sub2: #8aa0b4;
-      --accent: #00e5b0; --blue: #3b82f6; --orange: #f97316; --danger: #ef4444;
-      --r: 14px; --r-sm: 8px;
-    }
-    body { background: var(--bg); color: var(--text); font-family: 'Cabinet Grotesk', sans-serif; min-height: 100vh; }
-    .shell { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 32px; margin-bottom: 20px; }
-    h1 { font-size: 1.8rem; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
-    .tag { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; }
-    .desc { color: #94a3b8; line-height: 1.7; margin-bottom: 20px; }
-    .meta { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
-    .meta-item { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--sub); }
-    .meta-item span { color: var(--text); }
-    h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--accent); }
-    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-    .product { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 16px; }
-    .product + .product { margin-top: 8px; }
-    .product-name { font-weight: 700; }
-    .product-price { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--accent); }
-    .meta-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-    .cta-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: var(--r-sm); font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none; text-decoration: none; transition: all 0.2s; font-family: 'IBM Plex Mono', monospace; }
-    .cta-whatsapp { background: #25D366; color: #060809; }
-    .cta-whatsapp:hover { background: #20bd5a; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(37,211,102,0.3); }
-    .cta-share { background: var(--muted); color: var(--text); border: 1px solid var(--border); }
-    .cta-share:hover { border-color: var(--sub); transform: translateY(-1px); }
-    @media (max-width: 640px) { .shell { padding: 20px 12px; } .card { padding: 20px; } h1 { font-size: 1.3rem; } .meta { flex-direction: column; gap: 8px; } .product-grid { grid-template-columns: 1fr; } }
-    @media (max-width: 400px) { .card { padding: 14px; } }
+  /* ═══════════════════════════════════════
+     TOKENS
+  ═══════════════════════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #04060a;
+    --bg2:       #07090e;
+    --surface:   #0a0f17;
+    --surface2:  #0e1520;
+    --surface3:  #131d2b;
+    --border:    #162232;
+    --border2:   #1d2f44;
+    --border3:   #253a52;
+    --muted:     #192838;
+    --text:      #ddeeff;
+    --text2:     #9bbdd6;
+    --sub:       #486580;
+    --sub2:      #6b90aa;
+
+    --green:      #00e5b0;
+    --green2:     #00ffd2;
+    --green-dim:  rgba(0,229,176,0.07);
+    --green-bdr:  rgba(0,229,176,0.2);
+    --green-glow: 0 0 28px rgba(0,229,176,0.18);
+
+    --blue:       #3b82f6;
+    --blue-dim:   rgba(59,130,246,0.08);
+    --blue-bdr:   rgba(59,130,246,0.2);
+
+    --wa:         #25d366;
+    --wa-dim:     rgba(37,211,102,0.08);
+    --wa-bdr:     rgba(37,211,102,0.22);
+
+    --orange:     #f97316;
+    --red:        #ef4444;
+
+    --r:   12px;
+    --r-sm: 8px;
+    --r-xs: 5px;
+
+    --t: 0.15s cubic-bezier(.4,0,.2,1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cabinet Grotesk', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Dot grid */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(rgba(0,229,176,0.05) 1px, transparent 1px);
+    background-size: 26px 26px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ambient glow */
+  .glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-tl { width:560px;height:560px;background:rgba(0,229,176,0.035);top:-200px;left:-160px; }
+  .glow-br { width:440px;height:440px;background:rgba(59,130,246,0.035);bottom:-100px;right:-100px; }
+
+  /* ═══════════════════════════════════════
+     TOPBAR
+  ═══════════════════════════════════════ */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 clamp(16px, 4vw, 40px);
+    height: 58px;
+    background: rgba(4,6,10,0.85);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tb-brand {
+    display: flex; align-items: center; gap: 9px;
+    text-decoration: none; cursor: pointer;
+  }
+
+  .tb-logomark {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(140deg, var(--green) 0%, #009977 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 14px rgba(0,229,176,0.25);
+    flex-shrink: 0;
+  }
+  .tb-logomark svg { width:13px;height:13px;stroke:#04060a;stroke-width:2.3;fill:none;stroke-linecap:round; }
+
+  .tb-name {
+    font-size: 1.15rem; font-weight: 900;
+    letter-spacing: -0.04em; color: var(--text);
+  }
+  .tb-name em { font-style: normal; color: var(--green); }
+
+  .tb-right { display: flex; align-items: center; gap: 8px; }
+
+  .tb-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--sub2); text-decoration: none;
+    padding: 6px 12px; border-radius: var(--r-sm);
+    border: 1px solid var(--border2);
+    background: transparent;
+    transition: all var(--t);
+  }
+  .tb-back:hover { color: var(--text); border-color: var(--border3); background: var(--surface2); }
+  .tb-back svg { width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2; }
+
+  /* ═══════════════════════════════════════
+     LAYOUT SHELL
+  ═══════════════════════════════════════ */
+  .shell {
+    position: relative; z-index: 1;
+    max-width: 880px; margin: 0 auto;
+    padding: 36px clamp(16px, 4vw, 32px) 80px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+
+  /* ═══════════════════════════════════════
+     HERO CARD — business identity
+  ═══════════════════════════════════════ */
+  .hero-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:none; }
+  }
+
+  /* Green gradient top bar */
+  .hero-card::before {
+    content: '';
+    display: block; height: 3px;
+    background: linear-gradient(90deg, var(--green) 0%, #00b890 50%, transparent 100%);
+  }
+
+  .hero-body { padding: 28px 28px 24px; }
+
+  /* Logo + name row */
+  .hero-identity {
+    display: flex; align-items: flex-start; gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  .biz-logo-wrap {
+    width: 70px; height: 70px; flex-shrink: 0;
+    border-radius: var(--r-sm);
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; font-weight: 900;
+    color: var(--green); letter-spacing: -0.04em;
+  }
+  .biz-logo-wrap img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+
+  .biz-name-block { flex: 1; min-width: 0; }
+
+  .biz-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--green); background: var(--green-dim);
+    border: 1px solid var(--green-bdr);
+    padding: 3px 9px; border-radius: 100px;
+    margin-bottom: 7px;
+  }
+  .biz-badge-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 5px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.65)} }
+
+  .biz-name {
+    font-size: clamp(1.4rem, 4vw, 1.9rem);
+    font-weight: 900; letter-spacing: -0.04em;
+    line-height: 1.1; color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .biz-cat {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem; color: var(--sub2);
+    letter-spacing: 0.04em;
+  }
+
+  /* Meta row */
+  .meta-pills {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .meta-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem; color: var(--sub2);
+    background: var(--surface2); border: 1px solid var(--border2);
+    padding: 5px 10px; border-radius: 100px;
+  }
+  .meta-pill svg { width:10px;height:10px;stroke:var(--sub);fill:none;stroke-width:1.8;flex-shrink:0; }
+
+  /* Description */
+  .biz-desc {
+    font-size: 0.88rem; color: var(--text2);
+    line-height: 1.75; margin-bottom: 24px;
+    max-width: 620px;
+  }
+
+  /* CTA row */
+  .cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 20px; border-radius: var(--r-sm);
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 0.86rem; font-weight: 800;
+    cursor: pointer; border: none; text-decoration: none;
+    transition: all var(--t); white-space: nowrap;
+  }
+  .btn svg { width:15px;height:15px;flex-shrink:0; }
+
+  .btn-wa {
+    background: var(--wa); color: #04060a;
+    box-shadow: 0 0 0 0 rgba(37,211,102,0);
+  }
+  .btn-wa:hover {
+    background: #20c45c;
+    box-shadow: 0 6px 24px rgba(37,211,102,0.28);
+    transform: translateY(-2px);
+  }
+
+  .btn-share {
+    background: var(--surface2); color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+  .btn-share:hover { border-color: var(--border3); color: var(--text); transform: translateY(-2px); }
+
+  .btn-website {
+    background: var(--blue-dim); color: var(--blue);
+    border: 1px solid var(--blue-bdr);
+  }
+  .btn-website:hover { background: rgba(59,130,246,0.14); transform: translateY(-2px); }
+
+  /* ═══════════════════════════════════════
+     TRUST BAR
+  ═══════════════════════════════════════ */
+  .trust-bar {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--border);
+    background: rgba(4,6,10,0.3);
+  }
+
+  .trust-item {
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 10px;
+    border-right: 1px solid var(--border);
+  }
+  .trust-item:last-child { border-right: none; }
+
+  .trust-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .trust-icon svg { width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8; }
+
+  .ti-green { background: var(--green-dim); color: var(--green); }
+  .ti-blue  { background: var(--blue-dim);  color: var(--blue); }
+  .ti-wa    { background: var(--wa-dim);    color: var(--wa); }
+
+  .trust-body { min-width: 0; }
+  .trust-val {
+    font-size: 0.82rem; font-weight: 800;
+    color: var(--text); line-height: 1.1;
+  }
+  .trust-lbl {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.52rem; color: var(--sub);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+
+  /* ═══════════════════════════════════════
+     PRODUCTS / SERVICES
+  ═══════════════════════════════════════ */
+  .section-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); overflow: hidden;
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(4,6,10,0.3);
+  }
+
+  .section-title-row { display: flex; align-items: center; gap: 8px; }
+
+  .sec-pip {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 5px rgba(0,229,176,0.5);
+    flex-shrink: 0;
+  }
+
+  .sec-title {
+    font-size: 0.68rem; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text2);
+  }
+
+  .sec-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem; color: var(--sub2);
+    background: var(--surface2); border: 1px solid var(--border2);
+    padding: 2px 7px; border-radius: 100px;
+  }
+
+  /* Product grid */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .product-card {
+    background: var(--surface);
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: background var(--t);
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .product-card:hover { background: var(--surface2); }
+
+  /* Coloured left stripe on hover */
+  .product-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--green);
+    opacity: 0;
+    transition: opacity var(--t);
+  }
+  .product-card:hover::before { opacity: 1; }
+
+  .product-img {
+    width: 100%; aspect-ratio: 16/9;
+    object-fit: cover; border-radius: var(--r-xs);
+    background: var(--surface3);
+    margin-bottom: 4px;
+    border: 1px solid var(--border2);
+  }
+
+  .product-name {
+    font-size: 0.88rem; font-weight: 800;
+    color: var(--text); letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  .product-desc {
+    font-size: 0.76rem; color: var(--sub2);
+    line-height: 1.55; flex: 1;
+  }
+
+  .product-footer {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    gap: 8px;
+  }
+
+  .product-price {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem; font-weight: 600;
+    color: var(--green);
+  }
+
+  .product-wa-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--wa); background: var(--wa-dim);
+    border: 1px solid var(--wa-bdr);
+    padding: 5px 10px; border-radius: var(--r-xs);
+    text-decoration: none;
+    transition: all var(--t);
+    white-space: nowrap;
+  }
+  .product-wa-btn:hover { background: rgba(37,211,102,0.14); }
+  .product-wa-btn svg { width:10px;height:10px;fill:currentColor;flex-shrink:0; }
+
+  /* Empty state */
+  .empty-state {
+    padding: 44px 24px; text-align: center;
+  }
+  .es-icon { font-size: 1.6rem; margin-bottom: 10px; opacity: 0.25; }
+  .es-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem; color: var(--sub); line-height: 1.6;
+  }
+
+  /* ═══════════════════════════════════════
+     HOURS CARD
+  ═══════════════════════════════════════ */
+  .hours-grid {
+    display: flex; flex-direction: column; gap: 0;
+  }
+
+  .hours-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 22px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+  }
+  .hours-row:last-child { border-bottom: none; }
+  .hours-row.today { background: rgba(0,229,176,0.03); }
+
+  .day-name {
+    font-weight: 600; color: var(--text2); width: 90px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .today-pip {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 5px var(--green);
+    flex-shrink: 0;
+  }
+  .day-hours {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem; color: var(--sub2);
+  }
+  .day-closed { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--sub); }
+
+  /* ═══════════════════════════════════════
+     POWERED BY FOOTER
+  ═══════════════════════════════════════ */
+  .powered-footer {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem; color: var(--sub);
+    letter-spacing: 0.06em;
+  }
+
+  .powered-footer a {
+    display: flex; align-items: center; gap: 7px;
+    text-decoration: none; color: var(--sub2);
+    transition: color var(--t);
+  }
+  .powered-footer a:hover { color: var(--green); }
+
+  .powered-mark {
+    width: 20px; height: 20px; border-radius: 5px;
+    background: linear-gradient(140deg, var(--green), #009977);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .powered-mark svg { width:9px;height:9px;stroke:#04060a;stroke-width:2.3;fill:none;stroke-linecap:round; }
+
+  /* ═══════════════════════════════════════
+     SKELETON LOADING
+  ═══════════════════════════════════════ */
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 4px;
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  /* ═══════════════════════════════════════
+     RESPONSIVE
+  ═══════════════════════════════════════ */
+  @media (max-width: 640px) {
+    .hero-identity  { flex-direction: column; gap: 14px; }
+    .biz-logo-wrap  { width: 56px; height: 56px; }
+    .trust-bar      { grid-template-columns: 1fr; }
+    .trust-item     { border-right: none; border-bottom: 1px solid var(--border); }
+    .trust-item:last-child { border-bottom: none; }
+    .products-grid  { grid-template-columns: 1fr; }
+    .cta-row        { flex-direction: column; }
+    .btn            { width: 100%; justify-content: center; }
+    .hero-body      { padding: 20px 18px 18px; }
+    .section-head   { padding: 13px 18px; }
+    .product-card   { padding: 16px 18px; }
+    .hours-row      { padding: 10px 18px; }
+  }
+
+  @media (max-width: 400px) {
+    .meta-pills { gap: 6px; }
+    .meta-pill  { font-size: 0.55rem; padding: 4px 8px; }
+  }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-        <img src="/static/tell5-icon.svg" alt="Tell5" style="width:28px;height:28px;border-radius:6px;" />
-        <span style="font-size:1rem;font-weight:900;letter-spacing:-0.04em;color:var(--accent);">Tell5</span>
+
+  <div class="glow-orb glow-tl"></div>
+  <div class="glow-orb glow-br"></div>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <a class="tb-brand" href="/">
+      <div class="tb-logomark">
+        <svg viewBox="0 0 13 13"><path d="M1 3.5h11M1 6.5h7.5M1 9.5h5"/></svg>
+      </div>
+      <span class="tb-name">Tell<em>5</em></span>
+    </a>
+    <div class="tb-right">
+      <a class="tb-back" href="/discover">
+        <svg viewBox="0 0 16 16"><path d="M10 3L5 8l5 5"/></svg>
+        Discover
       </a>
-      <a href="/discover" class="nav-link">&larr; Discover</a>
     </div>
-    <div class="card" id="profile-card">
-      <div class="tag">Business Profile</div>
-      <div id="logo-container" style="display:none;margin-bottom:12px;">
-        <img id="business-logo" style="max-width:120px;max-height:120px;border-radius:12px;border:1px solid var(--border);background:var(--bg);" />
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <div class="shell" id="shell">
+
+    <!-- HERO CARD -->
+    <div class="hero-card" id="hero-card">
+      <div class="hero-body">
+
+        <!-- Identity -->
+        <div class="hero-identity">
+          <div class="biz-logo-wrap" id="biz-logo-wrap">
+            <!-- initials or img injected here -->
+          </div>
+          <div class="biz-name-block">
+            <div class="biz-badge">
+              <div class="biz-badge-dot"></div>
+              Tell5 Verified Business
+            </div>
+            <div class="biz-name" id="biz-name">
+              <div class="skeleton" style="height:28px;width:260px;max-width:100%"></div>
+            </div>
+            <div class="biz-cat" id="biz-cat">
+              <div class="skeleton" style="height:14px;width:120px;margin-top:6px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meta pills -->
+        <div class="meta-pills" id="meta-pills">
+          <div class="meta-pill skeleton" style="width:140px;height:28px;border-radius:100px"></div>
+          <div class="meta-pill skeleton" style="width:110px;height:28px;border-radius:100px"></div>
+        </div>
+
+        <!-- Description -->
+        <div class="biz-desc" id="biz-desc">
+          <div class="skeleton" style="height:13px;width:100%;margin-bottom:7px"></div>
+          <div class="skeleton" style="height:13px;width:85%;margin-bottom:7px"></div>
+          <div class="skeleton" style="height:13px;width:70%"></div>
+        </div>
+
+        <!-- CTAs -->
+        <div class="cta-row" id="cta-row">
+          <div class="skeleton" style="height:44px;width:200px;border-radius:8px"></div>
+          <div class="skeleton" style="height:44px;width:110px;border-radius:8px"></div>
+        </div>
       </div>
-      <h1 id="business-name">—</h1>
-      <div class="meta">
-        <div class="meta-item">Category: <span id="category">—</span></div>
-        <div class="meta-item">Location: <span id="address">—</span></div>
-        <div class="meta-item" id="hours-row" style="display:none;">Hours: <span id="hours">—</span></div>
-        <div class="meta-item" id="website-row" style="display:none;">Web: <span id="website">—</span></div>
+
+      <!-- Trust bar -->
+      <div class="trust-bar" id="trust-bar">
+        <div class="trust-item">
+          <div class="trust-icon ti-green">
+            <svg viewBox="0 0 16 16"><polyline points="2,9 6,13 14,4"/></svg>
+          </div>
+          <div class="trust-body">
+            <div class="trust-val">Verified</div>
+            <div class="trust-lbl">Business profile</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon ti-wa">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.3 2.7A7.16 7.16 0 0 0 8 .5C4 .5.7 3.8.7 7.8c0 1.3.3 2.5.9 3.6L.5 15.5l4.3-1.1c1 .6 2.1.9 3.2.9C12 15.3 15.3 12 15.3 8c0-1.9-.7-3.7-2-5.3zm-5.3 11c-1 0-2-.3-2.9-.8l-.2-.1-2.5.7.7-2.5-.2-.2C2.3 9.9 2 8.9 2 7.8 2 5 4.3 2.7 8 2.7c1.6 0 3 .6 4.1 1.7s1.7 2.5 1.7 4.1c0 2.8-2.3 5.2-5.8 5.2zm3.2-3.9c-.2-.1-1-.5-1.2-.6-.2-.1-.3-.1-.4.1l-.5.6c-.1.1-.2.2-.4.1s-.8-.3-1.5-1c-.6-.5-1-1.2-1.1-1.4 0-.1 0-.2.1-.3l.3-.4c.1-.1.1-.2.2-.3 0-.1 0-.2 0-.3l-.5-1.2c-.1-.3-.3-.3-.4-.3h-.3c-.1 0-.3.1-.5.2-.1.2-.7.6-.7 1.5s.7 1.8.8 2c.1.2 1.5 2.3 3.7 3.2.5.2.9.4 1.2.5.5.2 1 .1 1.4.1s.8-.2 1.1-.4c.3-.2.5-.5.6-.8.1-.3 0-.5-.1-.7z"/></svg>
+          </div>
+          <div class="trust-body">
+            <div class="trust-val">WhatsApp</div>
+            <div class="trust-lbl">Direct messaging</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon ti-blue">
+            <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 5v4l2.5 2"/></svg>
+          </div>
+          <div class="trust-body">
+            <div class="trust-val" id="trust-resp">Fast replies</div>
+            <div class="trust-lbl">Response time</div>
+          </div>
+        </div>
       </div>
-      <p class="desc" id="description">—</p>
-      <div class="cta-row">
-        <a class="cta-btn cta-whatsapp" id="wa-cta" href="#" target="_blank" rel="noopener">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </div>
+
+    <!-- PRODUCTS SECTION -->
+    <div class="section-block" id="products-section">
+      <div class="section-head">
+        <div class="section-title-row">
+          <div class="sec-pip"></div>
+          <div class="sec-title">Products & Services</div>
+        </div>
+        <span class="sec-count" id="prod-count">—</span>
+      </div>
+      <div id="products-container">
+        <!-- skeleton rows -->
+        <div class="products-grid" style="background:var(--border)">
+          <div class="product-card">
+            <div class="skeleton" style="height:110px;border-radius:5px;margin-bottom:4px"></div>
+            <div class="skeleton" style="height:16px;width:70%"></div>
+            <div class="skeleton" style="height:12px;width:90%;margin-top:4px"></div>
+            <div class="skeleton" style="height:12px;width:60%;margin-top:4px"></div>
+            <div class="skeleton" style="height:28px;border-radius:5px;margin-top:8px"></div>
+          </div>
+          <div class="product-card">
+            <div class="skeleton" style="height:110px;border-radius:5px;margin-bottom:4px"></div>
+            <div class="skeleton" style="height:16px;width:75%"></div>
+            <div class="skeleton" style="height:12px;width:85%;margin-top:4px"></div>
+            <div class="skeleton" style="height:12px;width:50%;margin-top:4px"></div>
+            <div class="skeleton" style="height:28px;border-radius:5px;margin-top:8px"></div>
+          </div>
+          <div class="product-card">
+            <div class="skeleton" style="height:110px;border-radius:5px;margin-bottom:4px"></div>
+            <div class="skeleton" style="height:16px;width:65%"></div>
+            <div class="skeleton" style="height:12px;width:88%;margin-top:4px"></div>
+            <div class="skeleton" style="height:12px;width:40%;margin-top:4px"></div>
+            <div class="skeleton" style="height:28px;border-radius:5px;margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POWERED BY -->
+    <div class="powered-footer">
+      <span>Powered by</span>
+      <a href="/">
+        <div class="powered-mark">
+          <svg viewBox="0 0 13 13"><path d="M1 3.5h11M1 6.5h7.5M1 9.5h5"/></svg>
+        </div>
+        Tell5
+      </a>
+      <span>· Built for African businesses</span>
+    </div>
+
+  </div><!-- /shell -->
+
+  <script>
+  /* ══════════════════════════
+     HELPERS
+  ══════════════════════════ */
+  function esc(v) {
+    return String(v ?? '').replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])
+    );
+  }
+
+  function buildWaLink(phone, bizName) {
+    const clean = String(phone).replace(/\D/g, '');
+    const msg = 'Hi! I saw ' + encodeURIComponent(bizName || 'your business') + ' on Tell5 and I\'m interested in your products/services.';
+    return 'https://wa.me/' + clean + '?text=' + msg;
+  }
+
+  /* Initials from business name */
+  function nameInitials(name) {
+    if (!name) return '??';
+    const words = name.trim().split(/\s+/);
+    if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  }
+
+  /* ══════════════════════════
+     LOAD PROFILE
+  ══════════════════════════ */
+  const params     = new URLSearchParams(window.location.search);
+  const pathMatch  = window.location.pathname.match(/\/business-profile\/(\d+)/);
+  const profileId  = params.get('id') || (pathMatch ? pathMatch[1] : null);
+
+  if (profileId) {
+    fetch('/api/business/' + profileId + '/public')
+      .then(r => r.json())
+      .then(render)
+      .catch(() => renderError());
+  } else {
+    renderError();
+  }
+
+  function render(data) {
+    /* ── Logo / initials ── */
+    const logoWrap = document.getElementById('biz-logo-wrap');
+    if (data.logo_url) {
+      logoWrap.innerHTML = '<img src="' + esc(data.logo_url) + '" alt="' + esc(data.business_name) + '"/>';
+    } else {
+      logoWrap.textContent = nameInitials(data.business_name);
+    }
+
+    /* ── Name & category ── */
+    document.title = esc(data.business_name || 'Business') + ' — Tell5';
+    document.getElementById('biz-name').textContent = data.business_name || '—';
+    document.getElementById('biz-cat').textContent  = data.category || '';
+
+    /* ── Meta pills ── */
+    const pills = [];
+    if (data.address) pills.push({
+      icon:'<svg viewBox="0 0 16 16"><path d="M8 1a5 5 0 0 1 5 5c0 4-5 9-5 9S3 10 3 6a5 5 0 0 1 5-5z"/><circle cx="8" cy="6" r="1.5"/></svg>',
+      text: data.address
+    });
+    if (data.phone) pills.push({
+      icon:'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.3 2.7A7.16 7.16 0 0 0 8 .5C4 .5.7 3.8.7 7.8c0 1.3.3 2.5.9 3.6L.5 15.5l4.3-1.1c1 .6 2.1.9 3.2.9C12 15.3 15.3 12 15.3 8c0-1.9-.7-3.7-2-5.3zm-5.3 11c-1 0-2-.3-2.9-.8l-.2-.1-2.5.7.7-2.5-.2-.2C2.3 9.9 2 8.9 2 7.8 2 5 4.3 2.7 8 2.7c1.6 0 3 .6 4.1 1.7s1.7 2.5 1.7 4.1c0 2.8-2.3 5.2-5.8 5.2z"/></svg>',
+      text: data.phone
+    });
+    if (data.hours) pills.push({
+      icon:'<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 2"/></svg>',
+      text: data.hours
+    });
+    if (data.website) pills.push({
+      icon:'<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 2C6 4 5 6 5 8s1 4 3 6M8 2c2 2 3 4 3 6s-1 4-3 6M2 8h12"/></svg>',
+      text: data.website,
+      href: (data.website.startsWith('http') ? data.website : 'https://' + data.website)
+    });
+
+    const pillsEl = document.getElementById('meta-pills');
+    if (pills.length) {
+      pillsEl.innerHTML = pills.map(p =>
+        (p.href
+          ? '<a class="meta-pill" href="' + esc(p.href) + '" target="_blank" rel="noopener" style="text-decoration:none;">'
+          : '<div class="meta-pill">'
+        ) +
+        p.icon + esc(p.text) +
+        (p.href ? '</a>' : '</div>')
+      ).join('');
+    } else {
+      pillsEl.style.display = 'none';
+    }
+
+    /* ── Description ── */
+    const descEl = document.getElementById('biz-desc');
+    if (data.description) {
+      descEl.textContent = data.description;
+    } else {
+      descEl.style.display = 'none';
+    }
+
+    /* ── CTAs ── */
+    const ctaRow = document.getElementById('cta-row');
+    let ctaHtml = '';
+    if (data.phone) {
+      const waLink = buildWaLink(data.phone, data.business_name);
+      ctaHtml += `
+        <a class="btn btn-wa" href="${esc(waLink)}" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Contact via WhatsApp
         </a>
-        <button class="cta-btn cta-share" onclick="shareProfile()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-          Share
-        </button>
-      </div>
-      <h2>Products & Services</h2>
-      <div class="product-grid" id="products">
-        <div class="empty">Loading products…</div>
-      </div>
-    </div>
-  </div>
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const pathMatch = window.location.pathname.match(/\/business-profile\/(\d+)/);
-    const profileId = params.get('id') || (pathMatch ? pathMatch[1] : null);
-    if (profileId) {
-      fetch(`/api/business/${profileId}/public`)
-        .then(r => r.json())
-        .then(data => {
-          document.getElementById('business-name').textContent = data.business_name || '—';
-          if (data.logo_url) {
-            document.getElementById('business-logo').src = data.logo_url;
-            document.getElementById('logo-container').style.display = '';
-          }
-          document.getElementById('category').textContent = data.category || '—';
-          document.getElementById('address').textContent = data.address || '—';
-          document.getElementById('description').textContent = data.description || '—';
-          if (data.hours) {
-            document.getElementById('hours').textContent = data.hours;
-            document.getElementById('hours-row').style.display = '';
-          }
-          if (data.website) {
-            document.getElementById('website').textContent = data.website;
-            document.getElementById('website-row').style.display = '';
-          }
-          const waBtn = document.getElementById('wa-cta');
-          const phone = data.phone;
-          if (phone) {
-            const bizName = data.business_name || 'this business';
-            const tell5Msg = 'Hi%21%20I%20saw%20' + encodeURIComponent(bizName) + '%20on%20Tell5%20and%20I%27m%20interested%20in%20your%20products%2Fservices.';
-            waBtn.href = 'https://wa.me/' + phone.replace(/\D/g, '') + '?text=' + tell5Msg;
-          } else {
-            waBtn.style.display = 'none';
-          }
-          const productsEl = document.getElementById('products');
-          if (data.products && data.products.length > 0) {
-            productsEl.innerHTML = data.products.map(p => `
-              <div class="product">
-                <div class="product-name">${esc(p.name)}</div>
-                <div class="product-desc">${esc(p.description || '')}</div>
-                <div class="product-price">${p.price ? esc(p.currency) + ' ' + esc(p.price) : '—'}</div>
-              </div>
-            `).join('');
-          } else {
-            productsEl.innerHTML = '<div class="empty">No products listed yet.</div>';
-          }
+      `;
+    }
+    if (data.website) {
+      const href = data.website.startsWith('http') ? data.website : 'https://' + data.website;
+      ctaHtml += `
+        <a class="btn btn-website" href="${esc(href)}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" stroke="currentColor" fill="none" stroke-width="1.7" width="15" height="15"><circle cx="8" cy="8" r="6"/><path d="M8 2C6 4 5 6 5 8s1 4 3 6M8 2c2 2 3 4 3 6s-1 4-3 6M2 8h12"/></svg>
+          Website
+        </a>
+      `;
+    }
+    ctaHtml += `
+      <button class="btn btn-share" onclick="shareProfile()">
+        <svg viewBox="0 0 16 16" stroke="currentColor" fill="none" stroke-width="1.8" width="15" height="15"><path d="M4 8v6h8V8M8 2v9M5 5l3-3 3 3"/></svg>
+        Share
+      </button>
+    `;
+    ctaRow.innerHTML = ctaHtml;
+
+    /* ── Products ── */
+    renderProducts(data.products, data.phone, data.business_name);
+  }
+
+  function renderProducts(products, phone, bizName) {
+    const container  = document.getElementById('products-container');
+    const countEl    = document.getElementById('prod-count');
+
+    if (!products || products.length === 0) {
+      countEl.textContent = '0';
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="es-icon">📦</div>
+          <div class="es-text">No products or services listed yet.</div>
+        </div>
+      `;
+      return;
+    }
+
+    countEl.textContent = products.length;
+
+    const waBase = phone ? buildWaLink(phone, bizName) : null;
+
+    container.innerHTML = '<div class="products-grid">' +
+      products.map(p => {
+        const orderMsg = phone
+          ? 'https://wa.me/' + String(phone).replace(/\D/g,'') + '?text=' + encodeURIComponent("Hi! I'd like to order: " + (p.name||'') + " from " + (bizName||'your business') + ".")
+          : null;
+        return `
+          <div class="product-card">
+            ${p.image_url ? '<img class="product-img" src="' + esc(p.image_url) + '" alt="' + esc(p.name) + '" loading="lazy"/>' : ''}
+            <div class="product-name">${esc(p.name || '—')}</div>
+            ${p.description ? '<div class="product-desc">' + esc(p.description) + '</div>' : ''}
+            <div class="product-footer">
+              <div class="product-price">${p.price ? (esc(p.currency || '₦') + ' ' + esc(p.price)) : (p.price === 0 ? 'Free' : '—')}</div>
+              ${orderMsg ? `
+                <a class="product-wa-btn" href="${esc(orderMsg)}" target="_blank" rel="noopener">
+                  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  Order
+                </a>` : ''
+              }
+            </div>
+          </div>
+        `;
+      }).join('') + '</div>';
+  }
+
+  function renderError() {
+    document.getElementById('biz-logo-wrap').textContent = '?';
+    document.getElementById('biz-name').textContent = 'Profile not found';
+    document.getElementById('biz-cat').textContent = '';
+    document.getElementById('meta-pills').style.display = 'none';
+    document.getElementById('biz-desc').textContent = 'This business profile could not be loaded. It may have been moved or removed.';
+    document.getElementById('cta-row').innerHTML = '<a class="btn btn-share" href="/discover">← Browse businesses</a>';
+    document.getElementById('products-container').innerHTML = '<div class="empty-state"><div class="es-icon">🔍</div><div class="es-text">No data to display.</div></div>';
+    document.getElementById('prod-count').textContent = '0';
+  }
+
+  /* ══════════════════════════
+     SHARE
+  ══════════════════════════ */
+  function shareProfile() {
+    const name = document.getElementById('biz-name').textContent;
+    const url  = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: name + ' on Tell5', url });
+    } else {
+      navigator.clipboard.writeText(url)
+        .then(() => {
+          const btn = event.currentTarget;
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<svg viewBox="0 0 16 16" stroke="currentColor" fill="none" stroke-width="2" width="14" height="14"><polyline points="2,9 6,13 14,4"/></svg> Copied!';
+          setTimeout(() => { btn.innerHTML = orig; }, 2000);
         })
-        .catch(() => {
-          document.getElementById('business-name').textContent = 'Profile not found';
-        });
+        .catch(() => {});
     }
-
-    function shareProfile() {
-      const url = window.location.href;
-      if (navigator.share) {
-        navigator.share({ title: document.getElementById('business-name').textContent, url });
-      } else {
-        navigator.clipboard.writeText(url).then(() => alert('Link copied!')).catch(() => {});
-      }
-    }
-
-    function esc(v) {
-      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-    }
+  }
   </script>
 </body>
-</html>
+</html>open

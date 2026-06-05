@@ -1,9 +1,12 @@
 import asyncio
 import json
+import logging
 import os
 from typing import Any, Optional
 from google import genai
 from google.genai import types
+
+logger = logging.getLogger(__name__)
 
 # ==================================================================================================
 # Configuration
@@ -17,6 +20,7 @@ ALLOWED_CATEGORIES = {
     "inquiry",
     "complaint",
     "feedback",
+    "pending",
 }
 
 
@@ -40,32 +44,27 @@ def get_client() -> genai.Client:
 # ==================================================================================================
 
 
-def ai_categorize_message(text: str) -> str:
+def ai_categorize_message(text: str) -> str | None:
     if not text.strip():
-        return "inquiry"
+        return None
 
     client = get_client()
 
     prompt = f"""
 You are the classifier for Tell5 — a business messaging platform.
-Classify the customer's primary intent into exactly one category.
+Classify the customer's primary intent into exactly ONE category.
 
 Message:
 {text}
 
 Categories:
-- order
-- inquiry
-- complaint
-- feedback
+- order: buying, placing, modifying, cancelling, or tracking an order — anything about a purchase or delivery.
+- inquiry: asking a question or requesting information about products, prices, availability, business hours, etc.
+- complaint: expressing dissatisfaction, reporting a problem, requesting a refund, damaged/wrong items, poor service.
+- feedback: appreciation, satisfaction, suggestions, general comments, thanks.
+- pending: the message is unclear, too short, or doesn't fit the other categories. Needs human review.
 
-Definitions:
-order: buying, placing, modifying, cancelling, or tracking an order.
-inquiry: asking a question or requesting information.
-complaint: expressing dissatisfaction, reporting a problem, requesting a refund.
-feedback: appreciation, satisfaction, suggestions, general comments.
-
-Return JSON only: {{"category": "order|inquiry|complaint|feedback"}}
+Return JSON only: {{"category": "order"|"inquiry"|"complaint"|"feedback"|"pending"}}
 """.strip()
 
     try:
@@ -78,20 +77,15 @@ Return JSON only: {{"category": "order|inquiry|complaint|feedback"}}
                 response_mime_type="application/json",
             ),
         )
-
         data = json.loads(response.text)
-
-        category = str(
-            data.get("category", "inquiry")
-        ).lower().strip()
-
+        category = str(data.get("category", "")).lower().strip()
         if category not in ALLOWED_CATEGORIES:
-            return "inquiry"
-
+            logger.warning("AI returned invalid category '%s' for: %.60s", category, text)
+            return None
         return category
-
-    except Exception:
-        return "inquiry"
+    except Exception as e:
+        logger.warning("AI categorization failed: %s", e)
+        return None
 
 
 # ==================================================================================================
@@ -130,12 +124,13 @@ Return JSON:
 # Gemini Response
 # ==================================================================================================
 
-def _generate_content(prompt: str, model: Optional[str] = None) -> str | None:
-    if not ai_configured():
+def _generate_content(prompt: str, model: Optional[str] = None, api_key: Optional[str] = None) -> str | None:
+    key = api_key or os.getenv("GEMINI_API_KEY")
+    if not key:
         return None
 
     model_name = model or GEMINI_MODEL
-    client = get_client()
+    client = genai.Client(api_key=key)
 
     try:
         response = client.models.generate_content(
@@ -149,8 +144,7 @@ def _generate_content(prompt: str, model: Optional[str] = None) -> str | None:
         )
         return response.text
     except Exception as exc:
-        import logging
-        logging.getLogger(__name__).warning(f"Gemini {model_name} generation failed: {exc}")
+        logger.warning("Gemini %s generation failed: %s", model_name, exc)
         return None
 
 def confidence_check(data:dict[str, Any]) -> str | None :

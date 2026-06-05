@@ -28,6 +28,7 @@
       --accent:   #00e5b0;
       --blue:     #3b82f6;
       --orange:   #f97316;
+      --purple:   #a78bfa;
       --danger:   #ef4444;
       --r:        10px;
       --r-sm:     7px;
@@ -556,6 +557,7 @@
     .cat-complaint { background: rgba(239,68,68,0.1);  color: var(--danger); }
     .cat-inquiry   { background: rgba(59,130,246,0.1); color: var(--blue); }
     .cat-support   { background: rgba(249,115,22,0.1); color: var(--orange); }
+    .cat-pending   { background: rgba(249,115,22,0.1); color: var(--orange); }
     .cat-other     { background: rgba(90,122,148,0.1); color: var(--sub2); }
 
     /* ═══════ RIGHT COLUMN ═══════ */
@@ -1029,6 +1031,28 @@
             </div>
           </div>
 
+          <!-- API Keys -->
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <div class="panel-pip" style="background:var(--purple)"></div>
+                API Keys
+              </div>
+            </div>
+            <div style="padding:8px 12px 12px;">
+              <div id="apikeys-list" style="max-height:200px;overflow-y:auto;margin-bottom:8px;"></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <select id="apikey-provider" style="padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.72rem;outline:none;">
+                  <option value="gemini">Gemini</option>
+                  <option value="groq">Groq</option>
+                  <option value="openrouter">OpenRouter</option>
+                </select>
+                <input type="password" id="apikey-input" placeholder="Paste your API key..." style="flex:1;min-width:120px;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.72rem;font-family:'IBM Plex Mono',monospace;outline:none;" />
+                <button onclick="saveApiKey()" style="padding:8px 14px;border-radius:6px;border:none;background:var(--purple);color:#fff;font-weight:700;cursor:pointer;font-size:0.72rem;">Save</button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </main>
@@ -1113,6 +1137,7 @@
       if (c.includes('order'))     return 'cat-order';
       if (c.includes('complaint')) return 'cat-complaint';
       if (c.includes('inquiry'))   return 'cat-inquiry';
+      if (c.includes('pending'))   return 'cat-pending';
       if (c.includes('support'))   return 'cat-support';
       return 'cat-other';
     }
@@ -1385,6 +1410,57 @@
       } catch {}
     }
 
+    /* ── API Keys ── */
+    let apiKeyData = [];
+
+    async function loadApiKeys() {
+      try {
+        const res = await fetch('/api/keys', { credentials: 'same-origin' });
+        if (!res.ok) return;
+        apiKeyData = await res.json();
+        const el = document.getElementById('apikeys-list');
+        if (!apiKeyData.length) {
+          el.innerHTML = '<div style="color:var(--sub);font-size:0.72rem;padding:4px 0;">No API keys stored. Add your own key to use your provider account instead of the shared one.</div>';
+          return;
+        }
+        el.innerHTML = apiKeyData.map(k => `
+          <div style="display:flex;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--accent);">${esc(k.provider)}</span>
+            <span style="flex:1;font-size:0.7rem;color:var(--sub);">••••••••</span>
+            <button onclick="deleteApiKey('${esc(k.provider)}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.6rem;padding:2px;">✕</button>
+          </div>
+        `).join('');
+      } catch {}
+    }
+
+    async function saveApiKey() {
+      const provider = document.getElementById('apikey-provider').value;
+      const input = document.getElementById('apikey-input');
+      const key = input.value.trim();
+      if (!key) { showToast('Paste your API key first', 'error'); return; }
+      try {
+        const res = await fetch('/api/keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ provider, api_key: key }),
+        });
+        if (!res.ok) { showToast('Failed to save. Is MongoDB connected?', 'error'); return; }
+        input.value = '';
+        showToast(`${provider} API key saved! The AI pipeline will use it for your account.`, 'success');
+        loadApiKeys();
+      } catch { showToast('Failed to save', 'error'); }
+    }
+
+    async function deleteApiKey(provider) {
+      try {
+        const res = await fetch(`/api/keys/${provider}`, { method: 'DELETE', credentials: 'same-origin' });
+        if (!res.ok) return;
+        showToast(`${provider} key removed`, 'info');
+        loadApiKeys();
+      } catch {}
+    }
+
     /* ── AI Chat ── */
     async function sendChat() {
       const input = document.getElementById('chat-input');
@@ -1493,9 +1569,38 @@
       document.getElementById('conv-time').textContent = c.timestamp || '—';
       document.getElementById('conv-message').textContent = c.message || '—';
       document.getElementById('conv-response').textContent = c.ai_response || c.reply || 'No AI response';
+      const resolveBtn = document.getElementById('conv-resolve-btn');
+      const isPending = (c.category || '').toLowerCase() === 'pending';
+      if (isPending) {
+        resolveBtn.style.display = 'flex';
+        resolveBtn.dataset.convId = c.id;
+      } else {
+        resolveBtn.style.display = 'none';
+      }
       document.getElementById('conv-modal').classList.add('open');
     }
     function closeConvModal() { document.getElementById('conv-modal').classList.remove('open'); }
+    async function resolveConversation() {
+      const btn = document.getElementById('conv-resolve-btn');
+      const convId = btn.dataset.convId;
+      if (!convId) return;
+      btn.disabled = true;
+      btn.textContent = 'Updating...';
+      try {
+        const res = await fetch(`/api/conversations/${convId}/category`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ category: 'order' }),
+        });
+        if (!res.ok) { showToast('Failed to update', 'error'); btn.disabled = false; btn.textContent = '✓ Done'; return; }
+        showToast('Marked as order!', 'success');
+        btn.textContent = '✓ Done';
+        btn.style.background = 'var(--accent)';
+        document.getElementById('conv-category').textContent = 'order';
+        fetchData();
+      } catch { showToast('Failed to update', 'error'); btn.disabled = false; btn.textContent = '✓ Done'; }
+    }
 
     /* ── Notifications toggle ── */
     function toggleNotif() {
@@ -1571,6 +1676,7 @@
     fetchData();
     checkWhatsApp();
     loadKnowledge();
+    loadApiKeys();
     setInterval(fetchData, 10000);
   </script>
   <div class="toast-container" id="toast-container"></div>
@@ -1603,6 +1709,10 @@
         <div class="modal-label">AI Response</div>
         <div class="modal-value" id="conv-response">—</div>
       </div>
+      <button id="conv-resolve-btn" onclick="resolveConversation()" style="display:none;width:100%;padding:10px;border-radius:8px;border:none;background:var(--orange);color:#fff;font-weight:800;font-size:0.82rem;cursor:pointer;align-items:center;justify-content:center;gap:6px;margin-top:4px;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2,9 6,13 14,4"/></svg>
+        Mark as Resolved / Done
+      </button>
     </div>
   </div>
 
@@ -1672,6 +1782,23 @@
         </div>
         <button class="toggle-btn on" id="notif-toggle-btn" onclick="toggleNotif()"></button>
       </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
+
+      <a href="/business-setup" style="display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--text2);text-decoration:none;font-weight:600;font-size:0.82rem;transition:color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M1 8h14"/></svg>
+        Business Setup
+      </a>
+
+      <a href="/business-profile" style="display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--text2);text-decoration:none;font-weight:600;font-size:0.82rem;transition:color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="2.5"/><path d="M2 14c0-3.5 2.7-6 6-6s6 2.5 6 6"/></svg>
+        Public Profile
+      </a>
+
+      <a href="/admin" style="display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--text2);text-decoration:none;font-weight:600;font-size:0.82rem;transition:color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'" id="settings-admin-link">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l6 3v3.5c0 3.5-2.7 6.5-6 7.5-3.3-1-6-4-6-7.5V4L8 1z"/></svg>
+        Admin Panel
+      </a>
     </div>
   </div>
 </body>

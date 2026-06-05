@@ -23,10 +23,11 @@ class MongoDBProvider:
       - mongodb_run_command    Run a raw database command
     """
 
-    def __init__(self, connection_string: str, db_name: str = "tell5", read_only: bool = False):
+    def __init__(self, connection_string: str, db_name: str = "tell5", read_only: bool = False, model_api_keys: Optional[str] = None):
         self._connection_string = connection_string
         self._db_name = db_name
         self._read_only = read_only
+        self._model_api_keys = model_api_keys
         self._client: Optional[Any] = None
         self._ready = False
 

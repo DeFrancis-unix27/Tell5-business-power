@@ -143,15 +143,15 @@ def categorize_message(text: str) -> str:
     if not text or len(text) < 1:
         return None
     t = text.lower()
-    if any(w in t for w in ["complain", "complaint", "issue", "damaged", "bad", "wrong"]):
+    if any(w in t for w in ["complain", "complaint", "issue", "damaged", "bad", "wrong", "refund", "return", "broken", "defective", "poor", "unsatisfied", "disappointed", "frustrated", "annoyed", "terrible", "worst", "not working", "doesn't work", "not good"]):
         return "complaint"
-    if any(w in t for w in ["thanks", "thank", "love", "great", "excellent", "feedback"]):
+    if any(w in t for w in ["thanks", "thank", "love", "great", "excellent", "feedback", "appreciate", "amazing", "awesome", "wonderful", "good", "nice", "well done", "suggestion"]):
         return "feedback"
-    if any(w in t for w in ["order", "buy", "purchase"]):
+    if any(w in t for w in ["order", "buy", "purchase", "delivery", "shipping", "track", "cancel order", "place order", "cart", "checkout"]):
         return "order"
-    if any(w in t for w in ["price", "how", "info", "details", "when", "cost"]):
+    if any(w in t for w in ["price", "how", "info", "details", "when", "cost", "what", "describe", "tell me", "available", "stock", "offer", "discount", "promo", "location", "address", "open", "close", "hours"]):
         return "inquiry"
-    return "inquiry"
+    return None
 
 
 WA_QR_STATE_FILE = Path("services/whatsapp/qr-state.json")
@@ -385,6 +385,7 @@ async def startup():
                 connection_string=Config.MDB_MCP_CONNECTION_STRING,
                 db_name=Config.MDB_MCP_DB_NAME,
                 read_only=Config.MDB_MCP_READ_ONLY,
+                model_api_keys=Config.MDB_MCP_MODEL_API_KEYS,
             )
             await provider.start()
             mongodb_tools.set_mongo_provider(provider)
@@ -551,7 +552,7 @@ async def _process_incoming_message(
 
     # If a personality Q&A matches, use the stored answer directly
     if personality_match:
-        category = "inquiry"
+        category = categorize_message(body) or "inquiry"
         ai_reply = personality_match["answer"]
         await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, ai_response=ai_reply, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
@@ -565,7 +566,7 @@ async def _process_incoming_message(
 
     # Block only clearly non-business chat; everything else goes to AI
     if should_block_message(body):
-        category = "inquiry"
+        category = categorize_message(body) or "inquiry"
         await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
         return {
@@ -639,7 +640,7 @@ async def _process_incoming_message(
         ai_reply = pipeline_result.adk_reply
     else:
         ai_reply = pipeline_result.reply
-    category = pipeline_result.category or categorize_message(body)
+    category = pipeline_result.category or categorize_message(body) or "inquiry"
 
     if pipeline_result.tier_outputs:
         await crud.create_pipeline_log(
@@ -1580,6 +1581,59 @@ async def delete_knowledge(entry_id: int, db: AsyncSession = Depends(get_db), us
     if not ok:
         raise HTTPException(status_code=404, detail="Entry not found")
     await db.commit()
+    return {"ok": True}
+
+
+# ── Update Conversation Category ────────────────────────────────────────
+
+@app.patch("/api/conversations/{conv_id}/category")
+async def update_conversation_category(conv_id: int, request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    data = await request.json()
+    new_category = str(data.get("category", "")).strip().lower()
+    if new_category not in ("order", "inquiry", "complaint", "feedback", "pending"):
+        raise HTTPException(status_code=400, detail="Invalid category")
+    conv = await crud.get_conversation(db, conv_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    if conv.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not your conversation")
+    updated = await crud.update_conversation_category(db, conv_id, new_category)
+    if not updated:
+        raise HTTPException(status_code=500, detail="Failed to update")
+    await db.commit()
+    return {"ok": True, "category": new_category}
+
+
+# ── API Keys (MongoDB) ──────────────────────────────────────────────────
+
+@app.get("/api/keys")
+async def list_api_keys(user=Depends(get_current_user)):
+    if not mongodb_tools.get_mongo_provider():
+        return []
+    keys = await mongodb_tools.list_api_keys(Config.MDB_MCP_DB_NAME, user.id)
+    return keys
+
+
+@app.post("/api/keys")
+async def store_api_key(request: Request, user=Depends(get_current_user)):
+    data = await request.json()
+    provider = str(data.get("provider", "")).strip().lower()
+    api_key = str(data.get("api_key", "")).strip()
+    if not provider or not api_key:
+        raise HTTPException(status_code=400, detail="provider and api_key are required")
+    if provider not in ("gemini", "groq", "openrouter", "mistral"):
+        raise HTTPException(status_code=400, detail="Invalid provider. Allowed: gemini, groq, openrouter, mistral")
+    ok = await mongodb_tools.store_api_key(Config.MDB_MCP_DB_NAME, user.id, provider, api_key)
+    if not ok:
+        raise HTTPException(status_code=500, detail="Failed to store API key (MongoDB may be unavailable)")
+    return {"ok": True, "provider": provider}
+
+
+@app.delete("/api/keys/{provider}")
+async def delete_api_key(provider: str, user=Depends(get_current_user)):
+    ok = await mongodb_tools.delete_api_key(Config.MDB_MCP_DB_NAME, user.id, provider.lower())
+    if not ok:
+        raise HTTPException(status_code=404, detail="Key not found")
     return {"ok": True}
 
 

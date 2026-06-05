@@ -26,6 +26,18 @@ async def create_notification(db: AsyncSession, ntype: str, payload: str | None 
     return n
 
 
+async def get_conversation(db: AsyncSession, conv_id: int) -> Conversation | None:
+    from sqlalchemy import select
+    q = await db.execute(select(Conversation).where(Conversation.id == conv_id))
+    return q.scalar_one_or_none()
+
+
+async def update_conversation_category(db: AsyncSession, conv_id: int, new_category: str) -> bool:
+    from sqlalchemy import update
+    r = await db.execute(update(Conversation).where(Conversation.id == conv_id).values(category=new_category))
+    return r.rowcount > 0
+
+
 async def list_conversations(db: AsyncSession, user_id: int | None = None) -> List[Conversation]:
     stmt = select(Conversation).order_by(Conversation.timestamp.desc())
     if user_id is not None:
