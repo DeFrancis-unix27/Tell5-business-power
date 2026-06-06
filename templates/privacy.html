@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Privacy Policy — Tell5</title>
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060809; --surface: #0c1014; --surface2: #111820;
+      --border: #1a2330; --border2: #243040;
+      --text: #e8f0f8; --sub: #5a7a94; --sub2: #8aa0b4;
+      --accent: #00e5b0;
+      --r: 14px; --r-sm: 8px;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Cabinet Grotesk', sans-serif;
+      min-height: 100vh; position: relative;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: radial-gradient(rgba(0,229,176,0.05) 1px, transparent 1px);
+      background-size: 26px 26px; pointer-events: none; z-index: 0;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(16px,4vw,40px); height: 58px;
+      background: rgba(4,6,10,0.85); backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar a { text-decoration: none; display: flex; align-items: center; gap: 9px; color: var(--text); }
+    .topbar .logo { font-size: 1.15rem; font-weight: 900; letter-spacing: -0.04em; }
+    .topbar .logo em { font-style: normal; color: var(--accent); }
+    .shell { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 36px 20px 80px; }
+    h1 { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 4px; }
+    .subtitle { color: var(--sub2); font-size: 0.95rem; margin-bottom: 32px; }
+    h2 { font-size: 1.05rem; font-weight: 800; margin: 28px 0 8px; color: var(--accent); }
+    p { color: var(--sub2); line-height: 1.75; margin-bottom: 14px; font-size: 0.88rem; }
+    ul { padding-left: 20px; margin-bottom: 14px; }
+    li { color: var(--sub2); line-height: 1.75; font-size: 0.88rem; margin-bottom: 6px; }
+    li strong { color: var(--text); }
+    .last-updated { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--sub); margin-bottom: 24px; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+    @media (max-width: 640px) { .shell { padding: 24px 16px 60px; } h1 { font-size: 1.4rem; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/">
+      <span class="logo">Tell<em>5</em></span>
+    </a>
+    <a href="/dashboard" style="font-size:0.8rem;font-weight:600;color:var(--sub2);">Dashboard</a>
+  </header>
+  <div class="shell">
+    <h1>Privacy Policy</h1>
+    <p class="last-updated">Last updated: June 2026</p>
+
+    <h2>1. Introduction</h2>
+    <p>Tell5 ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our WhatsApp business platform.</p>
+
+    <h2>2. Information We Collect</h2>
+    <p><strong>Personal Information:</strong> When you register, we collect your name, email address, phone number, and business details. If you sign in with Google, we collect your Google account email and profile information.</p>
+    <p><strong>WhatsApp Messages:</strong> We process message content, sender phone numbers, and message timestamps to provide AI-powered replies and store conversation history.</p>
+    <p><strong>Business Data:</strong> Business profiles, product listings, pricing, and customer communications you manage through the platform.</p>
+
+    <h2>3. How We Use Your Information</h2>
+    <ul>
+      <li>To operate and maintain the Tell5 platform</li>
+      <li>To generate AI-powered replies to customer messages</li>
+      <li>To store and display conversation history in your dashboard</li>
+      <li>To improve our AI models and service quality</li>
+      <li>To comply with legal obligations</li>
+    </ul>
+
+    <h2>4. Data Storage and Retention</h2>
+    <p>Conversations are stored for up to 7 days, after which they are automatically deleted. You can export your data as CSV before deletion. Business profiles and account information are retained until you delete your account.</p>
+    <p>Data is stored on secured servers using industry-standard encryption (PostgreSQL with SSL, MongoDB Atlas with TLS).</p>
+
+    <h2>5. Third-Party Services</h2>
+    <p>We use the following third-party services:</p>
+    <ul>
+      <li><strong>Twilio</strong> — WhatsApp message sending/receiving (when using Twilio integration)</li>
+      <li><strong>MongoDB Atlas</strong> — Conversation and profile storage</li>
+      <li><strong>Google AI / Groq / OpenRouter</strong> — AI model providers for message classification and reply generation</li>
+      <li><strong>Sentry</strong> — Error monitoring and crash reporting</li>
+    </ul>
+    <p>Each service processes data under their own privacy policies and data processing agreements.</p>
+
+    <h2>6. Data Sharing</h2>
+    <p>We do not sell your personal information. We may share data with third-party service providers only as necessary to operate the platform, and only under contractual obligations to protect your data.</p>
+
+    <h2>7. Your Rights</h2>
+    <p>You have the right to:</p>
+    <ul>
+      <li>Access your personal data</li>
+      <li>Export your conversation data as CSV</li>
+      <li>Delete your account and associated data</li>
+      <li>Disable the AI pipeline at any time from Settings</li>
+    </ul>
+
+    <h2>8. Security</h2>
+    <p>We implement appropriate technical and organizational measures to protect your data, including encryption in transit (TLS) and at rest, access controls, and regular security audits.</p>
+
+    <h2>9. Contact</h2>
+    <p>For privacy-related inquiries, contact us at: <strong>prevailfrancis@gmail.com</strong></p>
+
+    <hr>
+    <p style="text-align:center;"><a href="/dashboard" style="color:var(--accent);">Back to Dashboard</a></p>
+    <p style="text-align:center;margin-top:12px;font-size:0.75rem;">
+      <a href="/terms" style="color:var(--sub2);text-decoration:none;margin-right:12px;">Terms of Service</a>
+      <a href="/help" style="color:var(--sub2);text-decoration:none;">Help</a>
+    </p>
+  </div>
+</body>
+</html>

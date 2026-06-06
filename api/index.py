@@ -1402,6 +1402,18 @@ async def help_page():
     return HTMLResponse(content=html)
 
 
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy_page():
+    html = Path("templates/privacy.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
+
+
+@app.get("/terms", response_class=HTMLResponse)
+async def terms_page():
+    html = Path("templates/terms.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
+
+
 @app.get("/business-profile", response_class=HTMLResponse)
 async def business_profile_setup(user=Depends(get_current_user)):
     html = Path("templates/business_setup.html").read_text(encoding="utf-8")

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Terms of Service — Tell5</title>
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060809; --surface: #0c1014; --surface2: #111820;
+      --border: #1a2330; --border2: #243040;
+      --text: #e8f0f8; --sub: #5a7a94; --sub2: #8aa0b4;
+      --accent: #00e5b0;
+      --r: 14px; --r-sm: 8px;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Cabinet Grotesk', sans-serif;
+      min-height: 100vh; position: relative;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: radial-gradient(rgba(0,229,176,0.05) 1px, transparent 1px);
+      background-size: 26px 26px; pointer-events: none; z-index: 0;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(16px,4vw,40px); height: 58px;
+      background: rgba(4,6,10,0.85); backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar a { text-decoration: none; display: flex; align-items: center; gap: 9px; color: var(--text); }
+    .topbar .logo { font-size: 1.15rem; font-weight: 900; letter-spacing: -0.04em; }
+    .topbar .logo em { font-style: normal; color: var(--accent); }
+    .shell { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 36px 20px 80px; }
+    h1 { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 4px; }
+    .subtitle { color: var(--sub2); font-size: 0.95rem; margin-bottom: 32px; }
+    h2 { font-size: 1.05rem; font-weight: 800; margin: 28px 0 8px; color: var(--accent); }
+    p { color: var(--sub2); line-height: 1.75; margin-bottom: 14px; font-size: 0.88rem; }
+    ul { padding-left: 20px; margin-bottom: 14px; }
+    li { color: var(--sub2); line-height: 1.75; font-size: 0.88rem; margin-bottom: 6px; }
+    li strong { color: var(--text); }
+    .last-updated { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--sub); margin-bottom: 24px; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+    @media (max-width: 640px) { .shell { padding: 24px 16px 60px; } h1 { font-size: 1.4rem; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/">
+      <span class="logo">Tell<em>5</em></span>
+    </a>
+    <a href="/dashboard" style="font-size:0.8rem;font-weight:600;color:var(--sub2);">Dashboard</a>
+  </header>
+  <div class="shell">
+    <h1>Terms of Service</h1>
+    <p class="last-updated">Last updated: June 2026</p>
+
+    <h2>1. Acceptance of Terms</h2>
+    <p>By accessing or using Tell5 ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Platform.</p>
+
+    <h2>2. Description of Service</h2>
+    <p>Tell5 provides a WhatsApp business management platform that includes AI-powered message classification, automated replies, conversation management, and business profile hosting. The Platform is provided "as is" and may be updated or modified at any time.</p>
+
+    <h2>3. User Accounts</h2>
+    <p>You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You must provide accurate information during registration and keep it updated.</p>
+
+    <h2>4. Acceptable Use</h2>
+    <p>You agree not to:</p>
+    <ul>
+      <li>Use the Platform for any unlawful purpose</li>
+      <li>Send spam, unsolicited messages, or harassing content</li>
+      <li>Attempt to bypass rate limits or security measures</li>
+      <li>Reverse-engineer, copy, or misuse the Platform's AI models or code</li>
+      <li>Use the Platform to store or process sensitive personal data (health, financial, etc.) beyond normal business communications</li>
+    </ul>
+
+    <h2>5. AI-Generated Content</h2>
+    <p>AI-generated replies are provided as suggestions and may contain errors. You are solely responsible for reviewing and approving AI-generated content before sending it to customers. Tell5 is not liable for damages resulting from AI-generated responses.</p>
+
+    <h2>6. Limitation of Liability</h2>
+    <p>Tell5 shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform. In no event shall our total liability exceed the amount paid by you, if any, in the 12 months preceding the claim.</p>
+
+    <h2>7. Service Availability</h2>
+    <p>The Platform is provided on a best-effort basis. Free-tier services may experience downtime due to inactivity-based sleeping (Render free tier). We strive for high availability but do not guarantee 100% uptime.</p>
+
+    <h2>8. Data Ownership</h2>
+    <p>You retain ownership of your business data and conversations. Tell5 claims no intellectual property rights over your content. We may use anonymized, aggregated data to improve our services.</p>
+
+    <h2>9. Termination</h2>
+    <p>We reserve the right to suspend or terminate accounts that violate these terms. You may delete your account at any time. Upon termination, your data will be deleted within 30 days.</p>
+
+    <h2>10. Changes to Terms</h2>
+    <p>We may update these terms at any time. Continued use after changes constitutes acceptance. We will notify users of material changes via email or dashboard notice.</p>
+
+    <h2>11. Governing Law</h2>
+    <p>These terms shall be governed by the laws of the Federal Republic of Nigeria. Any disputes shall be resolved through binding arbitration in Nigeria.</p>
+
+    <h2>12. Contact</h2>
+    <p>For questions about these terms, contact: <strong>prevailfrancis@gmail.com</strong></p>
+
+    <hr>
+    <p style="text-align:center;"><a href="/dashboard" style="color:var(--accent);">Back to Dashboard</a></p>
+    <p style="text-align:center;margin-top:12px;font-size:0.75rem;">
+      <a href="/privacy" style="color:var(--sub2);text-decoration:none;margin-right:12px;">Privacy Policy</a>
+      <a href="/help" style="color:var(--sub2);text-decoration:none;">Help</a>
+    </p>
+  </div>
+</body>
+</html>
