@@ -1396,6 +1396,12 @@ async def get_public_business_profile(profile_id: int, db: AsyncSession = Depend
     }
 
 
+@app.get("/help", response_class=HTMLResponse)
+async def help_page():
+    html = Path("templates/help.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
+
+
 @app.get("/business-profile", response_class=HTMLResponse)
 async def business_profile_setup(user=Depends(get_current_user)):
     html = Path("templates/business_setup.html").read_text(encoding="utf-8")
