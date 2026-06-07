@@ -151,6 +151,7 @@ async function startBot() {
             message_id: m.key.id,
             push_name: pushName,
             profile_pic_url: profilePicUrl,
+            to: sock.user?.id || "",
         });
     });
 }

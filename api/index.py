@@ -585,6 +585,15 @@ async def _process_incoming_message(
             target_user_id = target_user.id
             ai_reply_enabled = bool(getattr(target_user, "ai_reply_enabled", True))
             ai_pipeline_enabled = bool(getattr(target_user, "ai_enabled", True))
+    if target_user_id is None and channel == "baileys":
+        # Fallback: try to match the sender as the business owner
+        normalized_from = from_number.replace("whatsapp:", "").replace(" ", "").split("@")[0].strip()
+        if len(normalized_from) > 5:
+            target_user = await crud.get_user_by_phone(db, normalized_from)
+            if target_user:
+                target_user_id = target_user.id
+                ai_reply_enabled = bool(getattr(target_user, "ai_reply_enabled", True))
+                ai_pipeline_enabled = bool(getattr(target_user, "ai_enabled", True))
 
     phone = from_number
 
@@ -782,6 +791,7 @@ async def baileys_webhook(request: Request, db: AsyncSession = Depends(get_db), 
     body = str(data.get("body", "")).strip()
     push_name = str(data.get("push_name", "")).strip() or None
     profile_pic_url = str(data.get("profile_pic_url", "")).strip() or None
+    to_number = str(data.get("to", "")).strip() or None
 
     if not from_number or not body:
         raise HTTPException(status_code=400, detail="Missing from or body")
@@ -789,7 +799,7 @@ async def baileys_webhook(request: Request, db: AsyncSession = Depends(get_db), 
     logger.info(f"Baileys message from {push_name or from_number}: {body[:80]}")
 
     result = await _process_incoming_message(
-        db, from_number, body, channel="baileys",
+        db, from_number, body, to_number=to_number, channel="baileys",
         contact_name=push_name, profile_pic_url=profile_pic_url,
     )
 
