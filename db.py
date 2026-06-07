@@ -30,7 +30,7 @@ if (sslmode and sslmode != "disable") or (parts.hostname or "").endswith(".aiven
     connect_args["ssl"] = ssl_context
     DATABASE_URL = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
-engine: AsyncEngine = create_async_engine(DATABASE_URL, echo=False, connect_args=connect_args)
+engine: AsyncEngine = create_async_engine(DATABASE_URL, echo=False, connect_args=connect_args, pool_pre_ping=True, pool_recycle=3600)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
 

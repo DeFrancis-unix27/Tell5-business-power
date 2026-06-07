@@ -72,7 +72,12 @@ if Config.SENTRY_DSN and Config.ENVIRONMENT == "production":
 # Rate limiting setup
 limiter = Limiter(key_func=get_remote_address)
 
-app = FastAPI(title="Tell5 - WhatsApp Workflow Agent")
+is_production = Config.ENVIRONMENT == "production"
+app = FastAPI(
+    title="Tell5 - WhatsApp Workflow Agent",
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+)
 app.add_middleware(SessionMiddleware, secret_key=Config.SESSION_SECRET)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
@@ -105,6 +110,8 @@ async def security_headers(request: Request, call_next):
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+    response.headers.setdefault("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https:; frame-src 'self' https://accounts.google.com")
     return response
 
 
@@ -121,9 +128,38 @@ async def error_logging(request: Request, call_next):
         )
 
 
+CSRF_SKIP_PATHS = {
+    "/webhook/whatsapp", "/webhook/whatsapp/status",
+    "/api/baileys/webhook",
+    "/api/auth/signup", "/api/auth/login", "/api/auth/send-reset", "/api/auth/logout",
+    "/api/csrf-token",
+    "/healthz",
+}
+
+
 @app.middleware("http")
 async def csrf_middleware(request: Request, call_next):
     """CSRF protection middleware for form submissions"""
+    path = request.url.path.rstrip("/") or "/"
+
+    # Validate CSRF on mutating requests (skip whitelisted paths)
+    if request.method in ("POST", "PUT", "DELETE", "PATCH") and path not in CSRF_SKIP_PATHS:
+        csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
+        if not csrf_cookie:
+            return JSONResponse(status_code=403, content={"detail": "Missing CSRF cookie"})
+        try:
+            csrf_token = extract_csrf_token_from_headers(dict(request.headers))
+            if not csrf_token:
+                ctype = request.headers.get("content-type", "")
+                if "application/json" not in ctype and "multipart" not in ctype:
+                    form = await request.form()
+                    csrf_token = extract_csrf_token_from_request(dict(form))
+            if not csrf_token or not verify_csrf_token(csrf_token, csrf_cookie):
+                return JSONResponse(status_code=403, content={"detail": "Invalid CSRF token"})
+        except Exception as e:
+            logger.warning("CSRF validation error: %s", e)
+            return JSONResponse(status_code=403, content={"detail": "CSRF validation failed"})
+
     response = await call_next(request)
 
     # Add CSRF token to GET requests that return HTML
@@ -266,6 +302,21 @@ async def get_admin_user(user=Depends(get_current_user)):
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
+
+
+async def verify_baileys_webhook(request: Request):
+    if Config.BAILEYS_WEBHOOK_SECRET:
+        header_secret = request.headers.get("X-Baileys-Secret", "")
+        if header_secret != Config.BAILEYS_WEBHOOK_SECRET:
+            raise HTTPException(status_code=403, detail="Invalid webhook secret")
+    return True
+
+
+async def verify_cron(request: Request):
+    secret = request.headers.get("X-Cron-Secret", "") or request.query_params.get("secret", "")
+    if Config.CRON_SECRET and secret != Config.CRON_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid cron secret")
+    return True
 
 
 def set_auth_cookie(response: Response, user_id: int) -> None:
@@ -724,7 +775,7 @@ async def whatsapp_webhook(request: Request, db: AsyncSession = Depends(get_db))
 
 @app.post("/api/baileys/webhook")
 @limiter.limit("30/minute")
-async def baileys_webhook(request: Request, db: AsyncSession = Depends(get_db)):
+async def baileys_webhook(request: Request, db: AsyncSession = Depends(get_db), _=Depends(verify_baileys_webhook)):
     """Receives messages forwarded from the Baileys WhatsApp bot"""
     data = await request.json()
     from_number = str(data.get("from", "")).strip()
@@ -746,13 +797,12 @@ async def baileys_webhook(request: Request, db: AsyncSession = Depends(get_db)):
 
 
 @app.get("/api/baileys/status")
-async def baileys_status():
+async def baileys_status(user=Depends(get_current_user)):
     """Check if the Baileys bot is running and connected"""
-    bot_port = os.getenv("BOT_PORT", "3001")
     import httpx
     try:
         async with httpx.AsyncClient(timeout=5) as client:
-            resp = await client.get(f"http://127.0.0.1:{bot_port}/health")
+            resp = await client.get(f"{Config.BOT_URL}/health")
             if resp.status_code == 200:
                 return resp.json()
     except Exception:
@@ -761,14 +811,14 @@ async def baileys_status():
 
 
 @app.get("/api/pipeline/metrics")
-async def pipeline_metrics():
+async def pipeline_metrics(user=Depends(get_admin_user)):
     """Returns pipeline performance metrics for monitoring"""
     from services.ai.metrics import metrics
     return metrics.snapshot()
 
 
 @app.get("/api/pipeline/circuit-breaker")
-async def circuit_breaker_status():
+async def circuit_breaker_status(user=Depends(get_admin_user)):
     """Returns circuit breaker state for each provider"""
     from services.ai.circuit_breaker import circuit_breaker
     import time
@@ -1107,7 +1157,7 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
 
 
 @app.get("/api/whatsapp/pairing-code")
-async def request_pairing_code(phone: str = ""):
+async def request_pairing_code(phone: str = "", user=Depends(get_current_user)):
     if not phone.strip():
         raise HTTPException(status_code=400, detail="Phone number required")
     import httpx
@@ -1117,7 +1167,7 @@ async def request_pairing_code(phone: str = ""):
 
 
 @app.get("/api/whatsapp/qr")
-async def whatsapp_qr():
+async def whatsapp_qr(user=Depends(get_current_user)):
     """Returns status of both WhatsApp channels (Twilio + Baileys)"""
     twilio_active = bool(Config.TWILIO_ACCOUNT_SID and Config.TWILIO_AUTH_TOKEN)
     state = get_whatsapp_qr_state()
@@ -1202,7 +1252,7 @@ async def pipeline_status(message_id: str, db: AsyncSession = Depends(get_db)):
 
 @app.post("/pipeline/process")
 @limiter.limit("20/minute")
-async def trigger_pipeline(request: Request, db: AsyncSession = Depends(get_db)):
+async def trigger_pipeline(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
     data = await request.json()
     message = str(data.get("message", "")).strip()
     if not message:
@@ -1555,6 +1605,20 @@ async def trigger_archive(db: AsyncSession = Depends(get_db), user=Depends(get_a
     from services.archival import run_weekly_archive
     result = await run_weekly_archive(db)
     return result
+
+
+@app.post("/api/cron/cleanup")
+async def cron_cleanup(db: AsyncSession = Depends(get_db), _=Depends(verify_cron)):
+    """Called by Render Cron Job weekly — cleans old conversations and runs archive"""
+    from datetime import timedelta, timezone, datetime
+    from sqlalchemy import text
+    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+    await db.execute(text("DELETE FROM conversations WHERE timestamp < :cutoff"), {"cutoff": cutoff})
+    await db.commit()
+    logger.info("Cron cleanup: deleted conversations older than 7 days")
+    from services.archival import run_weekly_archive
+    archive = await run_weekly_archive(db)
+    return {"ok": True, "deleted_old_conversations": True, "archive": archive}
 
 
 @app.get("/api/discovery/status")

@@ -1,66 +1,16 @@
 services:
   - type: web
-    name: tell5
-    runtime: python
-    region: ohio
-    plan: starter
-    buildCommand: bash render-build.sh
-    startCommand: bash render-start.sh
-    healthCheckPath: /healthz
+    name: tell5-bot
+    runtime: image
+    dockerfilePath: services/whatsapp/Dockerfile
     envVars:
-      - key: BOT_PORT
-        value: 3001
-      - key: PYTHON_VERSION
-        value: 3.12
-      - key: ENVIRONMENT
-        value: production
-      - key: DEBUG
-        value: "false"
-      - key: COOKIE_SECURE
-        value: "true"
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: GROQ_API_KEY
-        sync: false
-      - key: MISTRAL_API_KEY
-        sync: false
-      - key: TWILIO_ACCOUNT_SID
-        sync: false
-      - key: TWILIO_AUTH_TOKEN
-        sync: false
-      - key: TWILIO_PHONE_NUMBER
-        sync: false
-      - key: DATABASE_URL
-        sync: false
-      - key: SESSION_SECRET
-        sync: false
-      - key: MDB_MCP_CONNECTION_STRING
-        sync: false
-      - key: MDB_MCP_READ_ONLY
-        value: "false"
-      - key: MDB_MCP_DB_NAME
-        value: tell5
-      - key: OPENROUTER_API_KEY
-        sync: false
-      - key: SENTRY_DSN
-        sync: false
-      - key: GEMINI_MODEL
-        value: gemini-3-flash-preview
-      - key: GOOGLE_APPLICATION_CREDENTIALS_JSON
-        sync: false
-      - key: GOOGLE_CLOUD_PROJECT
-        sync: false
-      - key: AGENT_BUILDER_LOCATION
-        value: global
-      - key: AGENT_BUILDER_DATA_STORE
-        sync: false
-      - key: GOOGLE_OAUTH_CLIENT_ID
-        sync: false
-      - key: GOOGLE_OAUTH_CLIENT_SECRET
-        sync: false
       - key: API_URL
+        value: https://tell5-web-xxxxx-uc.a.run.app
+      - key: BAILEYS_WEBHOOK_SECRET
         sync: false
-      - key: OAUTH_REDIRECT_URI
-        value: /api/auth/google/callback
-      - key: ADMIN_EMAIL
-        sync: false
+      - key: BOT_PORT
+        value: "10000"
+    disk:
+      name: baileys-auth
+      mountPath: /app/auth
+      sizeGB: 1

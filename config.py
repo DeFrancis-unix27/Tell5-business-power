@@ -63,6 +63,10 @@ class Config:
 
     # Baileys WhatsApp bot
     BOT_URL: str = os.getenv("BOT_URL", "http://localhost:3001").strip()
+    BAILEYS_WEBHOOK_SECRET: Optional[str] = os.getenv("BAILEYS_WEBHOOK_SECRET", "").strip() or None
+
+    # Cron jobs (Render)
+    CRON_SECRET: Optional[str] = os.getenv("CRON_SECRET", "").strip() or None
 
     # Google Cloud Agent Builder / Discovery Engine
     GOOGLE_APPLICATION_CREDENTIALS_JSON: Optional[str] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip() or None

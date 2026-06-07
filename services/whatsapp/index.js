@@ -7,6 +7,7 @@ const STATE_FILE = path.join(__dirname, "qr-state.json");
 const AUTH_DIR = path.join(__dirname, "auth");
 const API_BASE = process.env.API_URL || "http://localhost:8000";
 const BOT_PORT = parseInt(process.env.BOT_PORT || "3001", 10);
+const WEBHOOK_SECRET = process.env.BAILEYS_WEBHOOK_SECRET || "";
 
 function writeState(state) {
     try {
@@ -24,11 +25,15 @@ let lastActive = Date.now();
 async function forwardToApi(body) {
     const url = `${API_BASE}/api/baileys/webhook`;
     try {
-        const resp = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
+    const headers = { "Content-Type": "application/json" };
+    if (WEBHOOK_SECRET) {
+        headers["X-Baileys-Secret"] = WEBHOOK_SECRET;
+    }
+    const resp = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+    });
         if (!resp.ok) {
             const text = await resp.text().catch(() => "");
             console.error(`API returned ${resp.status}: ${text.slice(0, 200)}`);
