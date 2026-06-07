@@ -1,4 +1,3 @@
-import os
 import sentry_sdk
 from datetime import datetime, timezone
 from fastapi import FastAPI, Request, Depends, HTTPException
@@ -10,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from config import Config
 import crud
-from ai import ai_configured, analyze_customer_message, draft_reply, ai_categorize_message
+from ai import ai_configured, draft_reply
 from services.ai.mongodb_mcp import MongoDBProvider
 from services.ai import mongodb_tools
 from auth import (
@@ -23,7 +22,6 @@ from auth import (
     verify_session_token,
 )
 from csrf import (
-    generate_csrf_token,
     create_csrf_token_with_expiry,
     verify_csrf_token,
     extract_csrf_token_from_request,
@@ -831,7 +829,6 @@ async def pipeline_metrics(user=Depends(get_admin_user)):
 async def circuit_breaker_status(user=Depends(get_admin_user)):
     """Returns circuit breaker state for each provider"""
     from services.ai.circuit_breaker import circuit_breaker
-    import time
     providers = ["gemini", "openrouter", "groq", "mistral"]
     return {
         p: {
@@ -1661,7 +1658,7 @@ async def create_discovery_datastore(user=Depends(get_admin_user)):
 
 @app.post("/api/discovery/sync")
 async def sync_to_discovery(db: AsyncSession = Depends(get_db), user=Depends(get_admin_user)):
-    from services.ai.discovery_engine import get_client, sync_business_profile_to_discovery, sync_product_to_discovery
+    from services.ai.discovery_engine import get_client, sync_business_profile_to_discovery
     client = get_client()
     if not client or not client.configured:
         raise HTTPException(status_code=501, detail="Discovery Engine not configured")

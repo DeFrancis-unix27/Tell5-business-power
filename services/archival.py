@@ -1,12 +1,12 @@
 import csv
-import io
 import logging
-import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any
 
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +22,7 @@ async def archive_conversations(db: AsyncSession) -> dict[str, int]:
     from models import Conversation
 
     await ensure_archive_dir()
-    cutoff = datetime.utcnow() - timedelta(days=7)
-    week_ago_str = cutoff.isoformat()
+    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
 
     q = await db.execute(
         select(Conversation).where(Conversation.timestamp < cutoff)
@@ -103,6 +102,3 @@ async def run_weekly_archive(db: AsyncSession) -> dict[str, Any]:
         "orders": order_result,
         "archived_at": datetime.utcnow().isoformat(),
     }
-
-
-from typing import Any
