@@ -57,13 +57,19 @@ class DiscoveryEngineClient:
     def configured(self) -> bool:
         return self._ready
 
+    def _base_path(self) -> str:
+        return (
+            f"projects/{Config.GOOGLE_CLOUD_PROJECT}"
+            f"/locations/{Config.AGENT_BUILDER_LOCATION}"
+            f"/collections/default_collection"
+        )
+
     @property
     def serving_config(self) -> Optional[str]:
         if not self._ready:
             return None
         return (
-            f"projects/{Config.GOOGLE_CLOUD_PROJECT}"
-            f"/locations/{Config.AGENT_BUILDER_LOCATION}"
+            f"{self._base_path()}"
             f"/dataStores/{Config.AGENT_BUILDER_DATA_STORE}"
             f"/servingConfigs/default_search"
         )
@@ -110,9 +116,8 @@ class DiscoveryEngineClient:
             from google.cloud.discoveryengine import CreateDataStoreRequest, DataStore
             from google.cloud.discoveryengine import SolutionType
 
-            parent = f"projects/{Config.GOOGLE_CLOUD_PROJECT}/locations/{Config.AGENT_BUILDER_LOCATION}"
             request = CreateDataStoreRequest(
-                parent=parent,
+                parent=self._base_path(),
                 data_store=DataStore(
                     display_name=display_name,
                     industry_vertical="GENERIC",
@@ -136,11 +141,9 @@ class DiscoveryEngineClient:
             return False
         try:
             from google.cloud.discoveryengine import Document
-            from google.cloud.discoveryengine import document_service_client
 
             parent = (
-                f"projects/{Config.GOOGLE_CLOUD_PROJECT}"
-                f"/locations/{Config.AGENT_BUILDER_LOCATION}"
+                f"{self._base_path()}"
                 f"/dataStores/{Config.AGENT_BUILDER_DATA_STORE}"
                 f"/branches/0"
             )
@@ -164,8 +167,7 @@ class DiscoveryEngineClient:
             return False
         try:
             name = (
-                f"projects/{Config.GOOGLE_CLOUD_PROJECT}"
-                f"/locations/{Config.AGENT_BUILDER_LOCATION}"
+                f"{self._base_path()}"
                 f"/dataStores/{Config.AGENT_BUILDER_DATA_STORE}"
                 f"/branches/0/documents/{doc_id}"
             )

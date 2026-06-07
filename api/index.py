@@ -1164,19 +1164,19 @@ async def basepage(request: Request):
     return HTMLResponse(content=landingpage_html)
 
 
-@app.get("/terms", response_class=HTMLResponse)
-async def terms():
-    return HTMLResponse(content="""
-    <!doctype html>
-    <html lang="en">
-      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tell5 Terms</title></head>
-      <body style="font-family:Arial,sans-serif;max-width:760px;margin:48px auto;padding:0 20px;line-height:1.6">
-        <h1>Terms of Service</h1>
-        <p>This is a placeholder Terms of Service page for Tell5. Replace it with your reviewed business terms before production launch.</p>
-        <p><a href="/">Back to Tell5</a></p>
-      </body>
-    </html>
-    """)
+# @app.get("/terms", response_class=HTMLResponse)
+# async def terms():
+#     return HTMLResponse(content="""
+#     <!doctype html>
+#     <html lang="en">
+#       <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tell5 Terms</title></head>
+#       <body style="font-family:Arial,sans-serif;max-width:760px;margin:48px auto;padding:0 20px;line-height:1.6">
+#         <h1>Terms of Service</h1>
+#         <p>This is a placeholder Terms of Service page for Tell5. Replace it with your reviewed business terms before production launch.</p>
+#         <p><a href="/">Back to Tell5</a></p>
+#       </body>
+#     </html>
+#     """)
 
 
 @app.get("/pipeline/status/{message_id}")
