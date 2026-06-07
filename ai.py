@@ -118,6 +118,19 @@ TELL5_SYSTEM_KNOWLEDGE = (
 )
 
 
+def format_business_hours(context: Optional[dict] = None) -> str:
+    if not context:
+        return ""
+    hours = context.get("business_hours")
+    open_now = context.get("business_open_now")
+    if not hours:
+        return ""
+    if open_now is False:
+        msg = context.get("business_hours_message", "We're currently closed.")
+        return f"\n\nNOTE: Business is currently CLOSED. Hours: {hours}. Inform the customer and let them know you'll get back to them when open."
+    return ""
+
+
 def format_internal_sellers(context: Optional[dict] = None) -> str:
     """Format internal seller recommendations from pipeline context."""
     if not context:
@@ -141,7 +154,7 @@ def format_internal_sellers(context: Optional[dict] = None) -> str:
 
 
 def build_prompt(message: str, category: str, context: Optional[dict] = None) -> str:
-    extra = format_internal_sellers(context)
+    extra = format_internal_sellers(context) + format_business_hours(context)
 
     return f"""
 {TELL5_SYSTEM_KNOWLEDGE}

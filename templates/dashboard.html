@@ -1038,7 +1038,38 @@
             </div>
           </div>
 
+          <!-- Reply Templates -->
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <div class="panel-pip" style="background:var(--accent)"></div>
+                Reply Templates
+              </div>
+              <span class="panel-badge" id="templates-count">0</span>
+            </div>
+            <div style="padding:8px 12px 12px;">
+              <div id="templates-list" style="max-height:180px;overflow-y:auto;margin-bottom:8px;"></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <input type="text" id="template-title-input" placeholder="Title..." style="flex:1;min-width:80px;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.72rem;outline:none;" />
+                <input type="text" id="template-body-input" placeholder="Reply body..." style="flex:2;min-width:120px;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.72rem;font-family:'IBM Plex Mono',monospace;outline:none;" />
+                <button onclick="addTemplate()" style="padding:8px 14px;border-radius:6px;border:none;background:var(--accent);color:#060809;font-weight:700;cursor:pointer;font-size:0.72rem;">Save</button>
+              </div>
+            </div>
+          </div>
 
+          <!-- Customers -->
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <div class="panel-pip" style="background:var(--blue)"></div>
+                Recent Customers
+              </div>
+              <span class="panel-badge" id="customers-count">0</span>
+            </div>
+            <div class="customers-list" id="customers-list">
+              <div class="empty">Loading customers…</div>
+            </div>
+          </div>
 
         </div>
       </div>
@@ -1397,6 +1428,79 @@
       } catch {}
     }
 
+    /* ── Reply Templates ── */
+    let templateData = [];
+    async function loadTemplates() {
+      try {
+        const res = await fetch('/api/reply-templates', { credentials: 'same-origin' });
+        if (!res.ok) return;
+        templateData = await res.json();
+        const el = document.getElementById('templates-list');
+        document.getElementById('templates-count').textContent = templateData.length;
+        if (!templateData.length) {
+          el.innerHTML = '<div style="color:var(--sub);font-size:0.72rem;padding:4px 0;">No saved templates. Add a common reply below.</div>';
+          return;
+        }
+        el.innerHTML = templateData.map((t, i) =>
+          `<div style="display:flex;gap:6px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border);">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.7rem;font-weight:700;color:var(--accent);">${esc(t.title)}</div>
+              <div style="font-size:0.68rem;color:var(--sub2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.body)}</div>
+            </div>
+            <button onclick="deleteTemplate(${t.id})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.6rem;padding:2px;">✕</button>
+          </div>`
+        ).join('');
+      } catch {}
+    }
+    async function addTemplate() {
+      const title = document.getElementById('template-title-input').value.trim();
+      const body = document.getElementById('template-body-input').value.trim();
+      if (!title || !body) { showToast('Enter both title and body', 'error'); return; }
+      try {
+        const res = await fetch('/api/reply-templates', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ title, body }),
+        });
+        if (!res.ok) throw new Error('Failed');
+        document.getElementById('template-title-input').value = '';
+        document.getElementById('template-body-input').value = '';
+        showToast('Template saved!', 'success');
+        loadTemplates();
+      } catch { showToast('Failed to save template', 'error'); }
+    }
+    async function deleteTemplate(id) {
+      try {
+        const res = await fetch(`/api/reply-templates/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+        if (!res.ok) return;
+        showToast('Template removed', 'info');
+        loadTemplates();
+      } catch {}
+    }
+
+    /* ── Customers ── */
+    async function loadCustomers() {
+      try {
+        const res = await fetch('/api/customers', { credentials: 'same-origin' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const el = document.getElementById('customers-list');
+        document.getElementById('customers-count').textContent = data.length;
+        if (!data.length) {
+          el.innerHTML = '<div class="empty">No customers yet</div>';
+          return;
+        }
+        el.innerHTML = data.map(c =>
+          `<div style="display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:var(--accent);flex-shrink:0;">${esc((c.name || c.phone || '?')[0].toUpperCase())}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.72rem;font-weight:600;">${esc(c.name || c.phone || 'Unknown')}</div>
+              <div style="font-size:0.62rem;color:var(--sub);">${c.message_count || 0} msgs · ${c.last_message_at ? relTime(c.last_message_at) : '—'}</div>
+            </div>
+          </div>`
+        ).join('');
+      } catch {}
+    }
+
     /* ── AI Chat ── */
     async function sendChat() {
       const input = document.getElementById('chat-input');
@@ -1607,6 +1711,8 @@
     fetchData();
     checkWhatsApp();
     loadKnowledge();
+    loadTemplates();
+    loadCustomers();
     setInterval(fetchData, 10000);
   </script>
   <div class="toast-container" id="toast-container"></div>

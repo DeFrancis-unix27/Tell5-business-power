@@ -129,6 +129,7 @@
 
     <div class="tabs">
       <button class="tab active" data-tab="personal">Personal QR</button>
+      <button class="tab" data-tab="phone-pair">Phone Pairing</button>
       <button class="tab" data-tab="business">Business (Twilio)</button>
     </div>
 
@@ -142,6 +143,33 @@
         <div id="qr-text" style="text-align:center;color:var(--sub2);font-size:0.8rem;"></div>
         <div class="btn-row">
           <button class="btn btn-primary" onclick="refresh()">Refresh QR</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-phone-pair" class="tab-content hidden">
+      <div class="option">
+        <span class="badge badge-recommended">Phone Only</span>
+        <h3>Connect With a Pairing Code</h3>
+        <p>No QR scanner? Enter your WhatsApp phone number (with country code) below to get a pairing code you type into WhatsApp.</p>
+        <div id="pair-status" class="status-box">Enter your number with country code and click "Get Code".</div>
+        <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap;">
+          <input type="tel" id="pair-phone" placeholder="e.g. 2348012345678 (Nigeria) or 14155552671 (US)" style="flex:1;min-width:150px;padding:11px 14px;border-radius:var(--r-sm);border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:0.9rem;font-family:'IBM Plex Mono',monospace;outline:none;" />
+          <button id="pair-btn" class="btn btn-primary" onclick="requestPairingCode()">Get Code</button>
+        </div>
+        <div style="font-size:0.7rem;color:var(--sub2);margin:4px 0 0;line-height:1.6;">
+          Include your country code without + or spaces.
+          Examples: <code>2348012345678</code> (Nigeria) · <code>14155552671</code> (US) · <code>447123456789</code> (UK) · <code>911234567890</code> (India)
+        </div>
+        <div id="pair-code-display" style="display:none;text-align:center;padding:20px;background:var(--bg);border:2px dashed var(--accent);border-radius:var(--r);margin:12px 0;">
+          <div style="font-size:0.65rem;color:var(--sub);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Your Pairing Code</div>
+          <div id="pair-code" style="font-family:'IBM Plex Mono',monospace;font-size:2rem;font-weight:700;color:var(--accent);letter-spacing:0.15em;">—</div>
+          <div style="font-size:0.72rem;color:var(--sub2);margin-top:12px;line-height:1.6;">
+            1. Open WhatsApp on your phone<br>
+            2. Go to <strong>Linked Devices → Link a Device</strong><br>
+            3. Tap <strong>"Link with phone number"</strong><br>
+            4. Enter this code
+          </div>
         </div>
       </div>
     </div>
@@ -220,6 +248,41 @@
       } finally {
         btn.classList.remove('spin');
       }
+    }
+
+    async function requestPairingCode() {
+      const phone = document.getElementById('pair-phone').value.trim().replace(/[^0-9]/g, '');
+      if (!phone) { showToast('Enter your WhatsApp phone number', 'error'); return; }
+      const btn = document.getElementById('pair-btn');
+      const statusEl = document.getElementById('pair-status');
+      const displayEl = document.getElementById('pair-code-display');
+      const codeEl = document.getElementById('pair-code');
+      btn.disabled = true; btn.textContent = 'Requesting…';
+      try {
+        const res = await fetch(`/api/whatsapp/pairing-code?phone=${encodeURIComponent(phone)}`, { credentials: 'same-origin' });
+        const data = await res.json();
+        if (data.pairing_code) {
+          codeEl.textContent = data.pairing_code;
+          displayEl.style.display = 'block';
+          statusEl.textContent = 'Pairing code generated! Enter it in WhatsApp.';
+          statusEl.style.borderLeftColor = 'var(--accent)';
+        } else {
+          displayEl.style.display = 'none';
+          statusEl.textContent = data.error || 'Failed to get pairing code. Try again or use QR.';
+          statusEl.style.borderLeftColor = 'var(--danger)';
+        }
+      } catch (err) {
+        displayEl.style.display = 'none';
+        statusEl.textContent = 'Error: ' + err.message;
+        statusEl.style.borderLeftColor = 'var(--danger)';
+      }
+      btn.disabled = false; btn.textContent = 'Get Code';
+    }
+
+    function showToast(msg, type) {
+      const el = document.getElementById('pair-status');
+      el.textContent = msg;
+      el.style.borderLeftColor = type === 'error' ? 'var(--danger)' : 'var(--accent)';
     }
 
     function updateSteps(data) {

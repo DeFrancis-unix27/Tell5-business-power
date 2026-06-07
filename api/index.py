@@ -537,6 +537,13 @@ async def _process_incoming_message(
 
     phone = from_number
 
+    # Track/update customer profile
+    if target_user_id and phone:
+        try:
+            await crud.get_or_create_customer(db, target_user_id, phone, contact_name)
+        except Exception as e:
+            logger.warning("Failed to track customer: %s", e)
+
     # If AI pipeline is disabled for this user, store message without processing
     if not ai_pipeline_enabled:
         category = categorize_message(body)
@@ -1099,6 +1106,16 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     return HTMLResponse(content=dashboard_html)
 
 
+@app.get("/api/whatsapp/pairing-code")
+async def request_pairing_code(phone: str = ""):
+    if not phone.strip():
+        raise HTTPException(status_code=400, detail="Phone number required")
+    import httpx
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(f"{Config.BOT_URL}/request-pairing-code", json={"phone": phone.strip()})
+        return resp.json()
+
+
 @app.get("/api/whatsapp/qr")
 async def whatsapp_qr():
     """Returns status of both WhatsApp channels (Twilio + Baileys)"""
@@ -1110,6 +1127,7 @@ async def whatsapp_qr():
             "connected": state["connected"],
             "qr": state["qr"],
             "qr_image": generate_qr_data_url(state["qr"]) if state["qr"] else None,
+            "pairing_code": state.get("pairing_code"),
             "message": state["message"],
             "is_running": state["qr"] is not None or state["connected"],
         },
@@ -1438,6 +1456,72 @@ async def discover_page():
     return HTMLResponse(content=html)
 
 
+# ── Reply Templates ─────────────────────────────────────────────────
+
+@app.get("/api/reply-templates")
+async def list_templates(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    templates = await crud.list_reply_templates(db, user.id)
+    return [{"id": t.id, "title": t.title, "body": t.body, "created_at": t.created_at.isoformat() if t.created_at else None} for t in templates]
+
+
+@app.post("/api/reply-templates")
+async def create_template(request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    data = await request.json()
+    title = str(data.get("title", "")).strip()
+    body = str(data.get("body", "")).strip()
+    if not title or not body:
+        raise HTTPException(status_code=400, detail="Title and body are required")
+    t = await crud.create_reply_template(db, user.id, title, body)
+    await db.commit()
+    return {"id": t.id, "title": t.title, "body": t.body, "created": True}
+
+
+@app.put("/api/reply-templates/{template_id}")
+async def update_template(template_id: int, request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    data = await request.json()
+    title = str(data.get("title", "")).strip()
+    body = str(data.get("body", "")).strip()
+    if not title or not body:
+        raise HTTPException(status_code=400, detail="Title and body are required")
+    ok = await crud.update_reply_template(db, template_id, user.id, title, body)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Template not found")
+    await db.commit()
+    return {"ok": True}
+
+
+@app.delete("/api/reply-templates/{template_id}")
+async def delete_template(template_id: int, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    ok = await crud.delete_reply_template(db, template_id, user.id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Template not found")
+    await db.commit()
+    return {"ok": True}
+
+
+# ── Customer Profiles ────────────────────────────────────────────────
+
+@app.get("/api/customers")
+async def list_customers(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    customers = await crud.list_customers(db, user.id)
+    return [{
+        "id": c.id, "phone": c.phone, "name": c.name, "notes": c.notes,
+        "message_count": c.message_count,
+        "last_message_at": c.last_message_at.isoformat() if c.last_message_at else None,
+    } for c in customers]
+
+
+@app.patch("/api/customers/{customer_id}")
+async def update_customer(customer_id: int, request: Request, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
+    data = await request.json()
+    notes = str(data.get("notes", "")).strip()
+    ok = await crud.update_customer_notes(db, customer_id, user.id, notes)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    await db.commit()
+    return {"ok": True}
+
+
 @app.delete("/api/business/products/{product_id}")
 async def delete_product_route(product_id: int, db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
     ok = await crud.delete_product(db, product_id)
@@ -1650,17 +1734,17 @@ async def export_csv(user=Depends(get_current_user), db: AsyncSession = Depends(
     )
 
 
-@app.get("/privacy", response_class=HTMLResponse)
-async def privacy():
-    return HTMLResponse(content="""
-    <!doctype html>
-    <html lang="en">
-      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tell5 Privacy</title></head>
-      <body style="font-family:Arial,sans-serif;max-width:760px;margin:48px auto;padding:0 20px;line-height:1.6">
-        <h1>Privacy Policy</h1>
-        <p>This is a placeholder Privacy Policy page for Tell5. Replace it with your reviewed privacy policy before production launch.</p>
-        <p><a href="/">Back to Tell5</a></p>
-      </body>
-    </html>
-    """)
+# @app.get("/privacy", response_class=HTMLResponse)
+# async def privacy():
+#     return HTMLResponse(content="""
+#     <!doctype html>
+#     <html lang="en">
+#       <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tell5 Privacy</title></head>
+#       <body style="font-family:Arial,sans-serif;max-width:760px;margin:48px auto;padding:0 20px;line-height:1.6">
+#         <h1>Privacy Policy</h1>
+#         <p>This is a placeholder Privacy Policy page for Tell5. Replace it with your reviewed privacy policy before production launch.</p>
+#         <p><a href="/">Back to Tell5</a></p>
+#       </body>
+#     </html>
+#     """)
 

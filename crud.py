@@ -326,6 +326,135 @@ async def create_pipeline_log(
     return log
 
 
+# ── Reply Templates ──────────────────────────────────────────────────
+
+async def list_reply_templates(db: AsyncSession, user_id: int) -> list:
+    from models import ReplyTemplate
+    q = await db.execute(select(ReplyTemplate).where(ReplyTemplate.user_id == user_id).order_by(ReplyTemplate.created_at.desc()))
+    return q.scalars().all()
+
+
+async def create_reply_template(db: AsyncSession, user_id: int, title: str, body: str) -> "ReplyTemplate":
+    from models import ReplyTemplate
+    t = ReplyTemplate(user_id=user_id, title=title, body=body)
+    db.add(t)
+    await db.flush()
+    return t
+
+
+async def update_reply_template(db: AsyncSession, template_id: int, user_id: int, title: str, body: str) -> bool:
+    from models import ReplyTemplate
+    q = await db.execute(select(ReplyTemplate).where(ReplyTemplate.id == template_id, ReplyTemplate.user_id == user_id))
+    t = q.scalar_one_or_none()
+    if not t: return False
+    t.title = title
+    t.body = body
+    await db.flush()
+    return True
+
+
+async def delete_reply_template(db: AsyncSession, template_id: int, user_id: int) -> bool:
+    from models import ReplyTemplate
+    q = await db.execute(select(ReplyTemplate).where(ReplyTemplate.id == template_id, ReplyTemplate.user_id == user_id))
+    t = q.scalar_one_or_none()
+    if not t: return False
+    await db.delete(t)
+    await db.flush()
+    return True
+
+
+# ── Customer Profiles ────────────────────────────────────────────────
+
+async def get_or_create_customer(db: AsyncSession, user_id: int, phone: str, name: str | None = None) -> "CustomerProfile":
+    from models import CustomerProfile
+    from datetime import datetime, timezone
+    q = await db.execute(select(CustomerProfile).where(CustomerProfile.user_id == user_id, CustomerProfile.phone == phone))
+    c = q.scalar_one_or_none()
+    if c:
+        c.message_count = (c.message_count or 0) + 1
+        c.last_message_at = datetime.now(timezone.utc)
+        if name and not c.name:
+            c.name = name
+        return c
+    c = CustomerProfile(user_id=user_id, phone=phone, name=name, message_count=1, last_message_at=datetime.now(timezone.utc))
+    db.add(c)
+    await db.flush()
+    return c
+
+
+async def list_customers(db: AsyncSession, user_id: int) -> list:
+    from models import CustomerProfile
+    q = await db.execute(select(CustomerProfile).where(CustomerProfile.user_id == user_id).order_by(CustomerProfile.last_message_at.desc().nullslast()))
+    return q.scalars().all()
+
+
+async def update_customer_notes(db: AsyncSession, customer_id: int, user_id: int, notes: str) -> bool:
+    from models import CustomerProfile
+    q = await db.execute(select(CustomerProfile).where(CustomerProfile.id == customer_id, CustomerProfile.user_id == user_id))
+    c = q.scalar_one_or_none()
+    if not c: return False
+    c.notes = notes
+    await db.flush()
+    return True
+
+
+# ── Business Hours ───────────────────────────────────────────────────
+
+def parse_business_hours(hours_str: str | None) -> dict:
+    """Parse 'Mon-Fri 9AM-6PM' into day ranges and time ranges. Simple parser."""
+    if not hours_str:
+        return {}
+    days_map = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6}
+    result = {}
+    parts = hours_str.lower().split()
+    for i, p in enumerate(parts):
+        if "-" in p and any(d in p for d in days_map):
+            day_range = p.split("-")
+            start_day = days_map.get(day_range[0][:3])
+            end_day = days_map.get(day_range[1][:3])
+            if start_day is not None and end_day is not None:
+                time_part = " ".join(parts[i+1:i+3]) if i+2 < len(parts) else ""
+                result.setdefault("days", []).append((start_day, end_day))
+                if time_part:
+                    result["time"] = time_part
+    return result
+
+
+def is_within_business_hours(hours_str: str | None) -> tuple[bool, str]:
+    """Returns (is_open, message)."""
+    if not hours_str:
+        return True, ""
+    import re
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    t = hours_str.lower()
+    days_map = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6}
+    # Check for patterns like "Mon-Fri 9AM-6PM"
+    m = re.search(r"(mon|tue|wed|thu|fri|sat|sun)\s*(?:-\s*)(mon|tue|wed|thu|fri|sat|sun)?\s*(\d{1,2})(am|pm)\s*-\s*(\d{1,2})(am|pm)", t)
+    if m:
+        start_d = days_map.get(m.group(1)[:3])
+        end_d = days_map.get((m.group(2) or m.group(1))[:3])
+        today = now.weekday()
+        if start_d is not None and end_d is not None:
+            # Check day
+            if end_d >= start_d:
+                if today < start_d or today > end_d:
+                    return False, "We're currently closed. Our hours are " + hours_str + ". We'll get back to you when we open."
+            else:  # wraps across week (e.g., Sat-Wed)
+                if today > end_d and today < start_d:
+                    return False, "We're currently closed. Our hours are " + hours_str + ". We'll get back to you when we open."
+            # Check time
+            def to_mins(h, ampm):
+                h = int(h)
+                return h % 12 * 60 + (0 if ampm == "am" else 12 * 60)
+            start_m = to_mins(m.group(3), m.group(4))
+            end_m = to_mins(m.group(5), m.group(6))
+            now_m = now.hour * 60 + now.minute
+            if now_m < start_m or now_m > end_m:
+                return False, "We're currently closed. Our hours are " + hours_str + ". We'll get back to you when we open."
+    return True, ""
+
+
 async def list_knowledge(db: AsyncSession, user_id: int) -> list:
     from models import KnowledgeEntry
     q = await db.execute(select(KnowledgeEntry).where(KnowledgeEntry.user_id == user_id).order_by(KnowledgeEntry.created_at.desc()))

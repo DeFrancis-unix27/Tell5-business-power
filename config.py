@@ -61,6 +61,9 @@ class Config:
     GOOGLE_OAUTH_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", "").strip() or None
     OAUTH_REDIRECT_URI: str = os.getenv("OAUTH_REDIRECT_URI", "/api/auth/google/callback").strip()
 
+    # Baileys WhatsApp bot
+    BOT_URL: str = os.getenv("BOT_URL", "http://localhost:3001").strip()
+
     # Google Cloud Agent Builder / Discovery Engine
     GOOGLE_APPLICATION_CREDENTIALS_JSON: Optional[str] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip() or None
     GOOGLE_CLOUD_PROJECT: str = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()

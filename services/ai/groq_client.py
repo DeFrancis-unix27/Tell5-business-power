@@ -50,8 +50,8 @@ async def groq_generate_reply(
     key = api_key or Config.GROQ_API_KEY
     if not key:
         return None
-    from ai import format_internal_sellers
-    seller_extra = format_internal_sellers(context)
+    from ai import format_internal_sellers, format_business_hours
+    seller_extra = format_internal_sellers(context) + format_business_hours(context)
     import httpx
 
     context_str = f"\nBusiness context: {json.dumps(context)}" if context else ""

@@ -256,6 +256,32 @@ async def run_pipeline(
         except Exception as e:
             logger.warning("Failed to search internal sellers: %s", e)
 
+    # Load saved reply templates into context
+    if db is not None and user_id:
+        try:
+            from crud import list_reply_templates
+            templates = await list_reply_templates(db, user_id)
+            if templates:
+                context["reply_templates"] = [{"title": t.title, "body": t.body} for t in templates[:10]]
+                logger.info("Loaded %d reply templates into context", len(templates))
+        except Exception as e:
+            logger.warning("Failed to load reply templates: %s", e)
+
+    # Check business hours if from_number is available
+    if from_number and db is not None and user_id:
+        try:
+            from crud import get_business_profile, is_within_business_hours
+            bp = await get_business_profile(db, user_id)
+            if bp and bp.hours:
+                open_now, hours_msg = is_within_business_hours(bp.hours)
+                context["business_hours"] = bp.hours
+                context["business_open_now"] = open_now
+                if not open_now:
+                    context["business_hours_message"] = hours_msg
+                    logger.info("Business is closed (hours: %s)", bp.hours)
+        except Exception as e:
+            logger.warning("Failed to check business hours: %s", e)
+
     # Build MongoDB context and merge into pipeline context
     if Config.MDB_MCP_CONNECTION_STRING and mongodb_tools.get_mongo_provider():
         try:

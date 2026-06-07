@@ -115,12 +115,21 @@ async function startBot() {
         const m = msg.messages[0];
         if (!m.message || m.key.fromMe) return;
 
+        const msgType = Object.keys(m.message).find(k => k.endsWith("Message")) || "unknown";
         const text = m.message.conversation
             || m.message.extendedTextMessage?.text
             || m.message.imageMessage?.caption
+            || m.message.videoMessage?.caption
+            || m.message.documentMessage?.caption
             || "";
 
-        if (!text.trim()) return;
+        // Skip messages with no readable text (images, stickers, voice notes, etc.)
+        if (!text.trim()) {
+            if (msgType !== "conversation" && msgType !== "extendedTextMessage") {
+                console.log(`Skipping ${msgType} from ${m.key.remoteJid} (no caption)`);
+            }
+            return;
+        }
 
         const sender = m.key.remoteJid;
         const pushName = m.pushName || "";
@@ -178,6 +187,23 @@ const server = http.createServer(async (req, res) => {
             let picUrl = null;
             try { picUrl = await sock.profilePictureUrl(jid, "image"); } catch {}
             return sendJson(200, { jid, profile_pic_url: picUrl });
+        }
+
+        if (req.method === "POST" && pathname === "/request-pairing-code") {
+            const data = JSON.parse(body || "{}");
+            const phone = String(data.phone || "").replace(/[^0-9]/g, "");
+            if (!phone) return sendJson(400, { error: "Phone number is required" });
+            if (!sock) return sendJson(400, { error: "Bot not initialized. Wait for connection." });
+            try {
+                let code = await sock.requestPairingCode(phone);
+                code = code.match(/.{1,4}/g)?.join("-") || code;
+                writeState({ connected: false, qr: null, pairing_code: code, message: `Pairing code: ${code}` });
+                console.log(`Pairing code generated for ${phone}: ${code}`);
+                return sendJson(200, { pairing_code: code, phone });
+            } catch (err) {
+                console.error("Pairing code error:", err.message);
+                return sendJson(500, { error: err.message });
+            }
         }
 
         if (req.method === "POST" && pathname === "/send") {

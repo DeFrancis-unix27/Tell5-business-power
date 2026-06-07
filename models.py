@@ -165,3 +165,28 @@ class KnowledgeEntry(Base):
     content = Column(Text, nullable=False)
     category = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class ReplyTemplate(Base):
+    __tablename__ = "reply_templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    title = Column(String(200), nullable=False)
+    body = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class CustomerProfile(Base):
+    __tablename__ = "customer_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    phone = Column(String(50), nullable=False, index=True)
+    name = Column(String(200), nullable=True)
+    notes = Column(Text, nullable=True)
+    message_count = Column(Integer, nullable=False, default=0)
+    last_message_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

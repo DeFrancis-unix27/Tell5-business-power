@@ -82,8 +82,8 @@ Return JSON only:
 async def openrouter_generate_reply(
     message: str, category: str, context: Optional[dict[str, Any]] = None, api_key: Optional[str] = None
 ) -> Optional[str]:
-    from ai import format_internal_sellers
-    seller_extra = format_internal_sellers(context)
+    from ai import format_internal_sellers, format_business_hours
+    seller_extra = format_internal_sellers(context) + format_business_hours(context)
     context_str = f"\nBusiness context: {json.dumps(context)}" if context else ""
 
     prompt = f"""You are Tell5 (tell5.app), a WhatsApp business platform AI assistant.
