@@ -1562,6 +1562,7 @@
         typing.remove();
         const catTag = data.category ? '<div class="cat-tag ' + catClass(data.category) + '">' + esc(data.category) + '</div>' : '';
         msgsEl.innerHTML += '<div class="chat-bubble ai">' + esc(data.reply || 'No response') + catTag + '</div>';
+        fetchData();
       } catch {
         typing.remove();
         msgsEl.innerHTML += '<div class="chat-bubble ai" style="color:var(--danger)">Error: could not reach AI pipeline</div>';
