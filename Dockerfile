@@ -11,10 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/json/tell5_key.json
-
-RUN sed -i 's|/json/tell5|/app/json/tell5|g' .env 2>/dev/null || true
-
 RUN groupadd -r tell5 && useradd -r -g tell5 -d /app -s /sbin/nologin tell5 && \
     chown -R tell5:tell5 /app
 
