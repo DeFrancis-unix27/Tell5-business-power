@@ -5,7 +5,7 @@ services:
     dockerfilePath: services/whatsapp/Dockerfile
     envVars:
       - key: API_URL
-        value: https://tell5-web-xxxxx-uc.a.run.app
+        value: https://tell5-web-734407983511.us-central1.run.app
       - key: BAILEYS_WEBHOOK_SECRET
         sync: false
       - key: BOT_PORT
