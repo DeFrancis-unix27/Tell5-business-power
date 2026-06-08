@@ -187,7 +187,7 @@ def categorize_message(text: str) -> str:
         return "order"
     if any(w in t for w in ["price", "how", "info", "details", "when", "cost", "what", "describe", "tell me", "available", "stock", "offer", "discount", "promo", "location", "address", "open", "close", "hours"]):
         return "inquiry"
-    return None
+    return "pending"
 
 
 WA_QR_STATE_FILE = Path("services/whatsapp/qr-state.json")
@@ -577,7 +577,7 @@ async def _process_incoming_message(
     ai_reply_enabled = True
     ai_pipeline_enabled = True
     if to_number:
-        normalized_to = str(to_number).replace("whatsapp:", "").replace(" ", "").strip()
+        normalized_to = str(to_number).replace("whatsapp:", "").replace(" ", "").split("@")[0].strip()
         target_user = await crud.get_user_by_phone(db, normalized_to)
         if target_user:
             target_user_id = target_user.id
@@ -604,8 +604,8 @@ async def _process_incoming_message(
 
     # If AI pipeline is disabled for this user, store message without processing
     if not ai_pipeline_enabled:
-        category = categorize_message(body)
-        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, contact_name=contact_name, profile_pic_url=profile_pic_url)
+        category = categorize_message(body) or "pending"
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, channel=channel, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
         return {"reply": "", "category": category, "conv_id": None, "pipeline_success": False, "ai_disabled": True}
 
@@ -621,7 +621,7 @@ async def _process_incoming_message(
     if personality_match:
         category = categorize_message(body) or "inquiry"
         ai_reply = personality_match["answer"]
-        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, ai_response=ai_reply, contact_name=contact_name, profile_pic_url=profile_pic_url)
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, channel=channel, ai_response=ai_reply, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
         return {
             "reply": ai_reply,
@@ -634,7 +634,7 @@ async def _process_incoming_message(
     # Block only clearly non-business chat; everything else goes to AI
     if should_block_message(body):
         category = categorize_message(body) or "inquiry"
-        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, contact_name=contact_name, profile_pic_url=profile_pic_url)
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, channel=channel, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
         return {
             "reply": "",
@@ -724,7 +724,7 @@ async def _process_incoming_message(
         )
 
     ai_result = {"category": category, "reply": ai_reply} if ai_reply else None
-    conv = await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, ai_response=ai_reply, contact_name=contact_name, profile_pic_url=profile_pic_url)
+    conv = await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, channel=channel, ai_response=ai_reply, contact_name=contact_name, profile_pic_url=profile_pic_url)
 
     reply = ""
     if category == "order":
@@ -1339,7 +1339,7 @@ async def chat_send(request: Request, db: AsyncSession = Depends(get_db), user=D
 
     return {
         "reply": result.reply,
-        "category": result.category,
+        "category": result.category or "inquiry",
         "success": result.success,
         "conv_id": conv.id,
     }

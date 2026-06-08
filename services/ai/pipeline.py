@@ -139,7 +139,7 @@ async def _run_gemini_tier(message: str, tier: int, context: Optional[dict] = No
     try:
         data = json.loads(text)
         validated = validate_response(data)
-        return validated
+        return validated or {"category": category, "reply": None}
     except (json.JSONDecodeError, TypeError):
         return {"category": category, "reply": None}
 
