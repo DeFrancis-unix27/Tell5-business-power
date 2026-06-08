@@ -1077,6 +1077,30 @@
   </div>
 
   <script>
+    /* ── CSRF helper ── */
+    let _csrfToken = null;
+    async function _ensureCsrf() {
+      if (_csrfToken) return _csrfToken;
+      try {
+        const r = await fetch('/api/csrf-token', { credentials: 'same-origin' });
+        const d = await r.json();
+        _csrfToken = { name: d.header_name, value: d.csrf_token };
+        return _csrfToken;
+      } catch { return null; }
+    }
+    const _origFetch = window.fetch;
+    window.fetch = async function(url, opts) {
+      opts = opts || {};
+      if (opts.method && opts.method !== 'GET' && opts.method !== 'HEAD') {
+        const csrf = await _ensureCsrf();
+        if (csrf) {
+          opts.headers = opts.headers || {};
+          opts.headers[csrf.name] = csrf.value;
+        }
+      }
+      return _origFetch(url, opts);
+    };
+
     /* ── Clock & date ── */
     function tickClock() {
       document.getElementById('clock').textContent =

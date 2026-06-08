@@ -846,6 +846,15 @@ async def get_csrf_token(request: Request):
     Returns a CSRF token that should be included in form submissions
     or as X-CSRF-Token header in POST requests.
     """
+    csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
+    if csrf_cookie:
+        parts = csrf_cookie.split(":")
+        if len(parts) == 3:
+            token = parts[0]
+            return {
+                "csrf_token": token,
+                "header_name": CSRF_HEADER_NAME,
+            }
     token, _ = create_csrf_token_with_expiry()
     return {
         "csrf_token": token,
