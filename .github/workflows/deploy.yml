@@ -32,6 +32,8 @@ jobs:
           source: .
           env_vars: |
             ENVIRONMENT=production
+            COOKIE_SECURE=true
+            DEBUG=false
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             SESSION_SECRET=${{ secrets.SESSION_SECRET }}
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
@@ -46,7 +48,10 @@ jobs:
             GOOGLE_CLOUD_PROJECT=${{ secrets.GOOGLE_CLOUD_PROJECT }}
             AGENT_BUILDER_DATA_STORE=${{ secrets.AGENT_BUILDER_DATA_STORE }}
             ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
-            COOKIE_SECURE=true
             BOT_URL=${{ secrets.BOT_URL }}
             BAILEYS_WEBHOOK_SECRET=${{ secrets.BAILEYS_WEBHOOK_SECRET }}
+            OAUTH_REDIRECT_URI=${{ secrets.OAUTH_REDIRECT_URI }}
+            MDB_MCP_CONNECTION_STRING=${{ secrets.MDB_MCP_CONNECTION_STRING }}
+            MDB_MCP_MODEL_API_KEYS=${{ secrets.MDB_MCP_MODEL_API_KEYS }}
+            SENTRY_DSN=${{ secrets.SENTRY_DSN }}
             GOOGLE_APPLICATION_CREDENTIALS_JSON=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
