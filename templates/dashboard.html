@@ -557,6 +557,7 @@
     .cat-inquiry   { background: rgba(59,130,246,0.1); color: var(--blue); }
     .cat-support   { background: rgba(249,115,22,0.1); color: var(--orange); }
     .cat-pending   { background: rgba(249,115,22,0.1); color: var(--orange); }
+    .cat-feedback  { background: rgba(168,85,247,0.1); color: #a855f7; }
     .cat-other     { background: rgba(90,122,148,0.1); color: var(--sub2); }
 
     /* ═══════ RIGHT COLUMN ═══════ */
@@ -1180,6 +1181,7 @@
       if (c.includes('complaint')) return 'cat-complaint';
       if (c.includes('inquiry'))   return 'cat-inquiry';
       if (c.includes('pending'))   return 'cat-pending';
+      if (c.includes('feedback'))  return 'cat-feedback';
       if (c.includes('support'))   return 'cat-support';
       return 'cat-other';
     }
@@ -1558,7 +1560,7 @@
         });
         const data = await res.json();
         typing.remove();
-        const catTag = data.category ? '<div class="cat-tag">' + esc(data.category) + '</div>' : '';
+        const catTag = data.category ? '<div class="cat-tag ' + catClass(data.category) + '">' + esc(data.category) + '</div>' : '';
         msgsEl.innerHTML += '<div class="chat-bubble ai">' + esc(data.reply || 'No response') + catTag + '</div>';
       } catch {
         typing.remove();
