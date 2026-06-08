@@ -592,6 +592,13 @@ async def _process_incoming_message(
                 target_user_id = target_user.id
                 ai_reply_enabled = bool(getattr(target_user, "ai_reply_enabled", True))
                 ai_pipeline_enabled = bool(getattr(target_user, "ai_enabled", True))
+    if target_user_id is None:
+        # Fallback: grab the first registered user (single-business deployment)
+        target_user = await crud.get_first_user(db)
+        if target_user:
+            target_user_id = target_user.id
+            ai_reply_enabled = bool(getattr(target_user, "ai_reply_enabled", True))
+            ai_pipeline_enabled = bool(getattr(target_user, "ai_enabled", True))
 
     phone = from_number
 

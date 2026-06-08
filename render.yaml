@@ -1,16 +1,38 @@
 services:
   - type: web
-    name: tell5-bot
+    name: tell5-business-power
     runtime: image
-    dockerfilePath: services/whatsapp/Dockerfile
+    dockerfilePath: Dockerfile.render
     envVars:
       - key: API_URL
-        value: https://tell5-web-734407983511.us-central1.run.app
+        value: http://localhost:8000
       - key: BAILEYS_WEBHOOK_SECRET
         sync: false
       - key: BOT_PORT
-        value: "10000"
+        value: "3001"
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash-lite
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: COOKIE_SECURE
+        value: "True"
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
     disk:
       name: baileys-auth
-      mountPath: /app/auth
+      mountPath: /app/services/whatsapp/auth
       sizeGB: 1

@@ -80,6 +80,11 @@ async def get_user_by_phone(db: AsyncSession, phone: str) -> User | None:
     return q.scalar_one_or_none()
 
 
+async def get_first_user(db: AsyncSession) -> User | None:
+    q = await db.execute(select(User).where(User.is_active == True).limit(1))
+    return q.scalar_one_or_none()
+
+
 async def get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
     q = await db.execute(select(User).where(User.id == user_id, User.is_active == True))
     return q.scalar_one_or_none()
