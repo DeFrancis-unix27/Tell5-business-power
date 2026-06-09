@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from typing import Any, Optional
@@ -91,7 +92,7 @@ class DiscoveryEngineClient:
                     mode=SearchRequest.SpellCorrectionSpec.Mode.AUTO,
                 ),
             )
-            response = self._client_search.search(request)
+            response = await asyncio.to_thread(self._client_search.search, request)
             results = []
             for r in response.results:
                 doc = r.document
@@ -102,7 +103,10 @@ class DiscoveryEngineClient:
                     }
                 elif doc.struct_data:
                     data["data"] = dict(doc.struct_data)
-                data["snippet"] = r.model_snippet_info.answers[0].answer if r.model_snippet_info and r.model_snippet_info.answers else ""
+                snippet = ""
+                if r.model_snippet_info and r.model_snippet_info.answers:
+                    snippet = r.model_snippet_info.answers[0].answer
+                data["snippet"] = snippet
                 results.append(data)
             return results
         except Exception as e:
@@ -125,8 +129,8 @@ class DiscoveryEngineClient:
                 ),
                 data_store_id=data_store_id,
             )
-            operation = self._client_datastore.create_data_store(request)
-            operation.result(timeout=120)
+            operation = await asyncio.to_thread(self._client_datastore.create_data_store, request)
+            await asyncio.to_thread(operation.result, timeout=120)
             logger.info("Created Discovery Engine data store: %s", data_store_id)
             return True
         except Exception as e:
@@ -151,7 +155,8 @@ class DiscoveryEngineClient:
                 id=doc_id,
                 json_data=json_data,
             )
-            self._client_doc.create_document(
+            await asyncio.to_thread(
+                self._client_doc.create_document,
                 parent=parent,
                 document=document,
                 document_id=doc_id,
@@ -171,7 +176,7 @@ class DiscoveryEngineClient:
                 f"/dataStores/{Config.AGENT_BUILDER_DATA_STORE}"
                 f"/branches/0/documents/{doc_id}"
             )
-            self._client_doc.delete_document(name=name)
+            await asyncio.to_thread(self._client_doc.delete_document, name=name)
             logger.info("Deleted document %s from Discovery Engine", doc_id)
             return True
         except Exception as e:

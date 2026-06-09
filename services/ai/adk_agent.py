@@ -95,7 +95,6 @@ if _adk_available:
                 "Always be concise and helpful."
             ),
             tools=[business_lookup_tool, business_list_tool, conversation_tool],
-            output_key="adk_response",
         )
 
     def init_agent():

@@ -4,6 +4,13 @@ set -e
 export BOT_PORT=${BOT_PORT:-3001}
 export API_URL="http://localhost:${PORT:-8000}"
 
+cleanup() {
+    echo "Shutting down..."
+    kill $BOT_PID 2>/dev/null
+    wait $BOT_PID 2>/dev/null
+}
+trap cleanup EXIT INT TERM
+
 echo "Starting WhatsApp bot on port $BOT_PORT (API_URL=$API_URL)..."
 node services/whatsapp/index.js &
 BOT_PID=$!

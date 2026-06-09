@@ -38,6 +38,11 @@ class CircuitBreaker:
 
     def record_failure(self, provider: str):
         with self._lock:
+            current_state = self._state.get(provider, CircuitState.CLOSED)
+            if current_state == CircuitState.HALF_OPEN:
+                self._state[provider] = CircuitState.OPEN
+                self._last_failure_time[provider] = time.time()
+                return
             self._failures[provider] = self._failures.get(provider, 0) + 1
             self._last_failure_time[provider] = time.time()
             if self._failures[provider] >= self.failure_threshold:

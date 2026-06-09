@@ -41,7 +41,7 @@ class Config:
 
     # AI API Keys
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", "").strip() or None
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview").strip()
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite").strip()
     GEMINI_FALLBACK_MODEL: str = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash-lite").strip()
     GROQ_API_KEY: Optional[str] = os.getenv("GROQ_API_KEY", "").strip() or None
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
@@ -59,7 +59,7 @@ class Config:
     # Google OAuth
     GOOGLE_OAUTH_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "").strip() or None
     GOOGLE_OAUTH_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", "").strip() or None
-    OAUTH_REDIRECT_URI: str = os.getenv("OAUTH_REDIRECT_URI", "/api/auth/google/callback").strip()
+    OAUTH_REDIRECT_URI: str = os.getenv("OAUTH_REDIRECT_URI", "https://tell5-business-power.onrender.com/api/auth/google/callback").strip()
 
     # Baileys WhatsApp bot
     BOT_URL: str = os.getenv("BOT_URL", "http://localhost:3001").strip()
