@@ -269,7 +269,7 @@ setInterval(() => {
     }
 }, 30000);
 
-server.listen(BOT_PORT, () => {
-    console.log(`WhatsApp bot listening on port ${BOT_PORT}`);
+server.listen(BOT_PORT, "127.0.0.1", () => {
+    console.log(`WhatsApp bot listening on 127.0.0.1:${BOT_PORT}`);
     startBot();
 });

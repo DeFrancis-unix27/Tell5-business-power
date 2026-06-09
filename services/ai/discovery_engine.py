@@ -22,8 +22,21 @@ class DiscoveryEngineClient:
 
         creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
         if not creds_path or not os.path.isfile(creds_path):
-            logger.warning("GOOGLE_APPLICATION_CREDENTIALS not found: %s", creds_path)
-            return False
+            raw_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip()
+            if raw_json:
+                import json
+                import tempfile
+                try:
+                    json.loads(raw_json)
+                    creds_path = os.path.join(tempfile.gettempdir(), "tell5-google-credentials.json")
+                    with open(creds_path, "w", encoding="utf-8") as f:
+                        f.write(raw_json)
+                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+                except json.JSONDecodeError:
+                    pass
+            if not creds_path or not os.path.isfile(creds_path):
+                logger.warning("GOOGLE_APPLICATION_CREDENTIALS not found")
+                return False
 
         try:
             from google.cloud.discoveryengine import SearchServiceClient
