@@ -43,6 +43,9 @@ env/
 *.sqlite
 *.sqlite3
 
+# Test cache
+.pytest_cache/
+
 # Logs
 *.log
 logs/
