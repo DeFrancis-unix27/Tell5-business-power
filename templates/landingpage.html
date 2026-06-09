@@ -1527,6 +1527,8 @@
       <span></span><span></span><span></span>
     </button>
     <div class="nav-links" id="nav-links">
+      <a class="nav-btn nav-ghost" href="/about">About</a>
+      <a class="nav-btn nav-ghost" href="/contact">Contact</a>
       <a class="nav-btn nav-ghost" href="/discover">Discover</a>
       <button class="nav-btn nav-ghost" onclick="closeNav();showPage('login')">Log in</button>
       <button class="nav-btn nav-solid" id="nav-cta" onclick="closeNav();showPage('signup')">Get started →</button>
@@ -1946,7 +1948,9 @@
     <!-- Footer -->
     <footer>
       <div class="footer-brand">Tell5</div>
-      <div style="display:flex;gap:16px;font-size:0.75rem;margin:6px 0;">
+      <div style="display:flex;gap:16px;font-size:0.75rem;margin:6px 0;flex-wrap:wrap;justify-content:center;">
+        <a href="/about" style="color:var(--sub2);text-decoration:none;">About</a>
+        <a href="/contact" style="color:var(--sub2);text-decoration:none;">Contact</a>
         <a href="/privacy" style="color:var(--sub2);text-decoration:none;">Privacy</a>
         <a href="/terms" style="color:var(--sub2);text-decoration:none;">Terms</a>
         <a href="/help" style="color:var(--sub2);text-decoration:none;">Help</a>

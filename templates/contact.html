@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contact Tell5 — Get in touch</title>
+  <meta name="description" content="Reach out to the Tell5 team for support, partnerships, or feedback. We'd love to hear from you." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#060809" />
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060809; --surface: #0c1014; --surface2: #111820;
+      --border: #1a2330; --border2: #243040; --muted: #1e2d3d;
+      --text: #e8f0f8; --sub: #5a7a94; --sub2: #8aa0b4;
+      --accent: #00e5b0; --accent-d: #00b889; --blue: #3b82f6;
+      --r: 14px; --r-sm: 8px; --nav-h: 62px;
+    }
+    html { scroll-behavior: smooth; }
+    ::selection { background: rgba(0,229,176,0.25); color: var(--text); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(0,229,176,0.07) 1px, transparent 1px);
+      background-size: 28px 28px; pointer-events: none; z-index: 0;
+    }
+    .orb {
+      position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0;
+    }
+    .orb-1 { width: 600px; height: 600px; background: rgba(0,229,176,0.04); top: -200px; left: -100px; }
+    .orb-2 { width: 500px; height: 500px; background: rgba(59,130,246,0.04); bottom: 10%; right: -100px; }
+    .page { position: relative; z-index: 1; }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--nav-h); display: flex; align-items: center;
+      justify-content: space-between; padding: 0 24px;
+      background: rgba(6,8,9,0.75); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand {
+      font-size: 1.35rem; font-weight: 900; letter-spacing: -0.04em;
+      color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 8px;
+    }
+    .nav-brand-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-btn {
+      padding: 8px 18px; border-radius: var(--r-sm); font-size: 0.85rem;
+      font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none;
+      font-family: 'Inter', sans-serif; background: transparent; color: var(--sub2); border: none;
+    }
+    .nav-btn:hover { color: var(--text); background: var(--surface2); }
+    .nav-btn.nav-solid {
+      background: var(--accent); color: #060809; font-weight: 600;
+    }
+    .nav-btn.nav-solid:hover { background: var(--accent-d); }
+
+    .hero {
+      padding: 140px 24px 60px; max-width: 800px; margin: 0 auto; text-align: center;
+    }
+    .hero h1 {
+      font-size: 3rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .hero h1 .hl { color: var(--accent); }
+    .hero p { color: var(--sub2); font-size: 1.1rem; line-height: 1.7; }
+
+    .contact-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 40px; max-width: 900px; margin: 0 auto; padding: 0 24px 80px;
+    }
+
+    .contact-form {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 40px;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block; font-size: 0.85rem; font-weight: 500;
+      color: var(--sub2); margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%; padding: 12px 14px; border-radius: var(--r-sm);
+      background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); font-family: 'Inter', sans-serif;
+      font-size: 0.9rem; transition: border-color 0.2s; outline: none;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--accent); }
+    .form-group textarea { min-height: 120px; resize: vertical; }
+    .form-group select { cursor: pointer; }
+    .form-group select option { background: var(--surface); color: var(--text); }
+    .form-error {
+      display: none; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--r-sm); padding: 12px 16px; margin-bottom: 16px;
+      color: #ef4444; font-size: 0.85rem;
+    }
+    .form-success {
+      display: none; background: rgba(0,229,176,0.1); border: 1px solid rgba(0,229,176,0.3);
+      border-radius: var(--r-sm); padding: 12px 16px; margin-bottom: 16px;
+      color: var(--accent); font-size: 0.85rem;
+    }
+    .submit-btn {
+      width: 100%; padding: 14px; border: none; border-radius: var(--r-sm);
+      background: var(--accent); color: #060809; font-size: 1rem;
+      font-weight: 600; cursor: pointer; transition: background 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .submit-btn:hover { background: var(--accent-d); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .contact-info { display: flex; flex-direction: column; gap: 24px; justify-content: center; }
+    .info-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 28px;
+    }
+    .info-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; color: var(--accent); }
+    .info-card p { color: var(--sub2); line-height: 1.6; font-size: 0.9rem; }
+    .info-card a { color: var(--accent); text-decoration: none; }
+    .info-card a:hover { text-decoration: underline; }
+
+    footer {
+      max-width: 1000px; margin: 0 auto; padding: 48px 24px 32px;
+      border-top: 1px solid var(--border); text-align: center;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 900; color: var(--accent); letter-spacing: -0.04em; margin-bottom: 12px; }
+    .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 12px; flex-wrap: wrap; }
+    .footer-links a { color: var(--sub2); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-copy { color: var(--sub); font-size: 0.8rem; }
+
+    @media (max-width:700px) {
+      .hero h1 { font-size: 2rem; }
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <nav>
+    <a class="nav-brand" href="/">
+      <div class="nav-brand-dot"></div>
+      Tell5
+    </a>
+    <div class="nav-links">
+      <a class="nav-btn" href="/about">About</a>
+      <a class="nav-btn" href="/contact">Contact</a>
+      <a class="nav-btn" href="/discover">Discover</a>
+      <a class="nav-btn nav-solid" href="/">Get started</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="hero">
+      <h1>Get in <span class="hl">touch</span>.</h1>
+      <p>Have a question, feedback, or want to partner with us? Send us a message and we&rsquo;ll get back to you.</p>
+    </div>
+
+    <div class="contact-grid">
+      <div>
+        <div class="form-error" id="form-error"></div>
+        <div class="form-success" id="form-success">Thanks for reaching out! We&rsquo;ll get back to you soon.</div>
+        <form class="contact-form" id="contact-form" onsubmit="return handleContact(event)">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required placeholder="Your name" />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required placeholder="you@example.com" />
+          </div>
+          <div class="form-group">
+            <label for="subject">Subject</label>
+            <select id="subject" name="subject" required>
+              <option value="">Select a subject</option>
+              <option value="support">Technical support</option>
+              <option value="feedback">Feedback / Feature request</option>
+              <option value="partnership">Partnership inquiry</option>
+              <option value="bug">Report a bug</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" required placeholder="Tell us more..."></textarea>
+          </div>
+          <button type="submit" class="submit-btn" id="submit-btn">Send message</button>
+        </form>
+      </div>
+      <div class="contact-info">
+        <div class="info-card">
+          <h3>Email</h3>
+          <p><a href="mailto:hello@tell5.ai">hello@tell5.ai</a></p>
+          <p style="margin-top:12px;color:var(--sub);font-size:0.8rem;">We respond within 24 hours.</p>
+        </div>
+        <div class="info-card">
+          <h3>Built by</h3>
+          <p><strong>Francis David</strong> &mdash; full-stack engineer and product builder from Nigeria, creating tools that meet African businesses where they already are: on WhatsApp.</p>
+        </div>
+        <div class="info-card">
+          <h3>Follow the journey</h3>
+          <p>Tell5 is open-source and built in the open. Check back often &mdash; we&rsquo;re shipping every week.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-brand">Tell5</div>
+      <div class="footer-links">
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/discover">Discover</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/help">Help</a>
+      </div>
+      <div class="footer-copy">&copy; 2026 Tell5 &middot; Built for African businesses.</div>
+    </footer>
+  </div>
+
+  <script>
+    async function handleContact(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const errEl = document.getElementById('form-error');
+      const okEl = document.getElementById('form-success');
+      errEl.style.display = 'none';
+      okEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      try {
+        const resp = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            subject: document.getElementById('subject').value,
+            message: document.getElementById('message').value
+          })
+        });
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          throw new Error(data.detail || 'Failed to send message. Please try again.');
+        }
+        okEl.style.display = 'block';
+        document.getElementById('contact-form').reset();
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send message';
+      }
+      return false;
+    }
+  </script>
+</body>
+</html>

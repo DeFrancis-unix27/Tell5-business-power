@@ -14,12 +14,15 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #0a0c0f;
-      --surface: #0f1318;
-      --border:  #1e2530;
-      --muted:   #2a3340;
-      --text:    #e2e8f0;
-      --sub:     #64748b;
+      --bg:      #060809;
+      --surface: #0c1014;
+      --surface2: #111820;
+      --border:  #1a2330;
+      --border2: #243040;
+      --muted:   #1e2d3d;
+      --text:    #e8f0f8;
+      --sub:     #5a7a94;
+      --sub2:    #8aa0b4;
       --accent:  #00e5b0;
       --accent2: #3b82f6;
       --accent3: #f97316;
@@ -38,10 +41,8 @@
       content: '';
       position: fixed;
       inset: 0;
-      background-image:
-        linear-gradient(rgba(0,229,176,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,229,176,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
+      background-image: radial-gradient(circle, rgba(0,229,176,0.07) 1px, transparent 1px);
+      background-size: 28px 28px;
       pointer-events: none;
       z-index: 0;
     }

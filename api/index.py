@@ -1248,6 +1248,18 @@ async def admin_page(request: Request, db: AsyncSession = Depends(get_db)):
     admin_html = Path("templates/admin.html").read_text(encoding="utf-8")
     return HTMLResponse(content=admin_html)
 
+@app.get("/about", response_class=HTMLResponse)
+async def about_page():
+    html = Path("templates/about.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
+
+
+@app.get("/contact", response_class=HTMLResponse)
+async def contact_page():
+    html = Path("templates/contact.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
+
+
 @app.get("/", response_class=HTMLResponse)
 async def basepage(request: Request):
     landingpage_html = Path("templates/landingpage.html").read_text(encoding="utf-8")
@@ -1836,6 +1848,22 @@ async def export_csv(user=Depends(get_current_user), db: AsyncSession = Depends(
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@app.post("/api/contact")
+async def contact_form(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    name = (body.get("name") or "").strip()
+    email = (body.get("email") or "").strip()
+    subject = (body.get("subject") or "").strip()
+    message = (body.get("message") or "").strip()
+    if not name or not email or not subject or not message:
+        raise HTTPException(status_code=400, detail="All fields are required")
+    logger.info("Contact form submission from %s (%s) — subject: %s — message: %.80s", name, email, subject, message)
+    return {"ok": True}
 
 
 # @app.get("/privacy", response_class=HTMLResponse)

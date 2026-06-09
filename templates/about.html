@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>About Tell5 — AI WhatsApp Agent for Business</title>
+  <meta name="description" content="Tell5 was built by Francis David to help African businesses turn WhatsApp messages into revenue through AI-powered automation." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#060809" />
+  <link rel="icon" href="/static/tell5-icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060809; --surface: #0c1014; --surface2: #111820;
+      --border: #1a2330; --border2: #243040; --muted: #1e2d3d;
+      --text: #e8f0f8; --sub: #5a7a94; --sub2: #8aa0b4;
+      --accent: #00e5b0; --accent-d: #00b889; --blue: #3b82f6;
+      --r: 14px; --r-sm: 8px; --nav-h: 62px;
+    }
+    html { scroll-behavior: smooth; }
+    ::selection { background: rgba(0,229,176,0.25); color: var(--text); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(0,229,176,0.07) 1px, transparent 1px);
+      background-size: 28px 28px; pointer-events: none; z-index: 0;
+    }
+    .orb {
+      position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0;
+    }
+    .orb-1 { width: 600px; height: 600px; background: rgba(0,229,176,0.04); top: -200px; left: -100px; }
+    .orb-2 { width: 500px; height: 500px; background: rgba(59,130,246,0.04); bottom: 10%; right: -100px; }
+    .page { position: relative; z-index: 1; }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--nav-h); display: flex; align-items: center;
+      justify-content: space-between; padding: 0 24px;
+      background: rgba(6,8,9,0.75); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand {
+      font-size: 1.35rem; font-weight: 900; letter-spacing: -0.04em;
+      color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 8px;
+    }
+    .nav-brand-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-btn {
+      padding: 8px 18px; border-radius: var(--r-sm); font-size: 0.85rem;
+      font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none;
+      font-family: 'Inter', sans-serif; background: transparent; color: var(--sub2); border: none;
+    }
+    .nav-btn:hover { color: var(--text); background: var(--surface2); }
+    .nav-btn.nav-solid {
+      background: var(--accent); color: #060809; font-weight: 600;
+    }
+    .nav-btn.nav-solid:hover { background: var(--accent-d); }
+
+    .hero {
+      padding: 140px 24px 80px; max-width: 800px; margin: 0 auto; text-align: center;
+    }
+    .hero h1 {
+      font-size: 3rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .hero h1 .hl { color: var(--accent); }
+    .hero p {
+      font-size: 1.15rem; color: var(--sub2); line-height: 1.7; max-width: 640px; margin: 0 auto;
+    }
+
+    section { max-width: 1000px; margin: 0 auto; padding: 80px 24px; }
+    .section-label {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+      color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 12px;
+    }
+    section h2 {
+      font-size: 2rem; font-weight: 800; letter-spacing: -0.03em;
+      margin-bottom: 16px;
+    }
+    section h2 .hl { color: var(--accent); }
+    section > p {
+      color: var(--sub2); line-height: 1.7; font-size: 1rem; margin-bottom: 40px;
+    }
+
+    .story-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 48px; position: relative;
+    }
+    .story-card::before {
+      content: '"'; position: absolute; top: 16px; left: 24px;
+      font-size: 5rem; color: var(--accent); opacity: 0.15; font-family: Georgia, serif; line-height: 1;
+    }
+    .story-card p {
+      color: var(--sub2); line-height: 1.8; font-size: 1rem; margin-bottom: 16px;
+    }
+    .story-card p:last-child { margin-bottom: 0; }
+    .story-card .story-attr {
+      margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: var(--sub);
+    }
+
+    .values-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px; margin-top: 24px;
+    }
+    .value-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 32px; transition: all 0.25s;
+    }
+    .value-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+    .value-card .value-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: rgba(0,229,176,0.1); display: flex; align-items: center;
+      justify-content: center; font-size: 1.3rem; margin-bottom: 16px;
+    }
+    .value-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .value-card p { color: var(--sub2); line-height: 1.6; font-size: 0.9rem; }
+
+    .milestones {
+      display: flex; flex-direction: column; gap: 24px; margin-top: 24px;
+    }
+    .milestone {
+      display: flex; gap: 20px; align-items: flex-start;
+    }
+    .milestone-dot {
+      min-width: 14px; height: 14px; border-radius: 50%;
+      background: var(--accent); margin-top: 4px;
+      box-shadow: 0 0 8px rgba(0,229,176,0.3);
+    }
+    .milestone-line {
+      width: 2px; flex-shrink: 0; background: var(--border);
+      margin: 0 auto; min-height: 30px;
+    }
+    .milestone:last-child .milestone-line { display: none; }
+    .milestone-content h4 { font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+    .milestone-content p { color: var(--sub2); line-height: 1.6; font-size: 0.9rem; }
+
+    footer {
+      max-width: 1000px; margin: 0 auto; padding: 48px 24px 32px;
+      border-top: 1px solid var(--border); text-align: center;
+    }
+    .footer-brand {
+      font-size: 1.2rem; font-weight: 900; color: var(--accent);
+      letter-spacing: -0.04em; margin-bottom: 12px;
+    }
+    .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 12px; flex-wrap: wrap; }
+    .footer-links a { color: var(--sub2); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-copy { color: var(--sub); font-size: 0.8rem; }
+
+    @media (max-width:640px) {
+      .hero h1 { font-size: 2rem; }
+      section { padding: 48px 16px; }
+      section h2 { font-size: 1.5rem; }
+      .story-card { padding: 28px; }
+      .values-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <nav>
+    <a class="nav-brand" href="/">
+      <div class="nav-brand-dot"></div>
+      Tell5
+    </a>
+    <div class="nav-links">
+      <a class="nav-btn" href="/about">About</a>
+      <a class="nav-btn" href="/contact">Contact</a>
+      <a class="nav-btn" href="/discover">Discover</a>
+      <a class="nav-btn nav-solid" href="/">Get started</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="hero">
+      <h1>Built for <span class="hl">African</span> businesses.</h1>
+      <p>Tell5 is an AI-powered WhatsApp operations platform that turns customer messages into orders, insights, and revenue — starting with Africa's informal economy.</p>
+    </div>
+
+    <section>
+      <div class="section-label">The Story</div>
+      <h2>Why Tell5 exists</h2>
+      <p>The idea was born from a simple observation: every African small business runs on WhatsApp, but most messages fall through the cracks.</p>
+      <div class="story-card">
+        <p>Tell5 was created by <strong>Francis David</strong>, a full-stack engineer and product builder from Nigeria who has spent years building tools for African businesses. He started his career building command-line tools and internal dashboards in Enugu, later moving into fintech, logistics tech, and marketplace infrastructure.</p>
+        <p>Francis has founded multiple products&mdash;from booking platforms to data-scraping engines&mdash;and has written code across the stack: Python, Golang, JavaScript, and Rust. But he noticed a pattern: the tools small businesses actually use (WhatsApp, spreadsheets, voice notes) were being ignored by the tech industry in favor of complex ERP systems that feel foreign to African merchants.</p>
+        <p>He saw a <strong>kiosk owner in Lagos managing 200+ orders daily via starred messages</strong>. A fashion designer in Aba sending manual price lists to every customer. A restaurant in Port Harcourt losing track of delivery addresses because they were buried in chat history.</p>
+        <p>These are not edge cases — they are the majority. And they deserve tools that meet them where they already are.</p>
+        <p>Tell5 is Francis's bet that the next generation of business software won't be a dashboard — it will be a conversation.</p>
+        <div class="story-attr">&mdash; Francis David, Founder &amp; Developer</div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">Mission &amp; Values</div>
+      <h2>What we <span class="hl">believe</span>.</h2>
+      <p>Our values shape every line of code and every product decision we make.</p>
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="value-icon">🎯</div>
+          <h3>Conversation-first design</h3>
+          <p>Business software should live inside the apps people already use, not force them to learn new ones. WhatsApp is the starting point, not an afterthought.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">🌍</div>
+          <h3>Built for Africa's context</h3>
+          <p>African businesses are not miniature versions of Western ones. We build for mobile-first, low-bandwidth, cash-based, high-trust economies — on their own terms.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">🔧</div>
+          <h3>Radical practicality</h3>
+          <p>We prioritize what actually moves the needle for a business owner. AI should reduce friction, not add complexity. Every feature must justify its existence.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">🤝</div>
+          <h3>Network effects for small business</h3>
+          <p>Every business on Tell5 makes the network stronger. Discovery, referrals, and supplier matching should work for micro-businesses the way they work for enterprise.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">Timeline</div>
+      <h2>The <span class="hl">journey</span> so far.</h2>
+      <p>From a side project to a platform powering WhatsApp operations for African businesses.</p>
+      <div class="milestones">
+        <div class="milestone">
+          <div>
+            <div class="milestone-dot"></div>
+            <div class="milestone-line"></div>
+          </div>
+          <div class="milestone-content">
+            <h4>Early 2025 &middot; The idea</h4>
+            <p>Francis starts building an AI agent that can read WhatsApp messages, classify them by intent (order, inquiry, complaint), and help businesses respond faster.</p>
+          </div>
+        </div>
+        <div class="milestone">
+          <div>
+            <div class="milestone-dot"></div>
+            <div class="milestone-line"></div>
+          </div>
+          <div class="milestone-content">
+            <h4>Mid 2025 &middot; First prototype</h4>
+            <p>Working MVP with Twilio SMS, then Baileys WhatsApp integration. Multi-provider AI classification (Gemini, Groq, Mistral, OpenRouter) with fallback behavior.</p>
+          </div>
+        </div>
+        <div class="milestone">
+          <div>
+            <div class="milestone-dot"></div>
+            <div class="milestone-line"></div>
+          </div>
+          <div class="milestone-content">
+            <h4>Late 2025 &middot; Platform expansion</h4>
+            <p>Dashboard, business profiles, discovery engine, MongoDB MCP, ADK agent integration, knowledge base, and conversation management with CSV export.</p>
+          </div>
+        </div>
+        <div class="milestone">
+          <div>
+            <div class="milestone-dot"></div>
+            <div class="milestone-line"></div>
+          </div>
+          <div class="milestone-content">
+            <h4>2026 &middot; Public launch</h4>
+            <p>Tell5 becomes available as a free-tier SaaS platform. Businesses connect their WhatsApp number, set up AI-powered auto-replies, and manage operations from a single dashboard.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-brand">Tell5</div>
+      <div class="footer-links">
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/discover">Discover</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/help">Help</a>
+      </div>
+      <div class="footer-copy">&copy; 2026 Tell5 &middot; Built for African businesses.</div>
+    </footer>
+  </div>
+</body>
+</html>
