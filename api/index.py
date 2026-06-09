@@ -826,6 +826,11 @@ async def baileys_webhook(request: Request, db: AsyncSession = Depends(get_db), 
 @app.get("/api/baileys/status")
 async def baileys_status(user=Depends(get_current_user)):
     """Check if the Baileys bot is running and connected"""
+    # First check local state file (fast)
+    state = get_whatsapp_qr_state()
+    if state["connected"]:
+        return {"ok": True, "connected": True}
+    # Then check bot HTTP endpoint
     import httpx
     try:
         async with httpx.AsyncClient(timeout=5) as client:
@@ -834,7 +839,7 @@ async def baileys_status(user=Depends(get_current_user)):
                 return resp.json()
     except Exception:
         pass
-    return {"ok": False, "connected": False}
+    return {"ok": False, "connected": False, "message": state.get("message", "")}
 
 
 @app.get("/api/pipeline/metrics")
