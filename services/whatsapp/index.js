@@ -22,29 +22,40 @@ let currentQr = null;
 let reconnectAttempts = 0;
 let lastActive = Date.now();
 
-async function forwardToApi(body) {
+async function forwardToApi(body, retries = 2) {
     const url = `${API_BASE}/api/baileys/webhook`;
-    try {
-    const headers = { "Content-Type": "application/json" };
-    if (WEBHOOK_SECRET) {
-        headers["X-Baileys-Secret"] = WEBHOOK_SECRET;
-    }
-    const resp = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-    });
-        if (!resp.ok) {
-            const text = await resp.text().catch(() => "");
-            console.error(`API returned ${resp.status}: ${text.slice(0, 200)}`);
-        } else {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            const headers = { "Content-Type": "application/json" };
+            if (WEBHOOK_SECRET) {
+                headers["X-Baileys-Secret"] = WEBHOOK_SECRET;
+            }
+            const resp = await fetch(url, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(body),
+                signal: AbortSignal.timeout(15000),
+            });
+            if (!resp.ok) {
+                const text = await resp.text().catch(() => "");
+                console.error(`API returned ${resp.status}: ${text.slice(0, 200)}`);
+                if (attempt < retries) {
+                    await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                    continue;
+                }
+                return;
+            }
             const data = await resp.json();
             if (data.reply && data.to) {
                 await sendMessage(data.to, data.reply);
             }
+            return;
+        } catch (err) {
+            console.error(`forwardToApi attempt ${attempt + 1}/${retries + 1} error:`, err.message);
+            if (attempt < retries) {
+                await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+            }
         }
-    } catch (err) {
-        console.error("forwardToApi error:", err.message);
     }
 }
 

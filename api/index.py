@@ -131,6 +131,7 @@ CSRF_SKIP_PATHS = {
     "/api/baileys/webhook",
     "/api/auth/signup", "/api/auth/login", "/api/auth/send-reset", "/api/auth/logout",
     "/api/csrf-token",
+    "/api/cron/cleanup",
     "/healthz",
 }
 
@@ -700,6 +701,17 @@ async def _process_incoming_message(
         merged_context.update(knowledge_context)
     if tell5_qa_context:
         merged_context.update(tell5_qa_context)
+    # Inject founder persona so ADK agent & all AI tiers know the voice
+    merged_context["founder_persona"] = {
+        "name": "Francis David",
+        "role": "Founder & Developer of Tell5",
+        "location": "Nnewi, Anambra State, Nigeria",
+        "voice": "Warm but direct. Professional but not corporate. No robot speak.",
+        "values": "Honesty over hype, simplicity over complexity, reliability over flash, growth through service.",
+        "style": "Patient, knowledgeable, proud of what he's building, always improving.",
+        "goal": "Every customer should feel like they're talking to the founder himself — someone who genuinely cares about their business success.",
+        "background": "Developer and entrepreneur. Built Tell5 to solve real problems for African entrepreneurs. Hands-on from architecture to customer support. Mentors other developers. Believes small businesses deserve enterprise tools without enterprise pricing.",
+    }
     pipeline_result = await run_pipeline(
         body, message_id=message_id, from_number=phone, user_id=target_user_id,
         context=merged_context if merged_context else None,

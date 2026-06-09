@@ -1660,13 +1660,23 @@
           credentials: 'same-origin',
           body: JSON.stringify({ category: 'order' }),
         });
-        if (!res.ok) { showToast('Failed to update', 'error'); btn.disabled = false; btn.textContent = '✓ Done'; return; }
+        if (!res.ok) {
+          const errBody = await res.text().catch(() => '');
+          showToast(`Failed (${res.status}): ${errBody.slice(0, 80)}`, 'error');
+          btn.disabled = false;
+          btn.textContent = '✓ Done';
+          return;
+        }
         showToast('Marked as order!', 'success');
         btn.textContent = '✓ Done';
         btn.style.background = 'var(--accent)';
         document.getElementById('conv-category').textContent = 'order';
         fetchData();
-      } catch { showToast('Failed to update', 'error'); btn.disabled = false; btn.textContent = '✓ Done'; }
+      } catch (e) {
+        showToast(`Network error: ${e.message}`, 'error');
+        btn.disabled = false;
+        btn.textContent = '✓ Done';
+      }
     }
 
     /* ── Notifications toggle ── */
