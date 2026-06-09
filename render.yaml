@@ -32,7 +32,4 @@ services:
         sync: false
       - key: CRON_SECRET
         sync: false
-    disk:
-      name: baileys-auth
-      mountPath: /app/services/whatsapp/auth
-      sizeGB: 1
+
