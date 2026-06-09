@@ -23,10 +23,17 @@ echo "Starting web app on port ${PORT:-8000}..."
 uvicorn api.index:app --host 0.0.0.0 --port ${PORT:-8000} &
 WEB_PID=$!
 
-# Wait for either process to exit, then shut down the other
-wait -n $BOT_PID $WEB_PID
-echo "A process exited. Shutting down..."
-kill $BOT_PID 2>/dev/null || true
-kill $WEB_PID 2>/dev/null || true
-wait 2>/dev/null
-exit 0
+# Keep the web app running regardless of bot state.
+# If the web app itself exits, shut down everything (Render will restart).
+while true; do
+    if ! kill -0 $WEB_PID 2>/dev/null; then
+        echo "Web app exited. Shutting down."
+        exit 0
+    fi
+    if ! kill -0 $BOT_PID 2>/dev/null; then
+        echo "Bot exited. Restarting..."
+        node services/whatsapp/index.js &
+        BOT_PID=$!
+    fi
+    sleep 5
+done
