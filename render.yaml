@@ -1,7 +1,7 @@
 services:
   - type: web
     name: tell5-business-power
-    runtime: image
+    runtime: docker
     dockerfilePath: Dockerfile.render
     envVars:
       - key: API_URL
