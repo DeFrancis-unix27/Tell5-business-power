@@ -1660,6 +1660,7 @@ async def trigger_archive(db: AsyncSession = Depends(get_db), user=Depends(get_a
 
 
 @app.post("/api/cron/cleanup")
+@app.get("/api/cron/cleanup")
 async def cron_cleanup(db: AsyncSession = Depends(get_db), _=Depends(verify_cron)):
     """Called by Render Cron Job weekly — cleans old conversations and runs archive"""
     from datetime import timedelta, timezone, datetime
