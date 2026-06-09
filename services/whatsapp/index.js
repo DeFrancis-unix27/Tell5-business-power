@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const http = require("http");
+const pino = require("pino");
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require("@whiskeysockets/baileys");
 
 const STATE_FILE = path.join(__dirname, "qr-state.json");
@@ -70,18 +71,34 @@ async function sendMessage(jid, text) {
     }
 }
 
+let botStarting = false;
+
 async function startBot() {
+    if (botStarting) return;
+    botStarting = true;
+
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
+
+    const logger = pino({
+        level: process.env.LOG_LEVEL || "warn",
+        transport: { target: "pino/file", options: { destination: 1 } },
+    });
 
     sock = makeWASocket({
         auth: state,
         printQRInTerminal: false,
         markOnlineOnConnect: true,
-        connectTimeoutMs: 30000,
-        keepAliveIntervalMs: 20000,
-        retryRequestDelayMs: 1000,
-        maxRetryCount: 5,
+        connectTimeoutMs: 60000,
+        keepAliveIntervalMs: 25000,
+        retryRequestDelayMs: 2000,
+        maxRetryCount: 10,
+        defaultQueryTimeoutMs: 60000,
         shouldSyncLogicMessage: () => false,
+        syncFullHistory: false,
+        fireInitQueries: false,
+        browser: ["Chrome (Mac OS)", "Safari", "14.4.1"],
+        generateHighQualityLinkPreview: false,
+        logger,
     });
 
     writeState({ connected: false, qr: null, message: "Connecting..." });
@@ -91,7 +108,6 @@ async function startBot() {
 
         if (qr) {
             currentQr = qr;
-            reconnectAttempts = 0;
             writeState({ connected: false, qr, message: "Scan the QR code with WhatsApp to connect." });
         }
 
@@ -99,22 +115,26 @@ async function startBot() {
             console.log("WhatsApp connected");
             currentQr = null;
             reconnectAttempts = 0;
+            botStarting = false;
             lastActive = Date.now();
             writeState({ connected: true, qr: null, message: "WhatsApp is connected." });
+            // Fire init queries now that we're connected
+            try { await sock.sendPresenceUpdate("available"); } catch {}
         }
 
         if (connection === "close") {
+            botStarting = false;
             const reason = lastDisconnect?.error?.output?.statusCode;
-            const shouldReconnect = reason !== DisconnectReason.loggedOut;
             currentQr = null;
 
             if (reason === DisconnectReason.loggedOut) {
-                console.log("Logged out. Delete auth folder to re-link.");
-                writeState({ connected: false, qr: null, message: "Logged out. Delete auth folder and restart to re-link." });
+                console.log("Logged out.");
+                writeState({ connected: false, qr: null, message: "Logged out. Re-pair from dashboard." });
                 sock = null;
                 return;
             }
 
+            // Exponential backoff: 5s, 10s, 20s, 40s, 60s max
             const delay = Math.min(5000 * Math.pow(2, reconnectAttempts), 60000);
             reconnectAttempts++;
             console.log(`Connection closed (reason: ${reason}). Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`);
@@ -139,7 +159,6 @@ async function startBot() {
             || m.message.documentMessage?.caption
             || "";
 
-        // Skip messages with no readable text (images, stickers, voice notes, etc.)
         if (!text.trim()) {
             if (msgType !== "conversation" && msgType !== "extendedTextMessage") {
                 console.log(`Skipping ${msgType} from ${m.key.remoteJid} (no caption)`);
@@ -238,23 +257,21 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
-// Keep-alive ping every 25s — prevents WhatsApp from dropping idle connections
+// Keep-alive ping every 30s — prevents WhatsApp from dropping idle connections
 setInterval(() => {
     if (sock?.user) {
-        sock.sendPresenceUpdate("available").catch(err => {
-            console.error("Keep-alive ping failed:", err.message);
-        });
+        sock.sendPresenceUpdate("available").catch(() => {});
     }
-}, 25000);
+}, 30000);
 
-// Health check: reconnect if no activity for 3 minutes
+// Health check: reconnect if no activity for 5 minutes
 setInterval(() => {
     try {
         const idle = Date.now() - lastActive;
-        if (sock?.user && idle > 180000) {
+        if (sock?.user && idle > 300000) {
             console.log(`Idle for ${Math.round(idle/1000)}s, reconnecting...`);
             sock.end(new Error("Reconnecting due to inactivity"));
-        } else if (!sock?.user && reconnectAttempts < 3 && idle > 60000) {
+        } else if (!sock?.user && !botStarting && idle > 120000) {
             console.log("Health check: no connection, restarting bot...");
             startBot();
         }
