@@ -1863,13 +1863,37 @@ async def contact_form(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON body")
     name = (body.get("name") or "").strip()
-    email = (body.get("email") or "").strip()
+    email_addr = (body.get("email") or "").strip()
     subject = (body.get("subject") or "").strip()
     message = (body.get("message") or "").strip()
-    if not name or not email or not subject or not message:
+    if not name or not email_addr or not subject or not message:
         raise HTTPException(status_code=400, detail="All fields are required")
-    logger.info("Contact form submission from %s (%s) — subject: %s — message: %.80s", name, email, subject, message)
+    logger.info("Contact form submission from %s (%s) — subject: %s — message: %.80s", name, email_addr, subject, message)
+    _send_contact_email(name, email_addr, subject, message)
     return {"ok": True}
+
+
+def _send_contact_email(name: str, email_addr: str, subject: str, message: str) -> None:
+    to = Config.ADMIN_EMAIL
+    if not to or not Config.SMTP_HOST or not Config.SMTP_USERNAME or not Config.SMTP_PASSWORD:
+        logger.info("SMTP not configured — contact message logged but not emailed")
+        return
+    try:
+        import smtplib
+        from email.message import EmailMessage
+        msg = EmailMessage()
+        msg["From"] = Config.SMTP_FROM
+        msg["To"] = to
+        msg["Reply-To"] = email_addr
+        msg["Subject"] = f"[Tell5 Contact] {subject}"
+        msg.set_content(f"Name: {name}\nEmail: {email_addr}\nSubject: {subject}\n\nMessage:\n{message}")
+        with smtplib.SMTP(Config.SMTP_HOST, Config.SMTP_PORT, timeout=15) as s:
+            s.starttls()
+            s.login(Config.SMTP_USERNAME, Config.SMTP_PASSWORD)
+            s.send_message(msg)
+        logger.info("Contact email sent to %s", to)
+    except Exception as e:
+        logger.warning("Failed to send contact email: %s", e)
 
 
 # @app.get("/privacy", response_class=HTMLResponse)

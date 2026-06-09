@@ -74,6 +74,13 @@ class Config:
     AGENT_BUILDER_LOCATION: str = os.getenv("AGENT_BUILDER_LOCATION", "global").strip()
     AGENT_BUILDER_DATA_STORE: Optional[str] = os.getenv("AGENT_BUILDER_DATA_STORE", "").strip() or None
 
+    # Email (SMTP for contact form)
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "").strip()
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "").strip()
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "").strip()
+    SMTP_FROM: str = os.getenv("SMTP_FROM", "").strip() or os.getenv("SMTP_USERNAME", "").strip()
+
     # Flags
     DEBUG: bool = os.getenv("DEBUG", "false").lower() in {"1", "true", "yes"}
     COOKIE_SECURE: bool = os.getenv("COOKIE_SECURE", "false").lower() in {"1", "true", "yes"}
