@@ -1110,12 +1110,21 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
     from services.ai.mistral_client import mistral_configured
     from services.ai.discovery_engine import get_client as get_de_client
     from services.ai.adk_agent import is_configured as adk_configured
-    from models import PipelineLog, BusinessProfile
+    from models import PipelineLog, BusinessProfile, ContactMessage
     from sqlalchemy import select, func
     pl_q = await db.execute(select(func.count(PipelineLog.id)))
     pipeline_count = pl_q.scalar() or 0
     bp_q = await db.execute(select(func.count(BusinessProfile.id)))
     biz_count = bp_q.scalar() or 0
+    cm_q = await db.execute(select(func.count(ContactMessage.id)))
+    contact_count = cm_q.scalar() or 0
+    cm_rows = await db.execute(
+        select(ContactMessage).order_by(ContactMessage.created_at.desc()).limit(5)
+    )
+    recent_contacts = [{
+        "id": r.id, "name": r.name, "email": r.email,
+        "subject": r.subject, "created_at": r.created_at.isoformat() if r.created_at else None,
+    } for r in cm_rows.scalars()]
     return {
         "stats": s,
         "total_users": len(users),
@@ -1130,6 +1139,8 @@ async def admin_summary(db: AsyncSession = Depends(get_db), user=Depends(get_adm
         "personality_qa_count": await _count_personality_qa(db),
         "pipeline_runs": pipeline_count,
         "business_profiles": biz_count,
+        "contact_messages": contact_count,
+        "recent_contacts": recent_contacts,
         "channels": ["whatsapp"],
         "recent_users": [public_user(u) for u in users[:10]],
         "recent_conversations": [{
@@ -1857,7 +1868,7 @@ async def export_csv(user=Depends(get_current_user), db: AsyncSession = Depends(
 
 
 @app.post("/api/contact")
-async def contact_form(request: Request):
+async def contact_form(request: Request, db: AsyncSession = Depends(get_db)):
     try:
         body = await request.json()
     except Exception:
@@ -1868,32 +1879,11 @@ async def contact_form(request: Request):
     message = (body.get("message") or "").strip()
     if not name or not email_addr or not subject or not message:
         raise HTTPException(status_code=400, detail="All fields are required")
-    logger.info("Contact form submission from %s (%s) — subject: %s — message: %.80s", name, email_addr, subject, message)
-    _send_contact_email(name, email_addr, subject, message)
+    from models import ContactMessage
+    db.add(ContactMessage(name=name, email=email_addr, subject=subject, message=message))
+    await db.commit()
+    logger.info("Contact form submission from %s (%s) — subject: %s", name, email_addr, subject)
     return {"ok": True}
-
-
-def _send_contact_email(name: str, email_addr: str, subject: str, message: str) -> None:
-    to = Config.ADMIN_EMAIL
-    if not to or not Config.SMTP_HOST or not Config.SMTP_USERNAME or not Config.SMTP_PASSWORD:
-        logger.info("SMTP not configured — contact message logged but not emailed")
-        return
-    try:
-        import smtplib
-        from email.message import EmailMessage
-        msg = EmailMessage()
-        msg["From"] = Config.SMTP_FROM
-        msg["To"] = to
-        msg["Reply-To"] = email_addr
-        msg["Subject"] = f"[Tell5 Contact] {subject}"
-        msg.set_content(f"Name: {name}\nEmail: {email_addr}\nSubject: {subject}\n\nMessage:\n{message}")
-        with smtplib.SMTP(Config.SMTP_HOST, Config.SMTP_PORT, timeout=15) as s:
-            s.starttls()
-            s.login(Config.SMTP_USERNAME, Config.SMTP_PASSWORD)
-            s.send_message(msg)
-        logger.info("Contact email sent to %s", to)
-    except Exception as e:
-        logger.warning("Failed to send contact email: %s", e)
 
 
 # @app.get("/privacy", response_class=HTMLResponse)

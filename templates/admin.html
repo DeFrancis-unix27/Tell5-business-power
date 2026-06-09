@@ -385,6 +385,10 @@
         <div class="kpi-label">Business Profiles</div>
         <div class="kpi-value" id="biz-profiles">—</div>
       </div>
+      <div class="kpi" style="--kpi-color: var(--accent2)">
+        <div class="kpi-label">Contact Messages</div>
+        <div class="kpi-value" id="contact-msgs">—</div>
+      </div>
     </div>
 
     <!-- Info Panels -->
@@ -519,6 +523,23 @@
       </div>
     </div>
 
+    <!-- Contact Messages -->
+    <div class="panel" style="margin-top:14px;">
+      <div class="panel-header"><span class="panel-title">Recent Contact Messages</span></div>
+      <div class="panel-body" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Subject</th><th>Date</th></tr>
+            </thead>
+            <tbody id="contact-list">
+              <tr><td colspan="4" class="muted-cell" style="padding:20px 16px;text-align:center">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -553,6 +574,7 @@
 
       document.getElementById('pipeline-runs').textContent = data.pipeline_runs || 0;
       document.getElementById('biz-profiles').textContent = data.business_profiles || 0;
+      document.getElementById('contact-msgs').textContent = data.contact_messages || 0;
 
       const waEl = document.getElementById('whatsapp-status');
       waEl.textContent  = data.twilio_configured ? 'Connected' : 'Needs setup';
@@ -593,6 +615,20 @@
 
       adminData = data;
       renderTables(data.recent_users || [], data.recent_conversations || []);
+      renderContacts(data.recent_contacts || []);
+    }
+
+    function renderContacts(contacts) {
+      document.getElementById('contact-list').innerHTML =
+        contacts.map(c => `
+          <tr>
+            <td>${esc(c.name)}</td>
+            <td>${esc(c.email)}</td>
+            <td>${esc(c.subject)}</td>
+            <td style="font-size:0.7rem;color:var(--sub);">${c.created_at ? new Date(c.created_at).toLocaleDateString() : '—'}</td>
+          </tr>
+        `).join('') ||
+        '<tr><td colspan="4" class="muted-cell" style="padding:18px 16px;text-align:center">No messages</td></tr>';
     }
 
     let adminData = {};
