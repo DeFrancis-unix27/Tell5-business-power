@@ -1192,8 +1192,7 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
         return RedirectResponse(url="/")
     if not is_twilio_enabled() and not is_baileys_connected():
         return RedirectResponse(url="/whatsapp-connect")
-    dashboard_html = Path("templates/dashboard.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=dashboard_html)
+    return HTMLResponse(content=_get_cached_page("templates/dashboard.html"))
 
 
 @app.get("/api/whatsapp/pairing-code")
@@ -1232,8 +1231,7 @@ async def whatsapp_connect(request: Request, db: AsyncSession = Depends(get_db))
     user = await crud.get_user_by_id(db, user_id) if user_id else None
     if not user:
         return RedirectResponse(url="/")
-    connect_html = Path("templates/connect.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=connect_html)
+    return HTMLResponse(content=_get_cached_page("templates/connect.html"))
 
 
 @app.get("/admin", response_class=HTMLResponse)
@@ -1245,25 +1243,38 @@ async def admin_page(request: Request, db: AsyncSession = Depends(get_db)):
         return RedirectResponse(url="/")
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
-    admin_html = Path("templates/admin.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=admin_html)
+    return HTMLResponse(content=_get_cached_page("templates/admin.html"))
+
+_CACHED_PAGES: dict[str, str] = {}
+
+def _get_cached_page(path: str) -> str:
+    if path not in _CACHED_PAGES:
+        _CACHED_PAGES[path] = Path(path).read_text(encoding="utf-8")
+    return _CACHED_PAGES[path]
+
+
+@ app.on_event("startup")
+async def _preload_pages():
+    for p in ["templates/landingpage.html", "templates/about.html", "templates/contact.html",
+              "templates/help.html", "templates/privacy.html", "templates/terms.html",
+              "templates/dashboard.html", "templates/connect.html", "templates/admin.html",
+              "templates/discover.html", "templates/business_setup.html"]:
+        _get_cached_page(p)
+
 
 @app.get("/about", response_class=HTMLResponse)
 async def about_page():
-    html = Path("templates/about.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+    return HTMLResponse(content=_get_cached_page("templates/about.html"))
 
 
 @app.get("/contact", response_class=HTMLResponse)
 async def contact_page():
-    html = Path("templates/contact.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+    return HTMLResponse(content=_get_cached_page("templates/contact.html"))
 
 
 @app.get("/", response_class=HTMLResponse)
 async def basepage(request: Request):
-    landingpage_html = Path("templates/landingpage.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=landingpage_html)
+    return HTMLResponse(content=_get_cached_page("templates/landingpage.html"))
 
 
 # @app.get("/terms", response_class=HTMLResponse)
@@ -1518,26 +1529,22 @@ async def get_public_business_profile(profile_id: int, db: AsyncSession = Depend
 
 @app.get("/help", response_class=HTMLResponse)
 async def help_page():
-    html = Path("templates/help.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+    return HTMLResponse(content=_get_cached_page("templates/help.html"))
 
 
 @app.get("/privacy", response_class=HTMLResponse)
 async def privacy_page():
-    html = Path("templates/privacy.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+    return HTMLResponse(content=_get_cached_page("templates/privacy.html"))
 
 
 @app.get("/terms", response_class=HTMLResponse)
 async def terms_page():
-    html = Path("templates/terms.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+    return HTMLResponse(content=_get_cached_page("templates/terms.html"))
 
 
 @app.get("/business-profile", response_class=HTMLResponse)
 async def business_profile_setup(user=Depends(get_current_user)):
-    html = Path("templates/business_setup.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+    return HTMLResponse(content=_get_cached_page("templates/business_setup.html"))
 
 
 @app.get("/business-profile/{profile_id}", response_class=HTMLResponse)
@@ -1548,14 +1555,12 @@ async def business_profile_page(profile_id: int, db: AsyncSession = Depends(get_
     profile = q.scalar_one_or_none()
     if not profile:
         return HTMLResponse(content="<h1>Profile not found</h1>", status_code=404)
-    html = Path("templates/business_profile.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+    return HTMLResponse(content=_get_cached_page("templates/business_profile.html"))
 
 
 @app.get("/discover", response_class=HTMLResponse)
 async def discover_page():
-    html = Path("templates/discover.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+    return HTMLResponse(content=_get_cached_page("templates/discover.html"))
 
 
 # ── Reply Templates ─────────────────────────────────────────────────
