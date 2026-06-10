@@ -144,21 +144,25 @@ async def csrf_middleware(request: Request, call_next):
 
     # Validate CSRF on mutating requests (skip whitelisted paths)
     if request.method in ("POST", "PUT", "DELETE", "PATCH") and path not in CSRF_SKIP_PATHS:
-        csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
-        if not csrf_cookie:
-            return JSONResponse(status_code=403, content={"detail": "Missing CSRF cookie"})
-        try:
-            csrf_token = extract_csrf_token_from_headers(dict(request.headers))
-            if not csrf_token:
-                ctype = request.headers.get("content-type", "")
-                if "application/json" not in ctype and "multipart" not in ctype:
-                    form = await request.form()
-                    csrf_token = extract_csrf_token_from_request(dict(form))
-            if not csrf_token or not verify_csrf_token(csrf_token, csrf_cookie):
-                return JSONResponse(status_code=403, content={"detail": "Invalid CSRF token"})
-        except Exception as e:
-            logger.warning("CSRF validation error: %s", e)
-            return JSONResponse(status_code=403, content={"detail": "CSRF validation failed"})
+        ctype = request.headers.get("content-type", "")
+        # JSON APIs are inherently CSRF-safe — a <form> cannot set application/json
+        if "application/json" in ctype:
+            pass
+        else:
+            csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME)
+            if not csrf_cookie:
+                return JSONResponse(status_code=403, content={"detail": "Missing CSRF cookie"})
+            try:
+                csrf_token = extract_csrf_token_from_headers(dict(request.headers))
+                if not csrf_token:
+                    if "multipart" in ctype:
+                        form = await request.form()
+                        csrf_token = extract_csrf_token_from_request(dict(form))
+                if not csrf_token or not verify_csrf_token(csrf_token, csrf_cookie):
+                    return JSONResponse(status_code=403, content={"detail": "Invalid CSRF token"})
+            except Exception as e:
+                logger.warning("CSRF validation error: %s", e)
+                return JSONResponse(status_code=403, content={"detail": "CSRF validation failed"})
 
     response = await call_next(request)
 
@@ -1464,21 +1468,81 @@ async def chat_send(request: Request, db: AsyncSession = Depends(get_db), user=D
     if not message:
         raise HTTPException(status_code=400, detail="Message is required")
 
-    from services.ai.pipeline import run_pipeline
     import uuid
     message_id = str(uuid.uuid4())
-    result = await run_pipeline(message, message_id=message_id, from_number=f"chat:{user.id}", user_id=user.id, db=db)
+
+    # ── Load business context (same as _process_incoming_message) ──
+    merged_context = {}
+    try:
+        from crud import get_business_profile
+        bp = await get_business_profile(db, user.id)
+        if bp:
+            merged_context["business_name"] = bp.business_name
+            merged_context["services"] = bp.services or ""
+            merged_context["price_range"] = bp.price_range or ""
+            if bp.description:
+                merged_context["description"] = bp.description
+    except Exception as e:
+        logger.warning("chat_send: failed to load business profile: %s", e)
+
+    try:
+        owner = await crud.get_user_by_id(db, user.id)
+        if owner:
+            merged_context["owner_name"] = f"{owner.first_name} {owner.last_name}".strip()
+    except Exception as e:
+        logger.warning("chat_send: failed to load owner name: %s", e)
+
+    try:
+        from crud import list_knowledge
+        entries = await list_knowledge(db, user.id)
+        if entries:
+            merged_context["business_knowledge"] = [{"content": e.content, "category": e.category} for e in entries[:20]]
+    except Exception as e:
+        logger.warning("chat_send: failed to load knowledge: %s", e)
+
+    merged_context["founder_persona"] = {
+        "name": "Francis David",
+        "role": "Founder & Developer of Tell5",
+        "location": "Nnewi, Anambra State, Nigeria",
+        "voice": "Warm but direct. Professional but not corporate. No robot speak.",
+        "values": "Honesty over hype, simplicity over complexity, reliability over flash, growth through service.",
+        "style": "Patient, knowledgeable, proud of what he's building, always improving.",
+        "goal": "Every customer should feel like they're talking to the founder himself — someone who genuinely cares about their business success.",
+        "background": "Developer and entrepreneur. Built Tell5 to solve real problems for African entrepreneurs. Hands-on from architecture to customer support. Mentors other developers. Believes small businesses deserve enterprise tools without enterprise pricing.",
+    }
+
+    # ── Pipeline processing with safety net ──
+    from services.ai.pipeline import run_pipeline, PipelineResult
+    pipeline_result = None
+    try:
+        pipeline_result = await run_pipeline(
+            message, message_id=message_id, from_number=f"chat:{user.id}",
+            user_id=user.id, context=merged_context or None, db=db,
+        )
+    except Exception as e:
+        logger.error(f"chat_send: pipeline crashed: {e}", exc_info=True)
+
+    if pipeline_result is None:
+        pipeline_result = PipelineResult()
+        pipeline_result.reply = None
+        pipeline_result.category = "inquiry"
+        pipeline_result.errors = ["Pipeline crashed"]
+        pipeline_result.success = False
+
+    ai_reply = pipeline_result.adk_reply or pipeline_result.reply
+    if not ai_reply:
+        ai_reply = "Thank you for your message. We'll get back to you shortly."
 
     await crud.create_pipeline_log(
         db,
         message=message,
-        category=result.category,
-        gemini_output=str(result.tier_outputs.get(1)),
-        groq_output=str(result.tier_outputs.get(2)),
-        mistral_output=str(result.tier_outputs.get(3)),
-        final_reply=result.reply,
-        errors="; ".join(result.errors) if result.errors else None,
-        success=result.success,
+        category=pipeline_result.category or "inquiry",
+        gemini_output=str(pipeline_result.tier_outputs.get(1)),
+        groq_output=str(pipeline_result.tier_outputs.get(2)),
+        mistral_output=str(pipeline_result.tier_outputs.get(3)),
+        final_reply=ai_reply,
+        errors="; ".join(pipeline_result.errors) if pipeline_result.errors else None,
+        success=pipeline_result.success,
         message_id=message_id,
     )
 
@@ -1486,17 +1550,17 @@ async def chat_send(request: Request, db: AsyncSession = Depends(get_db), user=D
         db,
         phone=f"chat:{user.id}",
         message=message,
-        category=result.category or "inquiry",
+        category=pipeline_result.category or "inquiry",
         user_id=user.id,
         channel="dashboard",
-        ai_response=result.reply,
+        ai_response=ai_reply,
     )
     await db.commit()
 
     return {
-        "reply": result.reply,
-        "category": result.category or "inquiry",
-        "success": result.success,
+        "reply": ai_reply,
+        "category": pipeline_result.category or "inquiry",
+        "success": pipeline_result.success,
         "conv_id": conv.id,
     }
 
