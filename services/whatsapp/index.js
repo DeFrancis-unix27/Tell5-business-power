@@ -23,6 +23,7 @@ function writeState(state) {
 let sock = null;
 let lastActive = Date.now();
 let autoReconnect = true;
+let isPairingMode = false;
 
 function clearAuthDir() {
     try {
@@ -109,6 +110,7 @@ function setupEventHandlers(socket, onConnected) {
 
         if (connection === "open") {
             console.log("WhatsApp connected");
+            isPairingMode = false;
             autoReconnect = true;
             lastActive = Date.now();
             writeState({ connected: true, qr: null, message: "WhatsApp is connected." });
@@ -130,10 +132,17 @@ function setupEventHandlers(socket, onConnected) {
             }
 
             if (reason === 408) {
-                console.log("408 — clearing stale auth and resetting for pairing");
-                clearAuthDir();
-                writeState({ connected: false, qr: null, message: "Ready for pairing. Refresh or enter your phone number to pair." });
-                nullSock();
+                if (isPairingMode) {
+                    console.log("408 during pairing — reconnecting without clearing auth");
+                    nullSock();
+                    startBot().catch(err => console.error("Restart after 408 (pairing) failed:", err.message));
+                } else {
+                    console.log("408 — clearing stale auth and restarting for fresh QR");
+                    clearAuthDir();
+                    writeState({ connected: false, qr: null, message: "Ready for pairing. Refresh or enter your phone number to pair." });
+                    nullSock();
+                    startBot().catch(err => console.error("Restart after 408 failed:", err.message));
+                }
                 return;
             }
 
@@ -328,6 +337,7 @@ async function requestPairingCode(phone) {
     pairingSock.ev.removeAllListeners("messages.upsert");
 
     sock = pairingSock;
+    isPairingMode = true;
     setupEventHandlers(sock);
     sock.ev.on("creds.update", saveCreds);
 
