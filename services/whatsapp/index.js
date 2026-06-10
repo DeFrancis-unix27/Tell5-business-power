@@ -400,10 +400,14 @@ setInterval(() => {
     }
 }, 30000);
 
+// Write initial state immediately so the API knows the bot ran at all
+writeState({ connected: false, qr: null, message: "Bot process started, connecting..." });
+
 server.listen(BOT_PORT, "127.0.0.1", () => {
     console.log(`WhatsApp bot listening on 127.0.0.1:${BOT_PORT}`);
+    writeState({ connected: false, qr: null, message: "Bot listening, initializing WhatsApp connection..." });
     startBot().catch(err => {
         console.error("Initial startBot failed:", err.message);
-        writeState({ connected: false, qr: null, message: "Bot failed to start. Refresh to retry." });
+        writeState({ connected: false, qr: null, message: `Bot failed: ${err.message}. Refresh to retry.` });
     });
 });
