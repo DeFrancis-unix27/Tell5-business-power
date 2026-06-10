@@ -239,9 +239,9 @@
           textEl.textContent = 'If you previously scanned a QR that expired, restart the bot and refresh.';
         } else {
           imgEl.classList.add('hidden');
-          statusEl.textContent = 'WhatsApp bot is not running. Start it from services/whatsapp and refresh.';
+          statusEl.textContent = data.baileys.message || 'WhatsApp bot is not running. Start it from services/whatsapp and refresh.';
           statusEl.style.borderLeftColor = 'var(--danger)';
-          textEl.textContent = data.baileys.message || '';
+          textEl.textContent = '';
         }
       } catch (err) {
         document.getElementById('baileys-status').textContent = 'Unable to reach the Baileys service. Is the bot running?';

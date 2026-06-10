@@ -410,6 +410,9 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
+// Write state immediately on process start (synchronous — runs before any async init)
+writeState({ connected: false, qr: null, message: "Bot process started, loading modules..." });
+
 // Start the bot after dynamic import of Baileys (ESM module — not requireable on Node 20)
 (async () => {
     try {
@@ -417,7 +420,7 @@ const server = http.createServer(async (req, res) => {
         makeWASocket = mod.default;
         useMultiFileAuthState = mod.useMultiFileAuthState;
         DisconnectReason = mod.DisconnectReason;
-        console.log("Baileys loaded successfully");
+        writeState({ connected: false, qr: null, message: "Baileys loaded, initializing..." });
     } catch (err) {
         console.error("Failed to load Baileys:", err.message);
         writeState({ connected: false, qr: null, message: `Baileys load failed: ${err.message}` });
@@ -430,8 +433,6 @@ const server = http.createServer(async (req, res) => {
             sock.sendPresenceUpdate("available").catch(() => {});
         }
     }, 30000);
-
-    writeState({ connected: false, qr: null, message: "Bot process started, connecting..." });
 
     server.listen(BOT_PORT, "127.0.0.1", () => {
         console.log(`WhatsApp bot listening on 127.0.0.1:${BOT_PORT}`);
