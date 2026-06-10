@@ -108,7 +108,6 @@ if _adk_available:
             agent=_agent,
             app_name="tell5",
             session_service=session_service,
-            auto_create_session=True,
         )
         logger.info("ADK agent initialized")
 
