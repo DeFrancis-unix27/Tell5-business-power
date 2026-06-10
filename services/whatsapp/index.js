@@ -84,6 +84,16 @@ async function sendMessage(jid, text, socketForReply = null) {
         await s.sendMessage(jid, { text });
         return true;
     } catch (err) {
+        // If the original socket failed and there's a newer global socket, try that
+        if (s !== sock && sock) {
+            try {
+                await sock.sendMessage(jid, { text });
+                return true;
+            } catch (err2) {
+                console.error("sendMessage: primary failed, fallback also failed:", err2.message);
+                return false;
+            }
+        }
         console.error("sendMessage error:", err.message);
         return false;
     }
