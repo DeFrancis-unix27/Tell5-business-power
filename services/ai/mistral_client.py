@@ -62,15 +62,15 @@ async def mistral_format_final(
 
     import httpx
 
-    prompt = f"""Review and improve this WhatsApp business reply if needed.
+    prompt = f"""Review and improve this WhatsApp reply if needed.
 
 Category: {category}
 Draft reply: {reply}
 
 Rules:
-- Keep it concise (under 200 chars).
+- Make it sound natural and human, not robotic.
 - Match the category tone.
-- Ensure it sounds natural.
+- Keep it conversational.
 
 Return JSON only:
 {{"reply": "<improved reply>", "category": "{category}"}}"""

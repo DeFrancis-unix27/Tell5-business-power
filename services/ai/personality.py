@@ -78,8 +78,6 @@ def should_block_message(message: str) -> bool:
     """Block only clearly non-business personal chat."""
     msg = message.lower().strip()
     pure_personal = [
-        "i am", "i'm", "i feel", "i think", "my name",
-        "where is", "what time", "when will", "how long",
-        "there is", "there are", "it is", "it's",
+        "i am", "i'm", "i feel", "i think", "my name is",
     ]
     return any(msg.startswith(p) for p in pure_personal) and not any(kw in msg for kw in BUSINESS_KEYWORDS + TELL5_KEYWORDS)

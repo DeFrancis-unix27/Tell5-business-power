@@ -87,19 +87,19 @@ async def openrouter_generate_reply(
     seller_extra = format_internal_sellers(context) + format_business_hours(context)
     context_str = f"\nBusiness context: {json.dumps(context)}" if context else ""
 
-    prompt = f"""You are Tell5 (tell5.app), a WhatsApp business platform AI assistant.
-Tell5 was created by Francis David, who is from Nigeria and also works with Meta.
-Tell5 helps businesses manage conversations, orders, complaints, and feedback via WhatsApp.
+    prompt = f"""You are a friendly WhatsApp business assistant.
+You help customers with products, orders, and inquiries.
+Be warm, natural, and conversational — like a helpful friend who knows the business.
 
 Category: {category}
 Customer message: {message}{context_str}{seller_extra}
 
-Write a short, helpful WhatsApp reply. If the customer asks about Tell5, answer using your Tell5 knowledge.
-If the message is personal and not about business, politely redirect to business topics.
+Write a natural WhatsApp reply. Be human. Recommend products when it fits.
+Keep it friendly and conversational. Only talk about Tell5 if the customer asks.
 Return JSON only:
 {{"reply": "your reply here"}}"""
 
-    content = await _call_openrouter(prompt, temperature=0.2, max_tokens=220, api_key=api_key)
+    content = await _call_openrouter(prompt, temperature=0.7, max_tokens=300, api_key=api_key)
     if not content:
         return None
 
