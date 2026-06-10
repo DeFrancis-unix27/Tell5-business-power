@@ -1,6 +1,6 @@
 {
-  "connected": true,
+  "connected": false,
   "qr": null,
-  "message": "WhatsApp is connected.",
-  "updated_at": "2026-06-02T12:49:40.985Z"
+  "message": "Logged out. Re-pair from dashboard.",
+  "updated_at": "2026-06-10T06:38:36.726Z"
 }

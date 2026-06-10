@@ -2,7 +2,9 @@ const fs = require("fs");
 const path = require("path");
 const http = require("http");
 const pino = require("pino");
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require("@whiskeysockets/baileys");
+
+// Baileys is ESM — use dynamic import so this works on Node.js 20 (Render) as well as Node 24 (local)
+let makeWASocket, useMultiFileAuthState, DisconnectReason;
 
 const STATE_FILE = path.join(__dirname, "qr-state.json");
 const AUTH_DIR = path.join(__dirname, "auth");
@@ -393,21 +395,35 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
-// Keep-alive ping every 30s
-setInterval(() => {
-    if (sock?.user) {
-        sock.sendPresenceUpdate("available").catch(() => {});
+// Start the bot after dynamic import of Baileys (ESM module — not requireable on Node 20)
+(async () => {
+    try {
+        const mod = await import("@whiskeysockets/baileys");
+        makeWASocket = mod.default;
+        useMultiFileAuthState = mod.useMultiFileAuthState;
+        DisconnectReason = mod.DisconnectReason;
+        console.log("Baileys loaded successfully");
+    } catch (err) {
+        console.error("Failed to load Baileys:", err.message);
+        writeState({ connected: false, qr: null, message: `Baileys load failed: ${err.message}` });
+        return;
     }
-}, 30000);
 
-// Write initial state immediately so the API knows the bot ran at all
-writeState({ connected: false, qr: null, message: "Bot process started, connecting..." });
+    // Keep-alive ping every 30s
+    setInterval(() => {
+        if (sock?.user) {
+            sock.sendPresenceUpdate("available").catch(() => {});
+        }
+    }, 30000);
 
-server.listen(BOT_PORT, "127.0.0.1", () => {
-    console.log(`WhatsApp bot listening on 127.0.0.1:${BOT_PORT}`);
-    writeState({ connected: false, qr: null, message: "Bot listening, initializing WhatsApp connection..." });
-    startBot().catch(err => {
-        console.error("Initial startBot failed:", err.message);
-        writeState({ connected: false, qr: null, message: `Bot failed: ${err.message}. Refresh to retry.` });
+    writeState({ connected: false, qr: null, message: "Bot process started, connecting..." });
+
+    server.listen(BOT_PORT, "127.0.0.1", () => {
+        console.log(`WhatsApp bot listening on 127.0.0.1:${BOT_PORT}`);
+        writeState({ connected: false, qr: null, message: "Bot listening, initializing WhatsApp connection..." });
+        startBot().catch(err => {
+            console.error("Initial startBot failed:", err.message);
+            writeState({ connected: false, qr: null, message: `Bot failed: ${err.message}. Refresh to retry.` });
+        });
     });
-});
+})();
