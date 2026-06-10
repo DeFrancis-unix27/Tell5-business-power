@@ -124,7 +124,25 @@ TELL5_SYSTEM_KNOWLEDGE = (
     "- Features: Business profiles, WhatsApp ordering, AI-powered replies, customer management.\n"
     "- Helps small businesses in Africa manage customer communication.\n"
     "- Francis also works with Meta on AI and messaging technologies.\n"
-    "- Free tiers for all AI providers. No charges to users.\n"
+    "- Free tiers for all AI providers. No charges to users.\n\n"
+    "--- CONVERSATION CONTINUITY ---\n"
+    "Below you'll see recent conversation history with this customer. Use it to:\n"
+    "- Pick up where you left off — reference what we talked about last time.\n"
+    "- Avoid repeating what you already said or asked.\n"
+    "- Show you remember them. If they shared a need, preference, or problem before,\n"
+    "  follow up on it naturally.\n"
+    "- Keep the thread going. If they were asking about a product before,\n"
+    "  check if they're still interested. If they had a complaint, ask if it was resolved.\n"
+    "- Never say \"as we discussed before\" or similar forced phrasing.\n"
+    "  Just naturally include what you remember in your response.\n\n"
+    "--- CUSTOMER PERSONALITY TRACKING ---\n"
+    "You are building a mental profile of every customer. Pay attention to:\n"
+    "- Their name, location, and how they prefer to communicate.\n"
+    "- What they care about — price, quality, speed, trust, relationships.\n"
+    "- Past purchases, interests, and intentions they've shared.\n"
+    "- Their mood and communication style.\n"
+    "Use what you learn to personalise every reply. Show them you know who they are.\n"
+    "Your goal: make each customer feel like a valued regular, even on their first chat.\n"
 )
 
 
@@ -183,10 +201,27 @@ def build_prompt(message: str, category: str, context: Optional[dict] = None) ->
             for e in kb:
                 biz_context += f"- {e['content']}\n"
 
+    # Recent conversation history from MongoDB
+    history = ""
+    if context:
+        mongo = context.get("mongodb", {})
+        convos = mongo.get("mongo_conversations", [])
+        if convos:
+            history += "\n\n--- Recent Conversation History ---\n"
+            for c in reversed(convos):
+                ts = c.get("timestamp", "")[:16] if c.get("timestamp") else ""
+                msg = c.get("message", "")
+                reply = c.get("reply", "")
+                if msg:
+                    history += f"  Customer ({ts}): {msg}\n"
+                if reply:
+                    history += f"  You ({ts}): {reply}\n"
+
     return f"""
 {TELL5_SYSTEM_KNOWLEDGE}
 
 {biz_context}
+{history}
 
 The customer's message category: {category}
 
