@@ -1222,6 +1222,15 @@ async def request_pairing_code(phone: str = "", user=Depends(get_current_user)):
         return resp.json()
 
 
+@app.post("/api/whatsapp/restart")
+async def restart_baileys(user=Depends(get_current_user)):
+    """Force restart the Baileys bot with fresh auth (clears stale creds)"""
+    import httpx
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.post(f"{Config.BOT_URL}/restart")
+        return resp.json()
+
+
 @app.get("/api/whatsapp/qr")
 async def whatsapp_qr(user=Depends(get_current_user)):
     """Returns status of both WhatsApp channels (Twilio + Baileys)"""

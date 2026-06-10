@@ -143,6 +143,7 @@
         <div id="qr-text" style="text-align:center;color:var(--sub2);font-size:0.8rem;"></div>
         <div class="btn-row">
           <button class="btn btn-primary" onclick="refresh()">Refresh QR</button>
+          <button class="btn btn-secondary" onclick="restartBot()">Restart Bot</button>
         </div>
       </div>
     </div>
@@ -247,6 +248,19 @@
         document.getElementById('baileys-status').style.borderLeftColor = 'var(--danger)';
       } finally {
         btn.classList.remove('spin');
+      }
+    }
+
+    async function restartBot() {
+      const statusEl = document.getElementById('baileys-status');
+      statusEl.textContent = 'Restarting bot with fresh auth...';
+      statusEl.style.borderLeftColor = 'var(--orange)';
+      try {
+        await fetch('/api/whatsapp/restart', { method: 'POST', credentials: 'same-origin' });
+        setTimeout(refresh, 3000);
+      } catch (err) {
+        statusEl.textContent = 'Restart failed: ' + err.message;
+        statusEl.style.borderLeftColor = 'var(--danger)';
       }
     }
 

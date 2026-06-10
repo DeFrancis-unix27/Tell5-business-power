@@ -113,9 +113,17 @@ function setupEventHandlers(socket, onConnected) {
             }
 
             if (reason === 408) {
-                writeState({ connected: false, qr: null, message: "Ready for pairing. Go to Connections page and enter your phone number." });
+                console.log("408 — clearing stale auth and resetting for pairing");
+                clearAuthDir();
+                writeState({ connected: false, qr: null, message: "Ready for pairing. Refresh or enter your phone number to pair." });
                 nullSock();
                 return;
+            }
+
+            // Log stream errors to state so the user can see them
+            const errMsg = lastDisconnect?.error?.message || lastDisconnect?.error?.reason || "";
+            if (errMsg && !["", "Connection Terminated"].includes(errMsg)) {
+                writeState({ connected: false, qr: null, message: `Disconnected: ${errMsg}` });
             }
 
             if (autoReconnect) {
@@ -356,6 +364,18 @@ const server = http.createServer(async (req, res) => {
                 writeState({ connected: false, qr: null, message: `Pairing failed: ${err.message}` });
                 return sendJson(500, { error: err.message });
             }
+        }
+
+        if (req.method === "POST" && pathname === "/restart") {
+            console.log("Restarting bot with fresh auth...");
+            clearAuthDir();
+            if (sock) { try { sock.end(undefined); } catch {} sock = null; }
+            autoReconnect = true;
+            startBot().catch(err => {
+                console.error("Restart bot failed:", err.message);
+                writeState({ connected: false, qr: null, message: `Restart failed: ${err.message}` });
+            });
+            return sendJson(200, { ok: true, message: "Bot restarted. QR will regenerate." });
         }
 
         if (req.method === "POST" && pathname === "/send") {
