@@ -243,6 +243,11 @@
           statusEl.style.borderLeftColor = 'var(--danger)';
           textEl.textContent = '';
         }
+
+        if (data.baileys.pairing_code) {
+          document.getElementById('pair-code').textContent = data.baileys.pairing_code;
+          document.getElementById('pair-code-display').style.display = 'block';
+        }
       } catch (err) {
         document.getElementById('baileys-status').textContent = 'Unable to reach the Baileys service. Is the bot running?';
         document.getElementById('baileys-status').style.borderLeftColor = 'var(--danger)';

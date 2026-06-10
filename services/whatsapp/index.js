@@ -24,6 +24,7 @@ let sock = null;
 let lastActive = Date.now();
 let autoReconnect = true;
 let isPairingMode = false;
+let pairingPhone = null;
 
 function clearAuthDir() {
     try {
@@ -126,16 +127,31 @@ function setupEventHandlers(socket, onConnected) {
             const nullSock = () => { if (sock === socket) sock = null; };
 
             if (reason === DisconnectReason.loggedOut) {
-                writeState({ connected: false, qr: null, message: "Logged out. Re-pair from dashboard." });
+                console.log("Logged out — clearing auth and restarting for fresh QR");
+                clearAuthDir();
+                writeState({ connected: false, qr: null, message: "Logged out. QR ready — scan or enter phone to re-pair." });
                 nullSock();
+                startBot().catch(err => console.error("Restart after loggedOut failed:", err.message));
                 return;
             }
 
             if (reason === 408) {
                 if (isPairingMode) {
-                    console.log("408 during pairing — reconnecting without clearing auth");
+                    console.log("408 during pairing — clearing auth and re-requesting pairing code");
                     nullSock();
-                    startBot().catch(err => console.error("Restart after 408 (pairing) failed:", err.message));
+                    isPairingMode = false;
+                    if (pairingPhone) {
+                        requestPairingCode(pairingPhone).then(newCode => {
+                            console.log("Auto re-pair succeeded:", newCode);
+                        }).catch(err => {
+                            console.error("Auto re-pair failed:", err.message);
+                            clearAuthDir();
+                            startBot().catch(e => console.error("Fallback restart failed:", e.message));
+                        });
+                    } else {
+                        clearAuthDir();
+                        startBot().catch(err => console.error("Restart after 408 failed:", err.message));
+                    }
                 } else {
                     console.log("408 — clearing stale auth and restarting for fresh QR");
                     clearAuthDir();
@@ -234,6 +250,7 @@ async function startBot(noReconnect = false) {
 
 async function requestPairingCode(phone) {
     if (!phone) throw new Error("Phone number is required");
+    pairingPhone = phone;
 
     // Already connected — don't disrupt an active session
     if (sock?.user) {
