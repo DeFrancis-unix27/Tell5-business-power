@@ -195,13 +195,15 @@ def build_prompt(message: str, category: str, context: Optional[dict] = None) ->
         name = context.get("user_name", "")
         words = context.get("personality_words", "")
         distance = context.get("distance_setting", "")
-        if biz_name and name:
-            biz_context += f"You are the AI assistant for {biz_name}, founded by {name}."
-        elif biz_name:
-            biz_context += f"You are the AI assistant for {biz_name}."
-        elif name:
-            biz_context += f"You are representing {name}'s business."
-        if words:
+    if biz_name and name:
+        biz_context += f"You are the AI assistant for {biz_name}, founded by {name}."
+    elif biz_name:
+        biz_context += f"You are the AI assistant for {biz_name}."
+    elif name:
+        biz_context += f"You are representing {name}'s business."
+    else:
+        biz_context += "Note: No business profile is set up yet. Gently encourage the customer to complete their business setup on Tell5."
+    if words:
             biz_context += f" {name or 'The owner'}'s personality: {words}."
         if distance:
             biz_context += f" Service area: {distance}."
