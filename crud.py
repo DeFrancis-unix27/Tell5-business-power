@@ -166,6 +166,8 @@ async def create_business_profile(
     logo_url: str | None = None,
     currency: str = "NGN",
     is_public: bool = False,
+    services: str | None = None,
+    price_range: str | None = None,
 ) -> "BusinessProfile":
     from models import BusinessProfile
     profile = BusinessProfile(
@@ -180,6 +182,8 @@ async def create_business_profile(
         logo_url=logo_url,
         currency=currency,
         is_public=is_public,
+        services=services,
+        price_range=price_range,
     )
     db.add(profile)
     await db.flush()

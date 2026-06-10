@@ -692,9 +692,19 @@ async def _process_incoming_message(
             bp = await get_business_profile(db, target_user_id)
             if bp and bp.business_name:
                 personality_context["business_name"] = bp.business_name
+                personality_context["services"] = bp.services or ""
+                personality_context["price_range"] = bp.price_range or ""
                 logger.info("Loaded business name for user %d: %s", target_user_id, bp.business_name)
         except Exception as e:
             logger.warning("Failed to load business name: %s", e)
+
+        # Load owner name from user record
+        try:
+            owner = await crud.get_user_by_id(db, target_user_id)
+            if owner:
+                personality_context["owner_name"] = f"{owner.first_name} {owner.last_name}".strip()
+        except Exception as e:
+            logger.warning("Failed to load owner name: %s", e)
 
     # Inject Tell5 Q&A knowledge into context for AI awareness
     tell5_qa_context = {}
@@ -1491,6 +1501,8 @@ async def get_my_business_profile(db: AsyncSession = Depends(get_db), user=Depen
         "logo_url": profile.logo_url,
         "currency": profile.currency,
         "is_public": profile.is_public,
+        "services": profile.services,
+        "price_range": profile.price_range,
         "created_at": profile.created_at.isoformat() if profile.created_at else None,
     }
 
@@ -1514,6 +1526,8 @@ async def create_or_update_business_profile(request: Request, db: AsyncSession =
         existing.logo_url = str(data.get("logo_url", existing.logo_url or "")) or None
         if "is_public" in data:
             existing.is_public = bool(data["is_public"])
+        existing.services = str(data.get("services", existing.services or "")) or None
+        existing.price_range = str(data.get("price_range", existing.price_range or "")) or None
         await db.flush()
         await db.commit()
         return {"id": existing.id, "business_name": existing.business_name, "updated": True}
@@ -1530,6 +1544,8 @@ async def create_or_update_business_profile(request: Request, db: AsyncSession =
         website=str(data.get("website", "")).strip() or None,
         logo_url=str(data.get("logo_url", "")).strip() or None,
         is_public=bool(data.get("is_public", True)),
+        services=str(data.get("services", "")).strip() or None,
+        price_range=str(data.get("price_range", "")).strip() or None,
     )
     await db.commit()
     return {"id": profile.id, "business_name": profile.business_name, "created": True}

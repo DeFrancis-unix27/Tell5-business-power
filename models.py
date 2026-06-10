@@ -83,6 +83,8 @@ class BusinessProfile(Base):
     logo_url = Column(Text, nullable=True)
     currency = Column(String(10), nullable=True, default="NGN")
     is_public = Column(Boolean, nullable=False, default=False)
+    services = Column(Text, nullable=True)
+    price_range = Column(String(200), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

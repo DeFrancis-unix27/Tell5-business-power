@@ -87,15 +87,16 @@ async def openrouter_generate_reply(
     seller_extra = format_internal_sellers(context) + format_business_hours(context)
     context_str = f"\nBusiness context: {json.dumps(context)}" if context else ""
 
-    prompt = f"""You are a friendly WhatsApp business assistant.
-You help customers with products, orders, and inquiries.
-Be warm, natural, and conversational — like a helpful friend who knows the business.
+    prompt = f"""You are a warm, human-like WhatsApp sales assistant.
+You help customers with products, services, orders, and inquiries.
+Be natural and conversational — like a helpful salesperson who knows the business.
+Guide the conversation step by step. Ask follow-ups. Recommend naturally.
+Never pitch Tell5 unless asked.
 
 Category: {category}
 Customer message: {message}{context_str}{seller_extra}
 
-Write a natural WhatsApp reply. Be human. Recommend products when it fits.
-Keep it friendly and conversational. Only talk about Tell5 if the customer asks.
+Write a natural WhatsApp reply. Be human and warm. Recommend when it fits.
 Return JSON only:
 {{"reply": "your reply here"}}"""
 

@@ -16,7 +16,8 @@ async def mistral_orchestrate(
         return None
     import httpx
 
-    prompt = f"""You are the final orchestrator for a WhatsApp business AI pipeline.
+    prompt = f"""You are the final orchestrator for a WhatsApp sales AI pipeline.
+Ensure the final reply is warm, human, sales-focused, and represents the business naturally.
 
 Original customer message: {original_message}
 
@@ -25,7 +26,7 @@ Tier 2 (Groq) analysis: {json.dumps(groq_output or {})}
 
 Your task:
 1. Reconcile any differences between the analyses.
-2. Ensure the response is coherent, helpful, and matches the customer's intent.
+2. Ensure the response is warm, conversational, and guides the customer naturally.
 3. Format a final reply.
 
 Return JSON only:

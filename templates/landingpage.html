@@ -4,16 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tell5 - AI WhatsApp Agent for Business Operations</title>
-  <meta name="description" content="Tell5 turns WhatsApp messages into orders, customer workflows, AI replies, business discovery, and actionable operations for small businesses." />
+  <meta name="description" content="Tell5 connects to your WhatsApp and handles conversations, tracks orders, and responds with AI — so you never miss a customer. Built for African businesses." />
   <meta name="robots" content="index,follow" />
   <meta name="theme-color" content="#060809" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Tell5 - AI WhatsApp Agent for Business Operations" />
-  <meta property="og:description" content="Automate WhatsApp customer conversations, classify intent, track orders, and connect businesses through an AI-powered marketplace network." />
+  <meta property="og:title" content="Tell5 - AI WhatsApp Agent for African Businesses" />
+  <meta property="og:description" content="Tell5 connects to your WhatsApp and handles conversations, tracks orders, and responds with AI. Your customers never wait. You never miss a sale." />
   <meta property="og:image" content="/static/tell5-icon.svg" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Tell5 - AI WhatsApp Agent" />
-  <meta name="twitter:description" content="An AI agent that helps businesses act on WhatsApp customer messages." />
+  <meta name="twitter:description" content="Connect WhatsApp, get an AI sales assistant, and never miss an order." />
   <link rel="canonical" href="/" />
   <link rel="icon" href="/static/tell5-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/static/tell5-icon.svg">
@@ -333,7 +333,75 @@
       margin-top: 6px;
     }
 
-    /* ═══════ DASHBOARD MOCKUP ═══════ */
+    /* ═══════ HOW IT WORKS ═══════ */
+    .how-section {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 40px 40px 60px;
+      text-align: center;
+    }
+
+    .how-grid {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .how-step {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 28px 20px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .how-step:hover {
+      border-color: var(--border2);
+      transform: translateY(-3px);
+    }
+
+    .how-num {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(0,229,176,0.1);
+      border: 1px solid rgba(0,229,176,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 0.9rem;
+      color: var(--accent);
+      margin: 0 auto 14px;
+    }
+
+    .how-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .how-desc {
+      font-size: 0.78rem;
+      color: var(--sub2);
+      line-height: 1.7;
+    }
+
+    .how-arrow {
+      font-size: 1.4rem;
+      color: var(--muted);
+      flex-shrink: 0;
+      padding: 0 4px;
+    }
+
+    @media (max-width: 720px) {
+      .how-grid { flex-direction: column; gap: 8px; }
+      .how-arrow { transform: rotate(90deg); padding: 4px 0; }
+      .how-section { padding: 30px 20px 40px; }
+    }
     .mockup-section {
       max-width: 1120px;
       margin: 0 auto;
@@ -1542,18 +1610,19 @@
     <section class="hero-wrap">
       <div class="hero-badge">
         <div class="hero-badge-pip"></div>
-        WhatsApp Operations Platform
+        AI Sales Agent for WhatsApp
       </div>
 
       <h1 class="hero-h1">
-        Turn every<br>
-        WhatsApp message<br>
-        into <span class="hl">revenue</span>.
+        Your AI sales team<br>
+        works WhatsApp<br>
+        <span class="hl">while you sleep</span>.
       </h1>
 
       <p class="hero-p">
-        Tell5 turns every customer message into an actionable conversation.
-        Track orders, resolve complaints, and respond instantly — all from one dashboard built for African businesses.
+        Tell5 connects to your WhatsApp number and becomes an AI sales assistant that
+        answers customers, tracks every order, and organizes conversations — automatically.
+        No apps to install. No team to hire. Your business runs 24/7.
       </p>
 
       <div class="hero-ctas">
@@ -1569,19 +1638,19 @@
       <div class="stats-row" data-animate data-speed="slow">
         <div class="stat">
           <div class="stat-n">12<span>k+</span></div>
-          <div class="stat-l">Active Businesses</div>
+          <div class="stat-l">Businesses Onboarded</div>
         </div>
         <div class="stat">
           <div class="stat-n">98<span>%</span></div>
-          <div class="stat-l">Uptime SLA</div>
+          <div class="stat-l">Messages Handled by AI</div>
         </div>
         <div class="stat">
           <div class="stat-n">&lt;2<span>s</span></div>
-          <div class="stat-l">Avg. Response Time</div>
+          <div class="stat-l">AI Response Time</div>
         </div>
         <div class="stat">
           <div class="stat-n">4.9<span>★</span></div>
-          <div class="stat-l">Customer Rating</div>
+          <div class="stat-l">Business Owner Rating</div>
         </div>
       </div>
 
@@ -1590,6 +1659,30 @@
         <div class="scroll-arrow"></div>
       </div>
     </section>
+
+    <!-- How It Works -->
+    <div class="how-section" data-animate>
+      <div class="section-eyebrow" style="margin-bottom:16px">How it works</div>
+      <div class="how-grid">
+        <div class="how-step" data-animate data-delay="1">
+          <div class="how-num">1</div>
+          <div class="how-title">Connect WhatsApp</div>
+          <div class="how-desc">Link your WhatsApp number with a QR scan or pairing code. Takes 30 seconds.</div>
+        </div>
+        <div class="how-arrow">→</div>
+        <div class="how-step" data-animate data-delay="2">
+          <div class="how-num">2</div>
+          <div class="how-title">AI takes over</div>
+          <div class="how-desc">Your AI sales assistant greets customers, answers questions, tracks orders, and categorises every message.</div>
+        </div>
+        <div class="how-arrow">→</div>
+        <div class="how-step" data-animate data-delay="3">
+          <div class="how-num">3</div>
+          <div class="how-title">You stay in control</div>
+          <div class="how-desc">Monitor everything from the dashboard. Step in anytime. Your business runs 24/7 without you.</div>
+        </div>
+      </div>
+    </div>
 
     <!-- Dashboard mockup -->
     <div class="mockup-section" data-animate>
@@ -1778,38 +1871,38 @@
 
     <!-- Features -->
     <section class="features-section" data-animate>
-      <div class="section-eyebrow">Features</div>
-      <h2 class="section-h2">Everything your team needs</h2>
+      <div class="section-eyebrow">What Tell5 does</div>
+      <h2 class="section-h2">Your WhatsApp business, fully automated</h2>
       <div class="features-grid">
         <div class="feature-card" data-animate data-delay="1">
-          <div class="feat-icon-wrap">💬</div>
-          <div class="feat-title">Conversation Inbox</div>
-          <div class="feat-desc">All WhatsApp messages in one unified inbox. Filter by category, status, or agent in real time.</div>
+          <div class="feat-icon-wrap">🤖</div>
+          <div class="feat-title">AI Sales Assistant</div>
+          <div class="feat-desc">Your 24/7 WhatsApp rep. It greets customers, answers questions, recommends products, and closes sales — in your business's voice.</div>
         </div>
         <div class="feature-card" data-animate data-delay="2">
           <div class="feat-icon-wrap">📦</div>
-          <div class="feat-title">Order Tracking</div>
-          <div class="feat-desc">Auto-parse orders from conversations and track them from placement to delivery — no manual entry.</div>
+          <div class="feat-title">Smart Order Tracking</div>
+          <div class="feat-desc">Every "I want to order" is captured from chat and tracked from placement to delivery. No manual entry. No missed orders.</div>
         </div>
         <div class="feature-card" data-animate data-delay="3">
-          <div class="feat-icon-wrap">📊</div>
-          <div class="feat-title">Live Analytics</div>
-          <div class="feat-desc">Real-time charts on conversation volume, category breakdown, and order funnel metrics.</div>
+          <div class="feat-icon-wrap">💬</div>
+          <div class="feat-title">Unified Inbox</div>
+          <div class="feat-desc">All WhatsApp messages organized in one place. Filter by orders, complaints, or inquiries. Never lose a message in the noise.</div>
         </div>
         <div class="feature-card feature-card-bottom" data-animate data-delay="4">
-          <div class="feat-icon-wrap">🤖</div>
-          <div class="feat-title">AI Auto-Categorise</div>
-          <div class="feat-desc">Messages are instantly tagged as orders, complaints, inquiries, or support — no rules to write.</div>
+          <div class="feat-icon-wrap">📊</div>
+          <div class="feat-title">Live Dashboard</div>
+          <div class="feat-desc">Real-time charts on conversation volume, order trends, and business performance. See your numbers at a glance.</div>
         </div>
         <div class="feature-card feature-card-bottom" data-animate data-delay="5">
-          <div class="feat-icon-wrap">⚡</div>
+          <div class="feat-icon-wrap">🚨</div>
           <div class="feat-title">Instant Alerts</div>
-          <div class="feat-desc">Get notified the moment a high-priority complaint or failed order lands in your queue.</div>
+          <div class="feat-desc">Get notified the moment a complaint lands or a high-priority order needs your attention. Respond fast, keep customers happy.</div>
         </div>
         <div class="feature-card feature-card-bottom" data-animate data-delay="5">
           <div class="feat-icon-wrap">🔗</div>
           <div class="feat-title">Webhook API</div>
-          <div class="feat-desc">Connect Tell5 to Shopify, Notion, Slack, and more — via webhooks and REST API.</div>
+          <div class="feat-desc">Connect Tell5 to Shopify, Notion, Slack, and more. Automate your workflow beyond WhatsApp.</div>
         </div>
       </div>
     </section>
@@ -1818,8 +1911,8 @@
 
     <!-- Testimonials -->
     <section class="testi-section" data-animate>
-      <div class="section-eyebrow">Trusted by businesses</div>
-      <h2 class="section-h2">What our users say</h2>
+      <div class="section-eyebrow">Real results</div>
+      <h2 class="section-h2">Businesses like yours are already winning</h2>
       <div class="testi-carousel">
         <div class="testi-track" id="testi-track">
           <div class="testi-slide">
@@ -1875,7 +1968,7 @@
     <!-- Pricing -->
     <section class="pricing-section" data-animate>
       <div class="section-eyebrow">Pricing</div>
-      <h2 class="section-h2">Free while we build</h2>
+      <h2 class="section-h2">Free today. Free tomorrow. Free forever.</h2>
       <div class="pricing-grid">
         <div class="pricing-card hot" data-animate data-delay="1">
           <div class="hot-badge">Current Plan</div>
@@ -1936,8 +2029,8 @@
     <!-- CTA Section -->
     <section class="cta-section" data-animate>
       <div class="cta-card">
-        <h2 class="cta-h2">Start using Tell5 today</h2>
-        <p class="cta-p">AI-powered WhatsApp management with personality-driven responses, smart categorization, and a powerful dashboard — free while we build.</p>
+        <h2 class="cta-h2">Connect WhatsApp. Start selling.</h2>
+        <p class="cta-p">No setup fees. No credit card. Your AI sales assistant is ready when you are.</p>
         <a class="cta-big-btn" onclick="showPage('signup')">
           Get started free
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -1955,7 +2048,7 @@
         <a href="/terms" style="color:var(--sub2);text-decoration:none;">Terms</a>
         <a href="/help" style="color:var(--sub2);text-decoration:none;">Help</a>
       </div>
-      <div class="footer-copy">© 2026 Tell5 · Built for African businesses.</div>
+      <div class="footer-copy">© 2026 Tell5 · WhatsApp AI for African businesses.</div>
     </footer>
 
     <!-- Back to top -->
@@ -1972,7 +2065,7 @@
         </a>
 
         <div class="auth-title">Welcome back</div>
-        <div class="auth-sub">Log in to your dashboard to pick up where you left off.</div>
+        <div class="auth-sub">Your AI sales assistant has been working. See what's happened since you left.</div>
 
         <div class="form-error" id="login-error">Invalid email or password. Please try again.</div>
 
@@ -2019,7 +2112,7 @@
         </a>
 
         <div class="auth-title">Reset password</div>
-        <div class="auth-sub">Enter your email and we'll send you a reset link. Back in action in seconds.</div>
+        <div class="auth-sub">Enter your email and we'll send you a reset link. You'll be back in your dashboard in seconds.</div>
 
         <div class="form-error" id="reset-error">Something went wrong.</div>
 
@@ -2048,8 +2141,8 @@
           Tell5
         </a>
 
-        <div class="auth-title">Create account</div>
-        <div class="auth-sub">Free forever. No credit card required. Join 12,000+ businesses.</div>
+        <div class="auth-title">Start selling on WhatsApp</div>
+        <div class="auth-sub">Connect your number, get an AI sales assistant, and never miss an order. Free forever — no card needed.</div>
 
         <div class="form-error" id="signup-error">Please fill in all fields correctly.</div>
 

@@ -165,6 +165,16 @@
       </div>
 
       <div class="field">
+        <label>Services offered</label>
+        <textarea id="biz-services" placeholder="What do you offer? e.g. Website design, catering, fashion tailoring…" style="min-height:60px;"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Price range</label>
+        <input type="text" id="biz-price-range" placeholder="e.g. ₦50,000 – ₦200,000 or $50 – $150" />
+      </div>
+
+      <div class="field">
         <label>Public profile</label>
         <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
           <input type="checkbox" id="biz-public" checked style="width:18px;height:18px;accent-color:var(--accent);" />
@@ -216,6 +226,8 @@
           document.getElementById('biz-hours').value = data.hours || '';
           document.getElementById('biz-website').value = data.website || '';
           document.getElementById('biz-desc').value = data.description || '';
+          document.getElementById('biz-services').value = data.services || '';
+          document.getElementById('biz-price-range').value = data.price_range || '';
           document.getElementById('biz-public').checked = data.is_public !== false;
           if (data.logo_url) {
             logoDataUrl = data.logo_url;
@@ -275,6 +287,8 @@
             hours: document.getElementById('biz-hours').value.trim(),
             website: document.getElementById('biz-website').value.trim(),
             description: document.getElementById('biz-desc').value.trim(),
+            services: document.getElementById('biz-services').value.trim(),
+            price_range: document.getElementById('biz-price-range').value.trim(),
             is_public: document.getElementById('biz-public').checked,
             logo_url: logoDataUrl || undefined,
           }),
