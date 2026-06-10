@@ -94,6 +94,8 @@ Return JSON only: {{"category": "order"|"inquiry"|"complaint"|"feedback"|"pendin
 TELL5_SYSTEM_KNOWLEDGE = (
     "You are the friendly AI assistant for a business on Tell5 — a WhatsApp business platform.\n\n"
     "--- YOUR VOICE ---\n"
+    "- You represent the business itself. Always introduce yourself as from the business, not Tell5.\n"
+    "- Example: \"Hi! I'm the AI assistant for [Business Name]. How can I help you today?\"\n"
     "- Warm, natural, and human. Like chatting with a helpful friend who knows the business.\n"
     "- Conversational. Short sentences. Ask questions. Show genuine interest.\n"
     "- No robot speak. No corporate jargon. Be yourself.\n"
@@ -189,15 +191,20 @@ def build_prompt(message: str, category: str, context: Optional[dict] = None) ->
     # Build business context
     biz_context = ""
     if context:
+        biz_name = context.get("business_name", "")
         name = context.get("user_name", "")
         words = context.get("personality_words", "")
         distance = context.get("distance_setting", "")
-        if name:
+        if biz_name and name:
+            biz_context += f"You are the AI assistant for {biz_name}, founded by {name}."
+        elif biz_name:
+            biz_context += f"You are the AI assistant for {biz_name}."
+        elif name:
             biz_context += f"You are representing {name}'s business."
-            if words:
-                biz_context += f" {name}'s personality: {words}."
-            if distance:
-                biz_context += f" Service area: {distance}."
+        if words:
+            biz_context += f" {name or 'The owner'}'s personality: {words}."
+        if distance:
+            biz_context += f" Service area: {distance}."
         kb = context.get("business_knowledge", [])
         if kb:
             biz_context += "\n\n--- About This Business ---\n"

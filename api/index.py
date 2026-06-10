@@ -686,6 +686,16 @@ async def _process_incoming_message(
         except Exception as e:
             logger.warning("Failed to load personality profile: %s", e)
 
+        # Load business_name so the AI knows which business it represents
+        try:
+            from crud import get_business_profile
+            bp = await get_business_profile(db, target_user_id)
+            if bp and bp.business_name:
+                personality_context["business_name"] = bp.business_name
+                logger.info("Loaded business name for user %d: %s", target_user_id, bp.business_name)
+        except Exception as e:
+            logger.warning("Failed to load business name: %s", e)
+
     # Inject Tell5 Q&A knowledge into context for AI awareness
     tell5_qa_context = {}
     try:
