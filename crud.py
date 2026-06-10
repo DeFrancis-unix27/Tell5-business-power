@@ -483,3 +483,40 @@ async def delete_knowledge(db: AsyncSession, entry_id: int, user_id: int) -> boo
     await db.delete(entry)
     await db.flush()
     return True
+
+
+# ── Password Reset ────────────────────────────────────────────────────
+
+async def create_password_reset_token(db: AsyncSession, user_id: int, token: str, expires_at) -> bool:
+    from models import PasswordResetToken
+    t = PasswordResetToken(user_id=user_id, token=token, expires_at=expires_at)
+    db.add(t)
+    await db.flush()
+    return True
+
+
+async def get_password_reset_token(db: AsyncSession, token: str) -> "PasswordResetToken | None":
+    from models import PasswordResetToken
+    from datetime import datetime, timezone
+    q = await db.execute(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token == token,
+            PasswordResetToken.used == False,
+            PasswordResetToken.expires_at > datetime.now(timezone.utc),
+        )
+    )
+    return q.scalar_one_or_none()
+
+
+async def mark_reset_token_used(db: AsyncSession, token_id: int) -> bool:
+    from models import PasswordResetToken
+    from sqlalchemy import update
+    r = await db.execute(update(PasswordResetToken).where(PasswordResetToken.id == token_id).values(used=True))
+    return r.rowcount > 0
+
+
+async def update_user_password(db: AsyncSession, user_id: int, password_hash: str) -> bool:
+    from sqlalchemy import update
+    from models import User
+    r = await db.execute(update(User).where(User.id == user_id).values(password_hash=password_hash))
+    return r.rowcount > 0

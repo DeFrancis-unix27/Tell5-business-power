@@ -1,5 +1,6 @@
 import sentry_sdk
-from datetime import datetime, timezone
+import secrets
+from datetime import datetime, timezone, timedelta
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import Response, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -971,8 +972,45 @@ async def send_reset(request: Request, db: AsyncSession = Depends(get_db)):
     user = await crud.get_user_by_email(db, email)
     if not user:
         return {"ok": True, "message": "If that email exists, a reset link has been sent."}
-    logger.info(f"Password reset requested for {email}")
-    return {"ok": True, "message": "Check your email for a reset link."}
+    token = secrets.token_urlsafe(48)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+    await crud.create_password_reset_token(db, user.id, token, expires_at)
+    await db.commit()
+    reset_url = f"/auth/reset/{token}"
+    logger.info(f"Password reset token generated for {email}: {reset_url}")
+    return {"ok": True, "redirect": reset_url}
+
+
+@app.get("/auth/reset/{token}", response_class=HTMLResponse)
+async def reset_password_page(token: str, db: AsyncSession = Depends(get_db)):
+    record = await crud.get_password_reset_token(db, token)
+    if not record:
+        return HTMLResponse(content=_get_cached_page("templates/reset_password_invalid.html"))
+    return HTMLResponse(
+        content=_get_cached_page("templates/reset_password.html")
+        .replace("{{TOKEN}}", token)
+    )
+
+
+@app.post("/api/auth/reset-password")
+@limiter.limit("3/minute")
+async def reset_password(request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    token = str(data.get("token", "")).strip()
+    password = str(data.get("password", ""))
+    if not token or not password:
+        raise HTTPException(status_code=400, detail="Token and password are required.")
+    if len(password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters.")
+    record = await crud.get_password_reset_token(db, token)
+    if not record:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
+    password_hash = hash_password(password)
+    await crud.update_user_password(db, record.user_id, password_hash)
+    await crud.mark_reset_token_used(db, record.id)
+    await db.commit()
+    logger.info(f"Password reset completed for user_id={record.user_id}")
+    return {"ok": True, "message": "Password reset successfully."}
 
 
 @app.post("/api/user/ai-reply-toggle")
@@ -1284,7 +1322,8 @@ async def _preload_pages():
     for p in ["templates/landingpage.html", "templates/about.html", "templates/contact.html",
               "templates/help.html", "templates/privacy.html", "templates/terms.html",
               "templates/dashboard.html", "templates/connect.html", "templates/admin.html",
-              "templates/discover.html", "templates/business_setup.html"]:
+              "templates/discover.html", "templates/business_setup.html",
+              "templates/reset_password.html", "templates/reset_password_invalid.html"]:
         _get_cached_page(p)
 
 
