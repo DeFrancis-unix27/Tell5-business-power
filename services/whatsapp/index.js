@@ -39,7 +39,7 @@ function clearAuthDir() {
     }
 }
 
-async function forwardToApi(body, retries = 2) {
+async function forwardToApi(body, socketForReply = null, retries = 2) {
     const url = `${API_BASE}/api/baileys/webhook`;
     for (let attempt = 0; attempt <= retries; attempt++) {
         try {
@@ -61,7 +61,11 @@ async function forwardToApi(body, retries = 2) {
             }
             const data = await resp.json();
             if (data.reply && data.to) {
-                await sendMessage(data.to, data.reply);
+                const ok = await sendMessage(data.to, data.reply, socketForReply);
+                if (!ok && attempt < retries) {
+                    await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                    continue;
+                }
             }
             return;
         } catch (err) {
@@ -73,10 +77,11 @@ async function forwardToApi(body, retries = 2) {
     }
 }
 
-async function sendMessage(jid, text) {
-    if (!sock) return false;
+async function sendMessage(jid, text, socketForReply = null) {
+    const s = socketForReply || sock;
+    if (!s) return false;
     try {
-        await sock.sendMessage(jid, { text });
+        await s.sendMessage(jid, { text });
         return true;
     } catch (err) {
         console.error("sendMessage error:", err.message);
@@ -169,7 +174,7 @@ function setupEventHandlers(socket, onConnected) {
             from: sender, body: text, message_id: m.key.id,
             push_name: pushName, profile_pic_url: profilePicUrl,
             to: socket.user?.id || "",
-        });
+        }, socket);
     });
 }
 
