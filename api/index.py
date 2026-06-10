@@ -620,9 +620,10 @@ async def _process_incoming_message(
     # If AI pipeline is disabled for this user, store message without processing
     if not ai_pipeline_enabled:
         category = categorize_message(body) or "pending"
-        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, channel=channel, contact_name=contact_name, profile_pic_url=profile_pic_url)
+        ack = "Thanks for your message. Noted!"
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, channel=channel, ai_response=ack, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
-        return {"reply": "", "category": category, "conv_id": None, "pipeline_success": False, "ai_disabled": True}
+        return {"reply": ack, "category": category, "conv_id": None, "pipeline_success": False, "ai_disabled": True}
 
     # ── Personality: match Q&A first ──
     from services.ai.personality import match_qa, should_block_message, load_qa_cache
@@ -646,13 +647,14 @@ async def _process_incoming_message(
             "personality_mode": personality_match["mode"],
         }
 
-    # Block only clearly non-business chat; everything else goes to AI
+    # Block only clearly non-business chat; acknowledge politely instead of silence
     if should_block_message(body):
         category = categorize_message(body) or "inquiry"
-        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, channel=channel, contact_name=contact_name, profile_pic_url=profile_pic_url)
+        ack = "Got it! Is there anything about the business I can help you with?"
+        await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, channel=channel, ai_response=ack, contact_name=contact_name, profile_pic_url=profile_pic_url)
         await db.commit()
         return {
-            "reply": "",
+            "reply": ack,
             "category": category,
             "conv_id": None,
             "pipeline_success": True,
@@ -718,7 +720,8 @@ async def _process_incoming_message(
     except Exception:
         pass
 
-    from services.ai.pipeline import run_pipeline
+    # ── Pipeline processing with safety net ──
+    from services.ai.pipeline import run_pipeline, PipelineResult
     import uuid
     message_id = str(uuid.uuid4())
     merged_context = {}
@@ -739,11 +742,23 @@ async def _process_incoming_message(
         "goal": "Every customer should feel like they're talking to the founder himself — someone who genuinely cares about their business success.",
         "background": "Developer and entrepreneur. Built Tell5 to solve real problems for African entrepreneurs. Hands-on from architecture to customer support. Mentors other developers. Believes small businesses deserve enterprise tools without enterprise pricing.",
     }
-    pipeline_result = await run_pipeline(
-        body, message_id=message_id, from_number=phone, user_id=target_user_id,
-        context=merged_context if merged_context else None,
-        db=db,
-    )
+
+    pipeline_result = None
+    try:
+        pipeline_result = await run_pipeline(
+            body, message_id=message_id, from_number=phone, user_id=target_user_id,
+            context=merged_context if merged_context else None,
+            db=db,
+        )
+    except Exception as e:
+        logger.error(f"Pipeline crashed: {e}", exc_info=True)
+
+    if pipeline_result is None:
+        pipeline_result = PipelineResult()
+        pipeline_result.reply = None
+        pipeline_result.category = categorize_message(body) or "inquiry"
+        pipeline_result.errors = ["Pipeline crashed"]
+        pipeline_result.success = False
 
     # If AI replies are disabled for this user, clear the auto-generated reply
     if not ai_reply_enabled:
@@ -754,6 +769,9 @@ async def _process_incoming_message(
         ai_reply = pipeline_result.adk_reply
     else:
         ai_reply = pipeline_result.reply
+    # Ensure we always have a fallback reply
+    if not ai_reply:
+        ai_reply = "Thank you for your message. We'll get back to you shortly."
     category = pipeline_result.category or categorize_message(body) or "inquiry"
 
     if pipeline_result.tier_outputs:
@@ -769,7 +787,6 @@ async def _process_incoming_message(
             success=pipeline_result.success,
         )
 
-    ai_result = {"category": category, "reply": ai_reply} if ai_reply else None
     conv = await crud.create_conversation(db, phone=phone, message=body, category=category, user_id=target_user_id, channel=channel, ai_response=ai_reply, contact_name=contact_name, profile_pic_url=profile_pic_url)
 
     reply = ""
@@ -777,13 +794,13 @@ async def _process_incoming_message(
         item, qty = parse_order(body)
         order = await crud.create_order(db, phone=phone, item=item, quantity=qty, user_id=target_user_id)
         await crud.create_notification(db, ntype="new_order", payload=f"order:{order.id}")
-        reply = ai_result["reply"] if ai_result else "We've received your order. We'll confirm shortly."
+        reply = ai_reply
     elif category == "inquiry":
-        reply = ai_result["reply"] if ai_result else "Thanks for reaching out. A team member will respond soon."
+        reply = ai_reply
     elif category == "complaint":
-        reply = ai_result["reply"] if ai_result else "Sorry about that. We've escalated your complaint."
+        reply = ai_reply
     else:
-        reply = ai_result["reply"] if ai_result else "Thanks for your message. We'll get back to you."
+        reply = ai_reply
 
     await db.commit()
     return {"reply": reply, "category": category, "conv_id": conv.id, "pipeline_success": pipeline_result.success}
@@ -906,11 +923,18 @@ async def get_csrf_token(request: Request):
                 "csrf_token": token,
                 "header_name": CSRF_HEADER_NAME,
             }
-    token, _ = create_csrf_token_with_expiry()
-    return {
-        "csrf_token": token,
-        "header_name": CSRF_HEADER_NAME,
-    }
+    token, signed = create_csrf_token_with_expiry()
+    resp = JSONResponse({"csrf_token": token, "header_name": CSRF_HEADER_NAME})
+    resp.set_cookie(
+        key=CSRF_COOKIE_NAME,
+        value=signed,
+        max_age=3600,
+        httponly=True,
+        samesite="lax",
+        secure=cookie_secure(),
+        path="/",
+    )
+    return resp
 
 
 @app.post("/api/auth/signup")
