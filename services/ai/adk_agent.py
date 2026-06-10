@@ -108,6 +108,7 @@ if _adk_available:
             agent=_agent,
             app_name="tell5",
             session_service=session_service,
+            auto_create_session=True,
         )
         logger.info("ADK agent initialized")
 
@@ -116,13 +117,11 @@ if _adk_available:
             return
         try:
             session_service = _runner.session_service
-            try:
-                await session_service.get_session(
-                    app_name="tell5", user_id=user_id, session_id="tell5-session"
-                )
+            session = await session_service.get_session(
+                app_name="tell5", user_id=user_id, session_id="tell5-session"
+            )
+            if session:
                 return
-            except Exception:
-                pass
             await session_service.create_session(
                 app_name="tell5", user_id=user_id, session_id="tell5-session"
             )

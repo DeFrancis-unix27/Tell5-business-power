@@ -313,6 +313,12 @@ async def verify_baileys_webhook(request: Request):
 
 async def verify_cron(request: Request):
     secret = request.headers.get("X-Cron-Secret", "") or request.query_params.get("secret", "")
+    # Also check raw URL to handle + in secrets (query_params decodes + as space)
+    if not secret and Config.CRON_SECRET:
+        import re as _re
+        m = _re.search(r"[?&]secret=([^&]+)", str(request.url))
+        if m:
+            secret = m.group(1)
     if Config.CRON_SECRET and secret != Config.CRON_SECRET:
         raise HTTPException(status_code=403, detail="Invalid cron secret")
     return True

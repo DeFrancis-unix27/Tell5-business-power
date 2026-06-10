@@ -10,9 +10,10 @@ logger = logging.getLogger(__name__)
 
 OPENROUTER_API = "https://openrouter.ai/api/v1/chat/completions"
 FREE_MODELS = [
-    "google/gemini-2.0-flash-exp:free",
-    "mistralai/mistral-small-3.1-24b-instruct:free",
+    "google/gemma-4-31b-it:free",
     "meta-llama/llama-3.3-70b-instruct:free",
+    "qwen/qwen3-coder:free",
+    "openrouter/free",
 ]
 
 

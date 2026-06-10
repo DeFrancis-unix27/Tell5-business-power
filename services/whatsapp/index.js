@@ -22,6 +22,21 @@ let sock = null;
 let lastActive = Date.now();
 let autoReconnect = true;
 
+function clearAuthDir() {
+    try {
+        if (fs.existsSync(AUTH_DIR)) {
+            const files = fs.readdirSync(AUTH_DIR);
+            for (const f of files) {
+                const fp = path.join(AUTH_DIR, f);
+                try { fs.unlinkSync(fp); } catch {}
+            }
+            console.log(`Cleared ${files.length} stale auth file(s)`);
+        }
+    } catch (err) {
+        console.error("clearAuthDir error:", err.message);
+    }
+}
+
 async function forwardToApi(body, retries = 2) {
     const url = `${API_BASE}/api/baileys/webhook`;
     for (let attempt = 0; attempt <= retries; attempt++) {
@@ -67,6 +82,87 @@ async function sendMessage(jid, text) {
     }
 }
 
+function setupEventHandlers(socket, onConnected) {
+    socket.ev.on("connection.update", async (update) => {
+        const { connection, lastDisconnect, qr } = update;
+
+        if (qr) {
+            writeState({ connected: false, qr, message: "QR code ready — use pairing code instead from dashboard." });
+        }
+
+        if (connection === "open") {
+            console.log("WhatsApp connected");
+            autoReconnect = true;
+            lastActive = Date.now();
+            writeState({ connected: true, qr: null, message: "WhatsApp is connected." });
+            try { await socket.sendPresenceUpdate("available"); } catch {}
+            if (onConnected) onConnected();
+        }
+
+        if (connection === "close") {
+            const reason = lastDisconnect?.error?.output?.statusCode;
+            console.log(`Connection closed (reason: ${reason})`);
+
+            // Only null global sock if this socket is still the active one
+            const nullSock = () => { if (sock === socket) sock = null; };
+
+            if (reason === DisconnectReason.loggedOut) {
+                writeState({ connected: false, qr: null, message: "Logged out. Re-pair from dashboard." });
+                nullSock();
+                return;
+            }
+
+            if (reason === 408) {
+                writeState({ connected: false, qr: null, message: "Ready for pairing. Go to Connections page and enter your phone number." });
+                nullSock();
+                return;
+            }
+
+            if (autoReconnect) {
+                console.log("Auto-reconnecting in 5s...");
+                setTimeout(() => startBot(), 5000);
+            } else {
+                nullSock();
+                writeState({ connected: false, qr: null, message: "Disconnected. Reconnect from dashboard." });
+            }
+        }
+    });
+
+    socket.ev.on("messages.upsert", async (msg) => {
+        lastActive = Date.now();
+        const m = msg.messages[0];
+        if (!m.message || m.key.fromMe) return;
+
+        const msgType = Object.keys(m.message).find(k => k.endsWith("Message")) || "unknown";
+        const text = m.message.conversation
+            || m.message.extendedTextMessage?.text
+            || m.message.imageMessage?.caption
+            || m.message.videoMessage?.caption
+            || m.message.documentMessage?.caption
+            || "";
+
+        if (!text.trim()) {
+            if (msgType !== "conversation" && msgType !== "extendedTextMessage") {
+                console.log(`Skipping ${msgType} from ${m.key.remoteJid} (no caption)`);
+            }
+            return;
+        }
+
+        const sender = m.key.remoteJid;
+        const pushName = m.pushName || "";
+        let profilePicUrl = null;
+        try { profilePicUrl = await socket.profilePictureUrl(sender, "image"); } catch {}
+
+        console.log(`Incoming from ${pushName || sender}:`, text.slice(0, 80));
+
+        await forwardToApi({
+            from: sender, body: text, message_id: m.key.id,
+            push_name: pushName, profile_pic_url: profilePicUrl,
+            to: socket.user?.id || "",
+        });
+    });
+}
+
 async function startBot(noReconnect = false) {
     if (sock) {
         try { sock.end(undefined); } catch {}
@@ -95,85 +191,122 @@ async function startBot(noReconnect = false) {
 
     writeState({ connected: false, qr: null, message: "Connecting..." });
 
-    sock.ev.on("connection.update", async (update) => {
-        const { connection, lastDisconnect, qr } = update;
-
-        if (qr) {
-            writeState({ connected: false, qr, message: "QR code ready — use pairing code instead from dashboard." });
-        }
-
-        if (connection === "open") {
-            console.log("WhatsApp connected");
-            autoReconnect = true;
-            lastActive = Date.now();
-            writeState({ connected: true, qr: null, message: "WhatsApp is connected." });
-            try { await sock.sendPresenceUpdate("available"); } catch {}
-        }
-
-        if (connection === "close") {
-            const reason = lastDisconnect?.error?.output?.statusCode;
-            console.log(`Connection closed (reason: ${reason})`);
-
-            if (reason === DisconnectReason.loggedOut) {
-                writeState({ connected: false, qr: null, message: "Logged out. Re-pair from dashboard." });
-                sock = null;
-                return;
-            }
-
-            // 408 = QR refs exhausted / registration timeout
-            // Don't auto-reconnect — wait for pairing code from dashboard
-            if (reason === 408) {
-                writeState({ connected: false, qr: null, message: "Ready for pairing. Go to Connections page and enter your phone number." });
-                sock = null;
-                return;
-            }
-
-            // For other disconnects, auto-reconnect if allowed
-            if (autoReconnect) {
-                console.log("Auto-reconnecting in 5s...");
-                setTimeout(() => startBot(), 5000);
-            } else {
-                sock = null;
-                writeState({ connected: false, qr: null, message: "Disconnected. Reconnect from dashboard." });
-            }
-        }
+    setupEventHandlers(sock, () => {
+        // connected callback
     });
 
     sock.ev.on("creds.update", saveCreds);
+}
 
-    sock.ev.on("messages.upsert", async (msg) => {
-        lastActive = Date.now();
-        const m = msg.messages[0];
-        if (!m.message || m.key.fromMe) return;
+async function requestPairingCode(phone) {
+    if (!phone) throw new Error("Phone number is required");
 
-        const msgType = Object.keys(m.message).find(k => k.endsWith("Message")) || "unknown";
-        const text = m.message.conversation
-            || m.message.extendedTextMessage?.text
-            || m.message.imageMessage?.caption
-            || m.message.videoMessage?.caption
-            || m.message.documentMessage?.caption
-            || "";
+    // Already connected — don't disrupt an active session
+    if (sock?.user) {
+        return "already_connected";
+    }
 
-        if (!text.trim()) {
-            if (msgType !== "conversation" && msgType !== "extendedTextMessage") {
-                console.log(`Skipping ${msgType} from ${m.key.remoteJid} (no caption)`);
-            }
-            return;
+    clearAuthDir();
+
+    if (sock) {
+        try { sock.end(undefined); } catch {}
+        sock = null;
+    }
+    autoReconnect = false;
+
+    writeState({ connected: false, qr: null, message: "Requesting pairing code..." });
+
+    const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
+    const logger = pino({ level: process.env.LOG_LEVEL || "warn" });
+
+    const pairingSock = makeWASocket({
+        auth: state,
+        printQRInTerminal: false,
+        markOnlineOnConnect: true,
+        connectTimeoutMs: 60000,
+        keepAliveIntervalMs: 25000,
+        retryRequestDelayMs: 2000,
+        maxRetryCount: 2,
+        defaultQueryTimeoutMs: 60000,
+        syncFullHistory: false,
+        fireInitQueries: false,
+        browser: ["Chrome (Mac OS)", "Safari", "14.4.1"],
+        generateHighQualityLinkPreview: false,
+        logger,
+    });
+
+    pairingSock.ev.on("creds.update", saveCreds);
+
+    const code = await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+            cleanup();
+            reject(new Error("Timeout waiting for WebSocket connection"));
+        }, 30000);
+
+        let done = false;
+
+        function cleanup() {
+            if (done) return;
+            done = true;
+            clearTimeout(timeout);
+            pairingSock.ev.off("connection.update", handler);
         }
 
-        const sender = m.key.remoteJid;
-        const pushName = m.pushName || "";
-        let profilePicUrl = null;
-        try { profilePicUrl = await sock.profilePictureUrl(sender, "image"); } catch {}
+        const handler = async (update) => {
+            if (done) return;
 
-        console.log(`Incoming from ${pushName || sender}:`, text.slice(0, 80));
+            if (update.connection === "open") {
+                cleanup();
+                resolve("already_connected");
+                return;
+            }
 
-        await forwardToApi({
-            from: sender, body: text, message_id: m.key.id,
-            push_name: pushName, profile_pic_url: profilePicUrl,
-            to: sock.user?.id || "",
-        });
+            if (update.qr) {
+                try {
+                    const pairingCode = await pairingSock.requestPairingCode(phone);
+                    cleanup();
+                    resolve(pairingCode);
+                } catch (err) {
+                    cleanup();
+                    reject(err);
+                }
+                return;
+            }
+
+            if (update.connection === "close") {
+                const reason = update.lastDisconnect?.error?.output?.statusCode;
+                cleanup();
+                const msg = reason === 408
+                    ? "Connection timed out (408). Try again."
+                    : `Connection closed (reason: ${reason || "unknown"}). Try again.`;
+                reject(new Error(msg));
+            }
+        };
+
+        pairingSock.ev.on("connection.update", handler);
     });
+
+    const formatted = String(code).match(/.{1,4}/g)?.join("-") || String(code);
+    writeState({
+        connected: false,
+        qr: null,
+        pairing_code: formatted,
+        message: `Pairing code: ${formatted}`,
+    });
+    console.log(`Pairing code generated for ${phone}: ${formatted}`);
+
+    autoReconnect = true;
+
+    // Remove temp handlers, set up full handlers, and make this the active socket
+    pairingSock.ev.removeAllListeners("connection.update");
+    pairingSock.ev.removeAllListeners("creds.update");
+    pairingSock.ev.removeAllListeners("messages.upsert");
+
+    sock = pairingSock;
+    setupEventHandlers(sock);
+    sock.ev.on("creds.update", saveCreds);
+
+    return formatted;
 }
 
 // ===== HTTP Server =====
@@ -215,36 +348,14 @@ const server = http.createServer(async (req, res) => {
             const phone = String(data.phone || "").replace(/[^0-9]/g, "");
             if (!phone) return sendJson(400, { error: "Phone number is required" });
 
-            // Start fresh socket for pairing — this one won't auto-reconnect on failure
-            writeState({ connected: false, qr: null, message: "Requesting pairing code..." });
-            startBot(true);
-
-            // Wait for socket to be ready, then request pairing code
-            for (let i = 0; i < 30; i++) {
-                await new Promise(r => setTimeout(r, 1000));
-                if (sock?.user) {
-                    // Already connected somehow — shouldn't happen for fresh auth
-                    return sendJson(200, { pairing_code: "already_connected", phone });
-                }
-                if (sock) {
-                    try {
-                        let code = await sock.requestPairingCode(phone);
-                        code = code.match(/.{1,4}/g)?.join("-") || code;
-                        writeState({ connected: false, qr: null, pairing_code: code, message: `Pairing code: ${code}` });
-                        console.log(`Pairing code generated for ${phone}: ${code}`);
-                        // Enable reconnect for the paired socket
-                        autoReconnect = true;
-                        return sendJson(200, { pairing_code: code, phone });
-                    } catch (err) {
-                        if (i < 5) {
-                            // Early failures might be "not ready yet" — keep waiting
-                            continue;
-                        }
-                        return sendJson(500, { error: err.message });
-                    }
-                }
+            try {
+                const code = await requestPairingCode(phone);
+                return sendJson(200, { pairing_code: code, phone });
+            } catch (err) {
+                console.error("Pairing code error:", err.message);
+                writeState({ connected: false, qr: null, message: `Pairing failed: ${err.message}` });
+                return sendJson(500, { error: err.message });
             }
-            return sendJson(500, { error: "Bot failed to initialize for pairing" });
         }
 
         if (req.method === "POST" && pathname === "/send") {
@@ -271,5 +382,8 @@ setInterval(() => {
 
 server.listen(BOT_PORT, "127.0.0.1", () => {
     console.log(`WhatsApp bot listening on 127.0.0.1:${BOT_PORT}`);
-    startBot();
+    startBot().catch(err => {
+        console.error("Initial startBot failed:", err.message);
+        writeState({ connected: false, qr: null, message: "Bot failed to start. Refresh to retry." });
+    });
 });
