@@ -1,161 +1,279 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Discover Businesses - Tell5 AIX Network</title>
-  <meta name="description" content="Discover public businesses and products listed by Tell5 AI agents across the AIX marketplace network." />
-  <meta name="robots" content="index,follow" />
-  <meta name="theme-color" content="#060809" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Discover Businesses - Tell5" />
-  <meta property="og:description" content="Search businesses and product listings powered by Tell5 AI agents." />
-  <meta property="og:image" content="/static/tell5-icon.svg" />
-  <meta name="twitter:card" content="summary" />
-  <link rel="canonical" href="/discover" />
-  <link rel="icon" href="/static/tell5-icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/static/tell5-icon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #060809; --surface: #0c1014; --surface2: #111820;
-      --border: #1a2330; --border2: #243040; --muted: #1e2d3d;
-      --text: #e8f0f8; --sub: #5a7a94; --sub2: #8aa0b4;
-      --accent: #00e5b0; --blue: #3b82f6; --orange: #f97316; --danger: #ef4444;
-      --r: 14px; --r-sm: 8px;
-    }
-    body { background: var(--bg); color: var(--text); font-family: 'Cabinet Grotesk', sans-serif; min-height: 100vh; }
-    .shell { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 32px; margin-bottom: 20px; }
-    h1 { font-size: 1.8rem; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-    .nav-link { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--accent); text-decoration: none; margin-bottom: 20px; display: inline-block; }
-    .nav-link:hover { text-decoration: underline; }
-    .profile-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 12px; cursor: pointer; transition: border-color 0.2s; }
-    .profile-card:hover { border-color: var(--accent); }
-    .profile-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
-    .profile-category { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-    .profile-desc { color: #94a3b8; font-size: 0.85rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .empty { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--sub); padding: 40px 0; text-align: center; }
-    .search-box { width: 100%; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; outline: none; margin-bottom: 16px; }
-    .search-box:focus { border-color: var(--accent); }
-    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    .filter-chip { padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border); background: transparent; color: var(--sub); font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.07em; }
-    .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
-    .filter-chip.active { background: rgba(0,229,176,0.1); border-color: var(--accent); color: var(--accent); }
-    .view-toggles { display: flex; gap: 4px; margin-left: auto; }
-    .view-btn { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--sub); cursor: pointer; font-size: 0.8rem; transition: all 0.15s; }
-    .view-btn.active { background: var(--muted); color: var(--text); border-color: var(--sub); }
-    .view-btn:hover { color: var(--text); }
-    .profiles-grid { display: flex; flex-direction: column; gap: 10px; }
-    .profiles-grid.grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-    .profiles-grid.grid-view .profile-card { margin-bottom: 0; }
-    .skeleton { background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; height: 80px; margin-bottom: 10px; }
-    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    .toolbar-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-    @media (max-width: 640px) { .shell { padding: 20px 12px; } .card { padding: 20px; } h1 { font-size: 1.3rem; } .profiles-grid.grid-view { grid-template-columns: 1fr; } .filter-bar { flex-direction: column; } .view-toggles { margin-left: 0; } }
-    @media (max-width: 400px) { .card { padding: 14px; } .profile-card { padding: 14px; } .toolbar-row { flex-direction: column; align-items: stretch; } }
-  </style>
-</head>
-<body>
-  <div class="shell">
-    <a href="/" class="nav-link">&larr; Back to home</a>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-      <img src="/static/tell5-icon.svg" alt="Tell5" style="width:32px;height:32px;border-radius:7px;" />
-      <h1 style="margin-bottom:0;">Discover Businesses</h1>
-    </div>
-    <input type="text" class="search-box" id="search" placeholder="Search by name or category…" oninput="filterProfiles()" />
-    <div class="toolbar-row">
-      <div class="filter-bar" id="filter-bar">
-        <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">All</button>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060809;--s1:#0b1118;--s2:#0f1820;--s3:#141e28;--s4:#1a2635;
+  --b1:#1c2c3c;--b2:#263545;--b3:#304050;
+  --t1:#eaf2fb;--t2:#9ab4c8;--t3:#4e6a80;--t4:#2d4255;
+  --ac:#00e5b0;--ac2:rgba(0,229,176,0.08);--ac3:rgba(0,229,176,0.15);--ac4:rgba(0,229,176,0.04);
+  --mono:'IBM Plex Mono',monospace;--sans:'Cabinet Grotesk',sans-serif;
+}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+
+.page{max-width:1080px;margin:0 auto;padding:36px 24px 100px}
+
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:52px}
+.back{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--t3);text-decoration:none;letter-spacing:.08em;transition:color .15s}
+.back:hover{color:var(--ac)}
+.back svg{width:12px;height:12px;flex-shrink:0}
+.brand-tag{font-family:var(--mono);font-size:10px;color:var(--t4);letter-spacing:.12em;text-transform:uppercase;padding:5px 12px;border:1px solid var(--b1);border-radius:100px}
+
+.hero{margin-bottom:44px}
+.hero-inner{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.hero-left{display:flex;align-items:center;gap:18px}
+.logo-box{width:52px;height:52px;border-radius:13px;background:var(--s2);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-box img{width:30px;height:30px}
+.hero-text{}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;color:var(--ac);letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px}
+.hero-title{font-size:28px;font-weight:900;color:var(--t1);letter-spacing:-.025em;line-height:1}
+.hero-count{font-family:var(--mono);font-size:11px;color:var(--t3);margin-top:6px;letter-spacing:.04em}
+.hero-count b{color:var(--t2);font-weight:600}
+.live-dot{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--ac);letter-spacing:.08em}
+.live-dot::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--ac);flex-shrink:0}
+
+.search-section{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:16px;align-items:stretch}
+.search-field{position:relative}
+.s-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none;line-height:0}
+.s-icon svg{width:14px;height:14px}
+.s-input{width:100%;height:46px;padding:0 44px 0 42px;background:var(--s1);border:1px solid var(--b1);border-radius:10px;color:var(--t1);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .15s,background .15s}
+.s-input::placeholder{color:var(--t4)}
+.s-input:focus{border-color:var(--ac);background:var(--s2)}
+.s-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;display:none;padding:4px;border-radius:4px;line-height:0}
+.s-clear svg{width:11px;height:11px}
+.s-clear.on{display:block}
+.s-clear:hover{color:var(--t1)}
+.sort-btn{height:46px;padding:0 16px;background:var(--s1);border:1px solid var(--b1);border-radius:10px;color:var(--t2);font-family:var(--mono);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;outline:none;transition:border-color .15s,color .15s}
+.sort-btn:hover{border-color:var(--b2);color:var(--t1)}
+.sort-btn svg{width:12px;height:12px;color:var(--t3)}
+
+.toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:28px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:7px 15px;border-radius:100px;border:1px solid var(--b1);background:transparent;color:var(--t3);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
+.chip:hover{border-color:var(--b2);color:var(--t2)}
+.chip.on{background:var(--ac3);border-color:rgba(0,229,176,.3);color:var(--ac)}
+.right-tools{display:flex;align-items:center;gap:6px}
+.vg{display:flex;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:3px;gap:2px}
+.vb{width:30px;height:28px;border-radius:5px;border:none;background:none;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.vb svg{width:13px;height:13px}
+.vb.on{background:var(--s4);color:var(--t1)}
+.vb:hover:not(.on){color:var(--t2)}
+.meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.meta-txt{font-family:var(--mono);font-size:10px;color:var(--t4);letter-spacing:.04em}
+.meta-txt em{color:var(--t2);font-style:normal;font-weight:600}
+
+.grid{display:flex;flex-direction:column;gap:2px}
+.grid.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px}
+.grid.g3{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px}
+
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:22px 24px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.card:hover{background:var(--s2);border-color:var(--b2)}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac);transform:scaleX(0);transform-origin:left;transition:transform .22s}
+.card:hover::after{transform:scaleX(1)}
+
+.card-row{display:flex;align-items:flex-start;gap:14px}
+.card-ico{width:40px;height:40px;border-radius:10px;background:var(--s3);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--t2);letter-spacing:-.02em}
+.card-body{flex:1;min-width:0}
+.card-name{font-weight:800;font-size:15px;color:var(--t1);letter-spacing:-.015em;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-tag{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
+.cat-tag::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--ac);opacity:.6}
+.card-desc{font-size:13px;color:var(--t3);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--b1)}
+.card-id{font-family:var(--mono);font-size:9px;color:var(--t4);letter-spacing:.06em}
+.card-cta{font-family:var(--mono);font-size:9px;color:var(--ac);opacity:0;display:flex;align-items:center;gap:4px;letter-spacing:.06em;transition:opacity .15s}
+.card-cta svg{width:10px;height:10px}
+.card:hover .card-cta{opacity:1}
+
+.grid.g2 .card-row,.grid.g3 .card-row{flex-direction:column;gap:10px}
+.grid.g2 .card-ico,.grid.g3 .card-ico{width:36px;height:36px;font-size:11px}
+.grid.g3 .card-desc{-webkit-line-clamp:3}
+
+.skel{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:22px 24px;display:flex;gap:14px}
+.sk{border-radius:5px;background:var(--s3);animation:sk 1.8s ease-in-out infinite;background:linear-gradient(90deg,var(--s2) 0%,var(--s3) 50%,var(--s2) 100%);background-size:300% 100%}
+@keyframes sk{0%{background-position:100% 0}100%{background-position:-200% 0}}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;gap:14px;text-align:center}
+.empty-ico{width:52px;height:52px;border-radius:14px;background:var(--s2);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;color:var(--t4)}
+.empty-ico svg{width:22px;height:22px}
+.empty-t{font-weight:700;font-size:15px;color:var(--t2)}
+.empty-s{font-family:var(--mono);font-size:11px;color:var(--t4);line-height:1.7}
+
+@media(max-width:600px){
+  .page{padding:24px 14px 80px}
+  .hero-title{font-size:22px}
+  .search-section{grid-template-columns:1fr}
+  .hero-inner{flex-direction:column;align-items:flex-start}
+  .grid.g2,.grid.g3{grid-template-columns:1fr}
+  .right-tools{margin-left:auto}
+}
+</style>
+
+<div class="page">
+
+  <nav class="nav">
+    <a href="/" class="back">
+      <svg viewBox="0 0 12 12" fill="none"><path d="M7.5 2L3.5 6L7.5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      back to home
+    </a>
+    <span class="brand-tag">AIX Network</span>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="logo-box">
+          <img src="/static/tell5-icon.svg" alt="Tell5" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=\'font-family:IBM Plex Mono,monospace;font-size:14px;font-weight:700;color:#00e5b0\'>T5</span>'" />
+        </div>
+        <div class="hero-text">
+          <div class="hero-eyebrow">Tell5 marketplace</div>
+          <h1 class="hero-title">Discover Businesses</h1>
+          <div class="hero-count" id="hero-count">Loading listings…</div>
+        </div>
       </div>
-      <div class="view-toggles">
-        <button class="view-btn active" onclick="setView('list')" title="List view">☰</button>
-        <button class="view-btn" onclick="setView('grid')" title="Grid view">⊞</button>
-      </div>
-    </div>
-    <div class="skeleton" id="skel-1"></div>
-    <div class="skeleton" id="skel-2"></div>
-    <div class="skeleton" id="skel-3"></div>
-    <div id="profiles-list" class="profiles-grid">
-      <div class="empty">Loading businesses…</div>
+      <span class="live-dot">Live</span>
     </div>
   </div>
-  <script>
-    let profiles = [];
-    let currentFilter = 'all';
-    let currentView = 'list';
 
-    function renderProfiles(list) {
-      const el = document.getElementById('profiles-list');
-      document.querySelectorAll('.skeleton').forEach(s => s.remove());
-      if (!list.length) {
-        el.innerHTML = '<div class="empty">No businesses found yet.</div>';
-        return;
-      }
-      el.innerHTML = list.map(p => `
-        <div class="profile-card" onclick="window.location.href='/business-profile/${p.id}'">
-          <div class="profile-name">${esc(p.business_name) || 'Unnamed'}</div>
-          <div class="profile-category">${esc(p.category) || 'General'}</div>
-          <div class="profile-desc">${esc(p.description) || 'No description'}</div>
+  <div class="search-section">
+    <div class="search-field">
+      <span class="s-icon"><svg viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+      <input class="s-input" id="search" placeholder="Search businesses, categories, descriptions…" autocomplete="off" />
+      <button class="s-clear" id="sclear" aria-label="Clear">
+        <svg viewBox="0 0 12 12" fill="none"><path d="M2 2L10 10M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <button class="sort-btn" id="sort-btn" onclick="cycleSorts()">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M2 4h10M4 7h6M6 10h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <span id="sort-label">Default</span>
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <div class="chips" id="chips">
+      <button class="chip on" data-f="all" onclick="setF('all')">All</button>
+    </div>
+    <div class="right-tools">
+      <div class="vg">
+        <button class="vb on" id="vl" onclick="setV('list')" aria-label="List view" title="List">
+          <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="2" rx="1" fill="currentColor"/><rect x="1" y="6" width="12" height="2" rx="1" fill="currentColor"/><rect x="1" y="10" width="12" height="2" rx="1" fill="currentColor"/></svg>
+        </button>
+        <button class="vb" id="v2" onclick="setV('g2')" aria-label="2-col grid" title="Grid">
+          <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1.5" fill="currentColor"/><rect x="7.5" y="1" width="5.5" height="5.5" rx="1.5" fill="currentColor"/><rect x="1" y="7.5" width="5.5" height="5.5" rx="1.5" fill="currentColor"/><rect x="7.5" y="7.5" width="5.5" height="5.5" rx="1.5" fill="currentColor"/></svg>
+        </button>
+        <button class="vb" id="v3" onclick="setV('g3')" aria-label="3-col grid" title="Dense">
+          <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="3.5" height="3.5" rx="1" fill="currentColor"/><rect x="5.25" y="1" width="3.5" height="3.5" rx="1" fill="currentColor"/><rect x="9.5" y="1" width="3.5" height="3.5" rx="1" fill="currentColor"/><rect x="1" y="5.25" width="3.5" height="3.5" rx="1" fill="currentColor"/><rect x="5.25" y="5.25" width="3.5" height="3.5" rx="1" fill="currentColor"/><rect x="9.5" y="5.25" width="3.5" height="3.5" rx="1" fill="currentColor"/><rect x="1" y="9.5" width="3.5" height="3.5" rx="1" fill="currentColor"/><rect x="5.25" y="9.5" width="3.5" height="3.5" rx="1" fill="currentColor"/><rect x="9.5" y="9.5" width="3.5" height="3.5" rx="1" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <span class="meta-txt" id="meta"></span>
+  </div>
+
+  <div id="list" class="grid"></div>
+</div>
+
+<script>
+let all=[],filt='all',view='list',sortIdx=0;
+const sorts=[{l:'Default',fn:null},{l:'A → Z',fn:(a,b)=>a.business_name.localeCompare(b.business_name)},{l:'Z → A',fn:(a,b)=>b.business_name.localeCompare(a.business_name)},{l:'Category',fn:(a,b)=>(a.category||'').localeCompare(b.category||'')}];
+
+function initials(name){return(name||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+
+function skels(){
+  const el=document.getElementById('list');
+  el.className='grid';
+  el.innerHTML=Array.from({length:5},()=>`
+    <div class="skel">
+      <div class="sk" style="width:40px;height:40px;border-radius:10px;flex-shrink:0"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div class="sk" style="height:14px;width:55%"></div>
+        <div class="sk" style="height:10px;width:30%"></div>
+        <div class="sk" style="height:11px;width:90%"></div>
+        <div class="sk" style="height:11px;width:70%"></div>
+      </div>
+    </div>`).join('');
+}
+
+function render(list){
+  const el=document.getElementById('list');
+  el.className='grid'+(view!=='list'?' '+view:'');
+  document.getElementById('meta').innerHTML=list.length?`Showing <em>${list.length}</em> of <em>${all.length}</em> businesses`:'';
+  if(!list.length){
+    el.innerHTML=`<div class="empty-state">
+      <div class="empty-ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M16 16L20 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+      <p class="empty-t">No results</p>
+      <p class="empty-s">Try a different search term<br>or clear the active filter.</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML=list.map(p=>`
+    <div class="card" onclick="window.location.href='/business-profile/${esc(p.id)}'" tabindex="0" role="link" onkeydown="if(event.key==='Enter')window.location.href='/business-profile/${esc(p.id)}'">
+      <div class="card-row">
+        <div class="card-ico">${initials(p.business_name)}</div>
+        <div class="card-body">
+          <div class="card-name">${esc(p.business_name)||'Unnamed'}</div>
+          <div class="cat-tag">${esc(p.category)||'General'}</div>
+          <div class="card-desc">${esc(p.description)||'No description available.'}</div>
+          <div class="card-foot">
+            <span class="card-id">${esc(p.id)}</span>
+            <span class="card-cta">View profile <svg viewBox="0 0 10 10" fill="none"><path d="M2 8L8 2M8 2H4M8 2V6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
         </div>
-      `).join('');
-    }
+      </div>
+    </div>`).join('');
+}
 
-    function setFilter(cat) {
-      currentFilter = cat;
-      document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === cat));
-      applyFilters();
-    }
+function applyAll(){
+  let list=[...all];
+  if(filt!=='all') list=list.filter(p=>(p.category||'').toLowerCase()===filt);
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  if(q) list=list.filter(p=>[(p.business_name||''),(p.category||''),(p.description||'')].some(s=>s.toLowerCase().includes(q)));
+  const s=sorts[sortIdx];
+  if(s.fn) list.sort(s.fn);
+  render(list);
+}
 
-    function setView(view) {
-      currentView = view;
-      document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.textContent.includes(view === 'grid' ? '⊞' : '☰')));
-      document.getElementById('profiles-list').classList.toggle('grid-view', view === 'grid');
-    }
+function setF(cat){
+  filt=cat;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.f===cat));
+  applyAll();
+}
 
-    function applyFilters() {
-      let list = profiles;
-      if (currentFilter !== 'all') {
-        list = list.filter(p => (p.category || '').toLowerCase() === currentFilter);
-      }
-      const q = document.getElementById('search').value.toLowerCase();
-      if (q) {
-        list = list.filter(p =>
-          (p.business_name && p.business_name.toLowerCase().includes(q)) ||
-          (p.category && p.category.toLowerCase().includes(q))
-        );
-      }
-      renderProfiles(list);
-    }
+function setV(v){
+  view=v;
+  ['list','g2','g3'].forEach(id=>document.getElementById('v'+{list:'l',g2:'2',g3:'3'}[id]).classList.toggle('on',id===v));
+  applyAll();
+}
 
-    function filterProfiles() { applyFilters(); }
+function cycleSorts(){
+  sortIdx=(sortIdx+1)%sorts.length;
+  document.getElementById('sort-label').textContent=sorts[sortIdx].l;
+  applyAll();
+}
 
-    function esc(v) {
-      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-    }
+const si=document.getElementById('search'),sc=document.getElementById('sclear');
+si.addEventListener('input',()=>{sc.classList.toggle('on',si.value.length>0);applyAll()});
+sc.addEventListener('click',()=>{si.value='';sc.classList.remove('on');applyAll();si.focus()});
 
-    fetch('/api/business/discover')
-      .then(r => r.json())
-      .then(data => {
-        profiles = data;
-        const cats = [...new Set(data.map(p => p.category).filter(Boolean))];
-        const bar = document.getElementById('filter-bar');
-        cats.forEach(c => {
-          const btn = document.createElement('button');
-          btn.className = 'filter-chip';
-          btn.dataset.filter = c;
-          btn.textContent = c;
-          btn.onclick = () => setFilter(c);
-          bar.appendChild(btn);
-        });
-        renderProfiles(profiles);
-      })
-      .catch(() => {
-        document.querySelectorAll('.skeleton').forEach(s => s.remove());
-        document.getElementById('profiles-list').innerHTML = '<div class="empty">Could not load businesses.</div>';
-      });
-  </script>
-</body>
-</html>
+function load(data){
+  all=data;
+  document.getElementById('hero-count').innerHTML=`<b>${data.length}</b> businesses listed`;
+  const cats=[...new Set(data.map(p=>p.category).filter(Boolean))];
+  const bar=document.getElementById('chips');
+  cats.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='chip';b.dataset.f=c.toLowerCase();
+    b.textContent=c;b.onclick=()=>setF(c.toLowerCase());
+    bar.appendChild(b);
+  });
+  applyAll();
+}
+
+skels();
+fetch('/api/business/discover')
+  .then(r=>{if(!r.ok)throw new Error('API error');return r.json()})
+  .then(load)
+  .catch(err=>{document.getElementById('list').innerHTML='<div class="empty-state"><div class="empty-ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M16 16L20 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div><p class="empty-t">No businesses yet</p><p class="empty-s">Be the first to list your business!</p></div>';document.getElementById('hero-count').innerHTML='<b>0</b> businesses listed'});
+</script>
