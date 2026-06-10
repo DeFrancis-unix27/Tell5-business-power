@@ -98,13 +98,67 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);-webkit-font-s
 .empty-t{font-weight:700;font-size:15px;color:var(--t2)}
 .empty-s{font-family:var(--mono);font-size:11px;color:var(--t4);line-height:1.7}
 
-@media(max-width:600px){
-  .page{padding:24px 14px 80px}
-  .hero-title{font-size:22px}
-  .search-section{grid-template-columns:1fr}
-  .hero-inner{flex-direction:column;align-items:flex-start}
-  .grid.g2,.grid.g3{grid-template-columns:1fr}
+@media(max-width:1024px){
+  .grid.g3{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+}
+@media(max-width:768px){
+  .page{padding:28px 18px 80px}
+  .hero-title{font-size:24px}
+  .hero{margin-bottom:32px}
+  .nav{margin-bottom:36px}
+  .toolbar{gap:8px;margin-bottom:20px}
+  .chips{gap:5px}
+  .chip{font-size:9px;padding:6px 12px}
+  .grid.g2,.grid.g3{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+  .card{padding:18px 20px}
+  .card-name{font-size:14px}
+  .card-desc{font-size:12px}
   .right-tools{margin-left:auto}
+}
+@media(max-width:600px){
+  .page{padding:20px 12px 80px}
+  .hero-title{font-size:20px}
+  .hero-eyebrow{font-size:9px}
+  .hero-left{gap:12px}
+  .logo-box{width:44px;height:44px}
+  .logo-box img{width:24px;height:24px}
+  .live-dot{font-size:9px}
+  .search-section{grid-template-columns:1fr;gap:8px}
+  .s-input{font-size:11px;height:42px;padding:0 38px 0 36px}
+  .s-icon{left:12px}
+  .s-icon svg{width:12px;height:12px}
+  .sort-btn{height:42px;font-size:10px;padding:0 12px}
+  .sort-btn svg{width:10px;height:10px}
+  .hero-inner{flex-direction:column;align-items:flex-start;gap:14px}
+  .grid.g2,.grid.g3{grid-template-columns:1fr}
+  .card{padding:16px;border-radius:10px}
+  .card-row{flex-direction:row;gap:12px}
+  .card-ico{width:36px;height:36px;font-size:11px;border-radius:8px}
+  .card-desc{font-size:12px}
+  .card-foot{margin-top:10px;padding-top:10px}
+  .card-cta{opacity:1;font-size:8px}
+  .meta-txt{font-size:9px}
+  .vb{width:28px;height:26px}
+  .chips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{font-size:9px;padding:6px 12px;flex-shrink:0}
+}
+@media(max-width:400px){
+  .page{padding:16px 10px 80px}
+  .hero-title{font-size:18px}
+  .nav{margin-bottom:24px}
+  .hero{margin-bottom:24px}
+  .hero-count{font-size:10px}
+  .search-section{gap:6px}
+  .s-input{font-size:10px;height:38px;padding:0 34px 0 32px}
+  .sort-btn{font-size:9px;height:38px;padding:0 10px}
+  .card{padding:14px}
+  .card-row{gap:10px}
+  .card-ico{width:32px;height:32px;font-size:10px}
+  .card-name{font-size:13px}
+  .card-desc{font-size:11px}
+  .grid.g2,.grid.g3{grid-template-columns:1fr;gap:1px}
+  .skel{padding:16px;gap:12px}
 }
 </style>
 

@@ -659,6 +659,17 @@
     @media (max-width: 1100px) {
       .content-grid { grid-template-columns: 1fr; }
       .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .kpi-value { font-size: 1.6rem; }
+      .main { padding: 20px; gap: 14px; }
+      .right-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    }
+
+    @media (max-width: 960px) {
+      .kpi-value { font-size: 1.4rem; }
+      .kpi { padding: 14px 16px; }
+      .main { padding: 18px; gap: 12px; }
+      .right-col { grid-template-columns: 1fr; }
+      .page-title { font-size: 1.15rem; }
     }
 
     @media (max-width: 860px) {
@@ -680,55 +691,121 @@
       .top-btn { font-size: 0.55rem; padding: 5px 8px; }
       .content-grid { grid-template-columns: 1fr; }
       .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-      .kpi-value { font-size: 1.4rem; }
+      .kpi-value { font-size: 1.3rem; }
       .right-col { flex-direction: column; }
       .menu-btn { display: flex !important; }
+      .topbar-greeting { font-size: 0.75rem; }
+      .topbar-center { padding: 0 14px; }
+    }
+
+    @media (max-width: 720px) {
+      .main { padding: 14px; gap: 10px; }
+      .kpi-row { gap: 6px; }
+      .kpi { padding: 12px; }
+      .kpi-value { font-size: 1.15rem; }
+      .kpi-label { font-size: 0.52rem; }
+      .kpi-sub { font-size: 0.5rem; }
+      .kpi-delta { font-size: 0.5rem; }
+      .page-title { font-size: 1rem; }
+      .page-date { font-size: 0.55rem; }
+      .panel-head { padding: 11px 14px; }
+      .panel-title { font-size: 0.62rem; }
+      .conv-item { padding: 10px 14px; }
+      .conv-phone { font-size: 0.68rem; }
+      .conv-msg { font-size: 0.72rem; }
+      .conv-time { font-size: 0.5rem; }
+      .brand-name { font-size: 1.1rem; }
+      .topbar { padding: 0 8px 0 0; }
+      .topbar-center { padding: 0 10px; }
+      .topbar-greeting { font-size: 0.7rem; }
+      .live-pill { font-size: 0.5rem; padding: 3px 6px; }
+      .chat-msgs { max-height: 220px; }
+      .chat-bubble { max-width: 90%; font-size: 0.75rem; }
+      .chat-input-row { flex-direction: column; gap: 6px; }
+      .chat-input-row input { width: 100%; }
+      .orders-list { max-height: 280px; }
+      .topbar-right .top-btn-ghost { font-size: 0.5rem; padding: 4px 7px; }
     }
 
     @media (max-width: 520px) {
-      .main { padding: 12px; }
-      .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-      .kpi { padding: 12px; }
-      .kpi-value { font-size: 1.2rem; }
-      .kpi-label { font-size: 0.5rem; }
-      .page-title { font-size: 1rem; }
+      .main { padding: 10px; gap: 8px; }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 5px; }
+      .kpi { padding: 10px; }
+      .kpi-value { font-size: 1.05rem; }
+      .kpi-label { font-size: 0.48rem; letter-spacing: 0.08em; }
+      .kpi-footer { flex-direction: column; align-items: flex-start; gap: 2px; }
+      .page-title { font-size: 0.9rem; }
       .page-date { display: none; }
       .clock { display: none; }
-      .topbar { padding: 0 8px 0 0; }
-      .topbar-center { padding: 0 8px; }
-      .topbar-greeting { font-size: 0.7rem; }
-      .live-pill { font-size: 0.5rem; padding: 3px 6px; }
-      .top-btn { font-size: 0.5rem; padding: 4px 6px; }
-      .top-btn-ghost { padding: 4px 6px; }
+      .topbar { padding: 0 6px 0 0; }
+      .topbar-center { padding: 0 6px; }
+      .topbar-greeting { font-size: 0.6rem; }
+      .topbar-greeting span { font-size: 0.6rem; }
+      .live-pill { font-size: 0.45rem; padding: 2px 5px; gap: 4px; }
+      .top-btn { font-size: 0.45rem; padding: 3px 5px; }
+      .top-btn-ghost { padding: 3px 5px; }
       #whatsapp-btn { display: none; }
-      .conv-item { padding: 8px 10px; grid-template-columns: 28px 1fr; }
-      .conv-avatar { width: 28px; height: 28px; font-size: 0.55rem; }
-      .conv-phone { font-size: 0.65rem; }
-      .conv-msg { font-size: 0.7rem; }
-      .cat-tag { font-size: 0.5rem; padding: 2px 5px; }
-      .panel-head { padding: 10px 12px; }
-      .panel-title { font-size: 0.6rem; }
+      .conv-item { padding: 8px 10px; grid-template-columns: 28px 1fr; gap: 8px; }
+      .conv-avatar { width: 28px; height: 28px; font-size: 0.5rem; }
+      .conv-phone { font-size: 0.62rem; }
+      .conv-msg { font-size: 0.65rem; }
+      .cat-tag { font-size: 0.45rem; padding: 2px 5px; }
+      .panel-head { padding: 9px 10px; }
+      .panel-title { font-size: 0.55rem; letter-spacing: 0.08em; }
+      .panel-pip { width: 4px; height: 4px; }
+      .panel-badge { font-size: 0.5rem; padding: 1px 6px; }
+      .panel-action { font-size: 0.5rem; }
       .chat-input-row { flex-direction: column; }
-      .chat-input-row input { width: 100%; }
-      .chat-msgs { max-height: 200px; }
-      .modal { padding: 20px; width: 95%; }
+      .chat-input-row input { width: 100%; font-size: 0.75rem; padding: 8px 12px; }
+      .chat-input-row button { font-size: 0.7rem; padding: 8px 14px; width: 100%; }
+      .chat-msgs { max-height: 180px; padding: 8px 10px; }
+      .chat-bubble { max-width: 92%; padding: 8px 10px; font-size: 0.7rem; }
+      .modal { padding: 16px; width: 96%; }
       .topbar-right .top-btn-ghost:not(#whatsapp-btn) { display: none; }
       .sidebar { width: 220px; left: -220px; }
-      .sidebar-item { padding: 7px 14px; font-size: 0.75rem; }
+      .sidebar-item { padding: 7px 14px; font-size: 0.72rem; }
+      .sidebar-section { font-size: 0.5rem; padding: 12px 14px 4px; }
+      .s-badge { font-size: 0.45rem; padding: 1px 5px; }
+      .sidebar-footer { padding: 12px 14px; }
+      .user-name { font-size: 0.7rem; }
+      .user-plan { font-size: 0.48rem; }
+      .user-avatar { width: 26px; height: 26px; font-size: 0.55rem; }
+      .conv-list { max-height: 350px; }
+      .orders-list { max-height: 200px; }
     }
 
-    @media (max-width: 380px) {
-      .main { padding: 8px; }
+    @media (max-width: 400px) {
+      .main { padding: 8px; gap: 6px; }
       .kpi-row { grid-template-columns: 1fr 1fr; gap: 4px; }
-      .kpi { padding: 10px 8px; }
-      .kpi-value { font-size: 1rem; }
-      .topbar-brand { padding: 0 8px; }
-      .brand-name { font-size: 1rem; }
-      .topbar-greeting { font-size: 0.6rem; }
+      .kpi { padding: 8px; border-radius: var(--r-sm); }
+      .kpi-value { font-size: 0.9rem; letter-spacing: -0.03em; }
+      .kpi-label { font-size: 0.42rem; letter-spacing: 0.06em; }
+      .kpi-sub { font-size: 0.45rem; }
+      .kpi-delta { font-size: 0.45rem; padding: 1px 4px; }
+      .topbar-brand { padding: 0 6px; }
+      .brand-name { font-size: 0.9rem; }
+      .topbar-greeting { font-size: 0.55rem; }
+      .topbar-center { padding: 0 4px; }
+      .topbar-right { gap: 2px; }
+      .live-pill { gap: 3px; }
       .live-pill span:not(.live-dot) { display: none; }
-      .live-pill { width: 20px; padding: 4px; justify-content: center; }
-      .conv-list { max-height: 300px; }
-      .orders-list { max-height: 200px; }
+      .live-pill { width: 18px; padding: 3px; justify-content: center; }
+      .live-dot { width: 4px; height: 4px; }
+      .menu-btn { width: 28px; height: 28px; font-size: 0.85rem; }
+      .page-title { font-size: 0.82rem; }
+      .conv-item { padding: 6px 8px; grid-template-columns: 24px 1fr; gap: 6px; }
+      .conv-avatar { width: 24px; height: 24px; font-size: 0.45rem; }
+      .conv-phone { font-size: 0.58rem; }
+      .conv-msg { font-size: 0.6rem; }
+      .conv-time { font-size: 0.45rem; }
+      .panel-head { padding: 8px 8px; }
+      .panel-title { font-size: 0.5rem; }
+      .chat-msgs { max-height: 150px; gap: 6px; }
+      .chat-bubble { padding: 6px 8px; }
+      .conv-list { max-height: 250px; }
+      .orders-list { max-height: 150px; }
+      .sidebar { width: 200px; left: -200px; }
+      .kpi:hover { transform: none; }
     }
 
     .menu-btn {

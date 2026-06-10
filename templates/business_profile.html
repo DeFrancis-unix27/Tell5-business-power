@@ -514,24 +514,119 @@
   /* ═══════════════════════════════════════
      RESPONSIVE
   ═══════════════════════════════════════ */
-  @media (max-width: 640px) {
-    .hero-identity  { flex-direction: column; gap: 14px; }
-    .biz-logo-wrap  { width: 56px; height: 56px; }
-    .trust-bar      { grid-template-columns: 1fr; }
-    .trust-item     { border-right: none; border-bottom: 1px solid var(--border); }
-    .trust-item:last-child { border-bottom: none; }
-    .products-grid  { grid-template-columns: 1fr; }
-    .cta-row        { flex-direction: column; }
-    .btn            { width: 100%; justify-content: center; }
-    .hero-body      { padding: 20px 18px 18px; }
-    .section-head   { padding: 13px 18px; }
-    .product-card   { padding: 16px 18px; }
-    .hours-row      { padding: 10px 18px; }
+  /* Tablet */
+  @media (max-width: 900px) {
+    .products-grid  { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    .trust-bar      { grid-template-columns: repeat(3, 1fr); }
+    .shell          { padding: 28px clamp(14px, 3vw, 24px) 60px; }
   }
 
+  @media (max-width: 768px) {
+    .shell          { padding: 24px 18px 60px; gap: 14px; }
+    .hero-body      { padding: 22px 22px 20px; }
+    .biz-name       { font-size: clamp(1.2rem, 4vw, 1.5rem); }
+    .biz-desc       { font-size: 0.82rem; }
+    .trust-bar      { grid-template-columns: repeat(2, 1fr); }
+    .trust-item:nth-child(2) { border-right: none; }
+    .trust-item:nth-child(3) { grid-column: 1 / -1; border-bottom: none; }
+    .products-grid  { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    .product-card   { padding: 16px; }
+    .product-name   { font-size: 0.82rem; }
+    .section-head   { padding: 14px 18px; }
+    .hours-row      { padding: 10px 18px; }
+    .biz-badge      { font-size: 0.5rem; padding: 2px 8px; }
+    .meta-pill      { font-size: 0.55rem; padding: 4px 9px; }
+    .btn            { font-size: 0.8rem; padding: 11px 16px; }
+  }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    .shell          { padding: 18px 14px 50px; gap: 12px; }
+    .hero-identity  { flex-direction: column; gap: 12px; }
+    .biz-logo-wrap  { width: 50px; height: 50px; font-size: 1.3rem; }
+    .hero-body      { padding: 18px 16px 16px; }
+    .biz-name       { font-size: clamp(1.1rem, 5vw, 1.35rem); }
+    .biz-desc       { font-size: 0.78rem; margin-bottom: 18px; }
+    .meta-pills     { gap: 6px; margin-bottom: 14px; }
+    .meta-pill      { font-size: 0.5rem; padding: 4px 8px; gap: 4px; }
+    .meta-pill svg  { width: 8px; height: 8px; }
+    .trust-bar      { grid-template-columns: 1fr; }
+    .trust-item     { border-right: none; border-bottom: 1px solid var(--border); padding: 12px 16px; }
+    .trust-item:last-child { border-bottom: none; }
+    .trust-val      { font-size: 0.76rem; }
+    .trust-lbl      { font-size: 0.48rem; }
+    .trust-icon     { width: 24px; height: 24px; }
+    .trust-icon svg { width: 11px; height: 11px; }
+    .products-grid  { grid-template-columns: 1fr; }
+    .product-card   { padding: 14px 16px; }
+    .product-name   { font-size: 0.8rem; }
+    .product-desc   { font-size: 0.72rem; }
+    .product-price  { font-size: 0.76rem; }
+    .product-wa-btn { font-size: 0.5rem; padding: 4px 8px; }
+    .product-wa-btn svg { width: 8px; height: 8px; }
+    .product-img    { aspect-ratio: 16/9; }
+    .cta-row        { flex-direction: column; }
+    .btn            { width: 100%; justify-content: center; padding: 12px 16px; font-size: 0.82rem; }
+    .section-head   { padding: 12px 16px; }
+    .sec-title      { font-size: 0.62rem; }
+    .sec-count      { font-size: 0.5rem; padding: 1px 6px; }
+    .empty-state    { padding: 32px 18px; }
+    .es-icon        { font-size: 1.3rem; }
+    .es-text        { font-size: 0.6rem; }
+    .hours-row      { padding: 9px 16px; font-size: 0.74rem; }
+    .day-name       { width: 75px; font-size: 0.72rem; }
+    .day-hours      { font-size: 0.66rem; }
+    .powered-footer { font-size: 0.55rem; padding: 16px; gap: 6px; }
+  }
+
+  /* Small phone */
   @media (max-width: 400px) {
-    .meta-pills { gap: 6px; }
-    .meta-pill  { font-size: 0.55rem; padding: 4px 8px; }
+    .shell          { padding: 14px 10px 40px; gap: 10px; }
+    .hero-body      { padding: 14px 12px 14px; }
+    .biz-logo-wrap  { width: 42px; height: 42px; font-size: 1.1rem; }
+    .biz-name       { font-size: 1.1rem; }
+    .biz-desc       { font-size: 0.72rem; }
+    .meta-pills     { gap: 4px; }
+    .meta-pill      { font-size: 0.45rem; padding: 3px 7px; }
+    .trust-item     { padding: 10px 14px; }
+    .trust-val      { font-size: 0.7rem; }
+    .product-card   { padding: 12px 14px; }
+    .product-name   { font-size: 0.76rem; }
+    .product-desc   { font-size: 0.68rem; }
+    .product-footer { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .btn            { font-size: 0.75rem; padding: 10px 14px; }
+    .section-head   { padding: 10px 14px; }
+    .hours-row      { padding: 8px 14px; font-size: 0.68rem; }
+    .day-name       { width: 65px; font-size: 0.65rem; }
+    .day-hours      { font-size: 0.6rem; }
+    .biz-badge      { font-size: 0.45rem; padding: 2px 7px; gap: 4px; }
+    .biz-badge-dot  { width: 3px; height: 3px; }
+  }
+
+  /* Landscape phones */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .shell          { padding: 14px 16px 40px; }
+    .hero-card::before { height: 2px; }
+    .hero-body      { padding: 14px 16px 12px; }
+    .hero-identity  { flex-direction: row; gap: 12px; }
+    .biz-logo-wrap  { width: 40px; height: 40px; font-size: 1rem; }
+    .biz-name       { font-size: 1.1rem; }
+    .biz-desc       { font-size: 0.72rem; margin-bottom: 12px; }
+    .biz-desc       { max-width: 100%; }
+    .meta-pills     { margin-bottom: 10px; }
+    .trust-item     { padding: 8px 14px; }
+    .products-grid  { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  }
+
+  /* Large screens */
+  @media (min-width: 1200px) {
+    .shell          { max-width: 960px; padding: 44px clamp(24px, 5vw, 48px) 100px; }
+    .hero-body      { padding: 36px 36px 28px; }
+    .biz-logo-wrap  { width: 80px; height: 80px; font-size: 1.8rem; }
+    .biz-name       { font-size: 2.2rem; }
+    .biz-desc       { font-size: 0.95rem; max-width: 680px; }
+    .products-grid  { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .product-card   { padding: 24px; }
   }
   </style>
 </head>
