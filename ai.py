@@ -3,10 +3,25 @@ import json
 import logging
 import os
 from typing import Any, Optional
-from google import genai
-from google.genai import types
 
 logger = logging.getLogger(__name__)
+
+_genai = None
+_types = None
+
+def _get_genai():
+    global _genai
+    if _genai is None:
+        from google import genai as _g
+        _genai = _g
+    return _genai
+
+def _get_types():
+    global _types
+    if _types is None:
+        from google.genai import types as _t
+        _types = _t
+    return _types
 
 # ==================================================================================================
 # Configuration
@@ -32,8 +47,8 @@ def ai_configured() -> bool:
     return bool(os.getenv("GEMINI_API_KEY"))
 
 
-def get_client() -> genai.Client:
-    return genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+def get_client():
+    return _get_genai().Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 
@@ -71,7 +86,7 @@ Return JSON only: {{"category": "order"|"inquiry"|"complaint"|"feedback"|"pendin
         response = client.models.generate_content(
             model=GEMINI_MODEL,
             contents=prompt,
-            config=types.GenerateContentConfig(
+            config=_get_types().GenerateContentConfig(
                 temperature=0.1,
                 max_output_tokens=50,
                 response_mime_type="application/json",
@@ -246,13 +261,13 @@ def _generate_content(prompt: str, model: Optional[str] = None, api_key: Optiona
         return None
 
     model_name = model or GEMINI_MODEL
-    client = genai.Client(api_key=key)
+    client = _get_genai().Client(api_key=key)
 
     try:
         response = client.models.generate_content(
             model=model_name,
             contents=prompt,
-            config=types.GenerateContentConfig(
+            config=_get_types().GenerateContentConfig(
                 temperature=0.7,
                 max_output_tokens=300,
                 response_mime_type="application/json",
@@ -297,7 +312,7 @@ def confidence_check(data:dict[str, Any]) -> str | None :
     response = client.models.generate_content(
         model=GEMINI_MODEL,
         contents=prompt,
-        config=types.GenerateContentConfig(
+        config=_get_types().GenerateContentConfig(
             temperature=0.2,
             max_output_tokens=220,
             response_mime_type="text/plain",
