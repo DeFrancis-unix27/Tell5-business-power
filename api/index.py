@@ -367,6 +367,10 @@ async def startup():
         await conn.execute(text("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS hours VARCHAR(200)"))
         await conn.execute(text("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS website VARCHAR(255)"))
         await conn.execute(text("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS logo_url TEXT"))
+        await conn.execute(text("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT FALSE"))
+        await conn.execute(text("UPDATE business_profiles SET is_public = TRUE WHERE is_public IS NULL"))
+        await conn.execute(text("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS services TEXT"))
+        await conn.execute(text("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS price_range VARCHAR(200)"))
         await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS contact_name VARCHAR(100)"))
         await conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS profile_pic_url TEXT"))
         await conn.execute(text("""
