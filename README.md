@@ -4,58 +4,170 @@
 
 ---
 
-## Inspiration
+Small businesses using WhatsApp struggle to manage customers efficiently. Orders, complaints, inquiries, and feedback all mix together in one inbox. Customers get ignored. Sales get lost. Business owners burn out trying to reply 24/7.
 
-Small business owners in Africa are accessible 24/7 through WhatsApp — their customers message them directly. But the business owner can't reply at 2 AM, or while driving, or when serving another customer face-to-face. Messages pile up. Sales slip away. Some hire receptionists, which costs money and still doesn't solve overnight coverage.
+Tell5 fixes this. It connects to your WhatsApp number, learns your business, and answers every customer automatically — like a salesperson who knows your prices, your policies, and never sleeps.
 
-We built Tell5 so every small business can have an AI sales assistant that lives on their WhatsApp — answering questions, recommending products, taking orders, and never sleeping. The customer texts like they're talking to a real person. The business owner wakes up to orders already captured and customers already served.
+---
 
-## What it does
+## How It Works
 
-Tell5 connects to any WhatsApp number via QR code or phone pairing code — no Twilio, no sandbox, no third-party number. Once connected, the business owner sets up a profile (business name, services, prices, hours, policies) and optionally adds knowledge base entries (product details, FAQ, pricing rules).
+**1. Connect your WhatsApp** — QR code or phone pairing. No Twilio, no sandbox, no third-party number. Your existing WhatsApp works.
 
-When a customer messages the business on WhatsApp, Tell5's AI pipeline processes the message through multiple AI providers (Gemini primary, with automatic fallback to Groq, OpenRouter, and Mistral). The AI knows exactly which business it represents — it introduces itself naturally, answers questions about services and pricing, recommends products, and takes orders. Every conversation is logged on a real-time dashboard where the owner can read, manage knowledge, and control the bot.
+**2. Tell the AI about your business** — Name, services, prices, hours, policies. The AI introduces itself as from YOUR business, never as Tell5.
 
-The dashboard also includes an AI chat sandbox for testing replies, a business profile editor, product management, conversation stats, and an admin panel showing AI provider health and pipeline logs.
+**3. It starts selling** — Customers message your number. The AI answers questions, recommends products, gives estimates, takes orders. All in natural WhatsApp conversation.
 
-## How we built it
+**4. You stay in control** — Every conversation logged. Add knowledge from your dashboard. Turn AI on/off. Watch everything in real time.
 
-- **WhatsApp connection**: Node.js bot using `@whiskeysockets/baileys` v7 (ESM) — handles QR code registration, phone pairing, auto-reconnection on disconnect, and stale session cleanup.
-- **Web server**: FastAPI (Python) with async SQLAlchemy + asyncpg for PostgreSQL — handles all API routes, authentication, template rendering, and AI orchestration.
-- **AI pipeline**: Multi-tier architecture with circuit breaker. Tier 1 is Google Gemini (temperature 0.7, max 300 tokens). If Gemini fails, fallback to Groq (Llama 3), then OpenRouter, then Mistral as orchestrator. Each provider has its own client wrapper with retry logic and cooldown.
-- **Frontend**: Vanilla JavaScript with Tailwind CSS — no framework. All pages are server-rendered Jinja2 templates. Dashboard has live conversation log, AI chat sandbox, bot status, and knowledge base CRUD.
-- **Deployment**: Single Render Web Service using a Dockerfile that installs both Python deps and Node.js, then `start.sh` supervises both processes.
-- **Auth**: Session-based with secure cookies, CSRF protection for form endpoints, and Google OAuth option.
+---
 
-## Challenges we ran into
+## Features
 
-- **Baileys ESM on Node 20**: `@whiskeysockets/baileys` v7 is pure ESM, which crashes `require()`. We had to use dynamic `import()` throughout the bot, and handle the async initialization carefully before setting up event handlers.
-- **Pairing code vs QR race conditions**: `requestPairingCode()` sets `creds.me` internally, which causes Baileys' `validateConnection()` to call `generateLoginNode()` instead of `generateRegistrationNode()` on reconnection. This meant every 408 timeout during pairing required full auth directory cleanup and fresh pairing request — not just a reconnect.
-- **WhatsApp WebSocket reliability**: The connection drops frequently on Render containers (ephemeral network). The bot's `sendMessage` function would hold a stale socket reference while the API had already processed the message. This caused duplicate conversations (from retries re-calling the webhook) and messages that were processed but never delivered.
-- **CSRF protection blocking JSON APIs**: The CSRF middleware was designed for form submissions but was also blocking JSON API fetch calls from the dashboard. We had to exempt `application/json` requests since they can't be forged by browser forms.
-- **Google GenAI import hanging**: The Gemini client library (`google-genai`) hangs on import when not installed or misconfigured. Since `ai.py` was imported at module level by the pipeline, every request to the AI pipeline would hang. Fixed with lazy imports inside function bodies.
+- **WhatsApp Bot** — Connect via QR or pairing code. Auto-reconnects on disconnect. Your existing number.
+- **AI Sales Assistant** — Multi-tier AI (Gemini → Groq → OpenRouter → Mistral) with automatic fallback. Knows your business name, owner, services, price range, and policies. Never pitches Tell5 unless asked.
+- **Business Profile** — Name, description, category, services, pricing, hours, logo, products. The AI reads it before every reply.
+- **Knowledge Base** — Add facts, policies, product details. The AI uses them naturally. Update anytime from the dashboard.
+- **Dashboard** — Live conversation log, AI chat sandbox, bot controls, conversation stats, knowledge & template management.
+- **Conversation Log** — Every message and AI reply stored with customer name and profile. See who's asking what.
+- **Order Tracking** — Parse orders from messages. Track status. Get notified on new orders.
+- **Discover Page** — Customers browse public business profiles. Search, filter by category.
+- **Admin Panel** — AI provider health, circuit breaker status, pipeline logs, recent contacts, system health checks.
+- **Forgot Password** — Self-service reset, no email service required.
+- **Google OAuth** — Sign in with Google.
+- **Multi-tier Reliability** — If Gemini fails, Groq takes over. If Groq fails, OpenRouter. Circuit breaker prevents cascading failures.
 
-## Accomplishments that we're proud of
+---
 
-- A WhatsApp bot that reliably stays connected for days, survives disconnects, and re-pairs automatically when the connection drops with 408 timeout during pairing.
-- A multi-tier AI pipeline with circuit breakers — if Gemini goes down, Groq picks up. If Groq fails, OpenRouter takes over. The business keeps running.
-- An AI that knows each business personally — introduces itself by the business name, mentions the owner, talks about their specific services and prices. It never pitches Tell5 unless asked.
-- End-to-end WhatsApp messaging working through a single Render container — no external services beyond PostgreSQL and AI APIs.
-- Forgot password flow that works without email — useful in markets where email is less common than phone.
+## Tech Stack
 
-## What we learned
+| Layer | Technology |
+|-------|-----------|
+| WhatsApp | Baileys v7 (Node.js, ESM) — QR + pairing code |
+| Web Server | FastAPI (Python) + Uvicorn |
+| Database | PostgreSQL + asyncpg + SQLAlchemy 2.0 |
+| AI (Tier 1) | Google Gemini |
+| AI (Tier 2) | Groq (Llama 3) |
+| AI (Tier 3) | OpenRouter (Gemini fallback) |
+| AI (Tier 4) | Mistral Large (orchestrator) |
+| Agents | Google ADK |
+| Auth | Session cookies + Google OAuth |
+| Frontend | Vanilla JS, Tailwind CSS, Chart.js |
+| Process Mgmt | start.sh — Node.js + Python in one container |
+| Hosting | Render (single service, Dockerfile) |
+| Discovery | Google Cloud Discovery Engine (optional) |
 
-- Baileys internals are undocumented and break in surprising ways. `requestPairingCode()` modifies auth state that persists across reconnections. Debugging required reading the library source code.
-- WebSocket-based WhatsApp connections on cloud containers are inherently unstable. The bot must be designed for frequent disconnection and reconnection — every message path needs to handle stale socket references.
-- Multi-tier AI providers require careful circuit breaker design. A single failing provider should never cascade into total system failure. Each tier needs its own timeout, retry count, and cooldown.
-- Server-side template rendering with vanilla JS is faster to develop than React/Vue for a project of this scope. No build step, no npm in the frontend, no hydration issues.
+---
 
-## What's next for Tell5
+## Quick Start
 
-- **Persistent message queue**: Store failed-to-send messages and retry via background scheduler instead of relying on synchronous retries.
-- **Multiple WhatsApp numbers per account**: Let one dashboard manage multiple business profiles, each with its own WhatsApp bot instance.
-- **Analytics dashboard**: Customer response rates, popular products, peak messaging hours, conversion tracking.
-- **Multilingual replies**: Detect customer language and reply in the same language.
-- **Voice message transcription**: Convert voice notes to text so the AI can respond to voice messages too.
-- **WhatsApp Business API integration**: For businesses that qualify, offer the official Business API as an alternative to Baileys.
-- **Inventory management**: Track stock levels and let the AI inform customers when items are out of stock.
+```bash
+# Install
+pip install -r requirements.txt
+cd services/whatsapp && npm install && cd ../..
+
+# Configure
+cp .env.example .env
+# Edit .env — set DATABASE_URL, SESSION_SECRET, GEMINI_API_KEY
+
+# Run (two terminals)
+uvicorn api.index:app --reload --host 0.0.0.0 --port 8000
+node services/whatsapp/index.js
+```
+
+Open `http://localhost:8000` → sign up → set up business → connect WhatsApp.
+
+---
+
+## API Endpoints
+
+### Auth
+| POST | `/api/auth/signup` | Create account |
+| POST | `/api/auth/login` | Login |
+| POST | `/api/auth/logout` | Logout |
+| GET | `/api/auth/me` | Current user |
+| POST | `/api/auth/send-reset` | Generate reset token |
+| POST | `/api/auth/reset-password` | Reset password |
+
+### WhatsApp Bot
+| GET | `/api/baileys/status` | Bot connection status |
+| POST | `/api/baileys/webhook` | Bot message webhook |
+| POST | `/api/whatsapp/restart` | Restart bot |
+
+### Business
+| GET/POST | `/api/business/profile` | Get/update business profile |
+| GET/POST/DELETE | `/api/business/products` | Product CRUD |
+| GET | `/api/business/discover` | List public profiles |
+
+### AI & Knowledge
+| POST | `/api/chat/send` | Dashboard AI chat |
+| GET/POST/DELETE | `/api/knowledge` | Knowledge base CRUD |
+| GET/POST/DELETE | `/api/reply-templates` | Reply template CRUD |
+
+### Admin
+| GET | `/api/admin/summary` | Full admin summary |
+| GET | `/api/pipeline/circuit-breaker` | Circuit breaker states |
+| POST | `/api/discovery/sync` | Sync to Discovery Engine |
+
+---
+
+## Deployment (Render)
+
+Single Web Service using `Dockerfile.render`:
+
+1. Push to GitHub
+2. Create Render Web Service → connect repo
+3. Set env vars in Render dashboard
+4. Deploy — `start.sh` runs both Node bot and Python server
+
+The bot accesses the API at `http://localhost:8000` inside the container.
+
+---
+
+## Project Structure
+
+```
+Tell5/
+├── api/index.py              # FastAPI routes
+├── ai.py                     # Gemini client + prompt builder
+├── models.py                 # 12 SQLAlchemy models
+├── crud.py                   # Database operations
+├── auth.py / csrf.py         # Auth + CSRF
+├── config.py                 # Env var config
+├── start.sh                  # Boots Node + Python
+├── Dockerfile.render         # Production image
+├── services/
+│   ├── whatsapp/index.js     # WhatsApp bot (Baileys)
+│   └── ai/                   # Multi-tier AI pipeline
+│       ├── pipeline.py       # Orchestrator
+│       ├── personality.py    # Q&A matching + blocking
+│       ├── groq_client.py
+│       ├── openrouter_client.py
+│       ├── mistral_client.py
+│       ├── circuit_breaker.py
+│       ├── adk_agent.py
+│       └── discovery_engine.py
+├── templates/                # 10 HTML pages
+└── requirements.txt
+```
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `SESSION_SECRET` | Yes | Random secret for cookies |
+| `GEMINI_API_KEY` | Recommended | Google Gemini |
+| `GROQ_API_KEY` | No | Groq fallback |
+| `OPENROUTER_API_KEY` | No | OpenRouter fallback |
+| `MISTRAL_API_KEY` | No | Mistral fallback |
+| `ADMIN_EMAIL` | No | Auto-assign admin |
+| `COOKIE_SECURE` | No | `True` on HTTPS (Render) |
+
+---
+
+## LICENSE
+
+MIT
