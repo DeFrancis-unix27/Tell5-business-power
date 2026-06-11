@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timezone, timedelta
-from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi import FastAPI, Request, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import Response, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -29,6 +29,7 @@ from csrf import (
     CSRF_COOKIE_NAME,
     CSRF_HEADER_NAME,
 )
+import asyncio
 import re
 import logging
 import base64
@@ -131,6 +132,71 @@ async def healthz():
     return {"ok": True}
 
 
+# ==================================================================================================
+# WebSocket Keepalive Manager
+# ==================================================================================================
+
+class ConnectionManager:
+    """Manages WebSocket connections with heartbeat keepalive."""
+
+    def __init__(self):
+        self._connections: dict[str, WebSocket] = {}
+        self._tasks: dict[str, asyncio.Task] = {}
+
+    async def connect(self, client_id: str, ws: WebSocket) -> None:
+        await ws.accept()
+        self._connections[client_id] = ws
+        self._tasks[client_id] = asyncio.create_task(self._keepalive(client_id, ws))
+
+    async def disconnect(self, client_id: str) -> None:
+        self._connections.pop(client_id, None)
+        task = self._tasks.pop(client_id, None)
+        if task and not task.done():
+            task.cancel()
+
+    async def _keepalive(self, client_id: str, ws: WebSocket) -> None:
+        """Send keepalive pings every 25s to prevent Render's 50s timeout."""
+        try:
+            while True:
+                await asyncio.sleep(25)
+                try:
+                    await ws.send_json({"type": "ping"})
+                except Exception:
+                    break
+        except asyncio.CancelledError:
+            pass
+        finally:
+            await self.disconnect(client_id)
+
+    async def handle_message(self, client_id: str, ws: WebSocket, data: str) -> None:
+        """Process incoming WebSocket messages — respond to pings."""
+        try:
+            msg = json.loads(data)
+        except (json.JSONDecodeError, TypeError):
+            return
+        if msg.get("type") == "ping":
+            try:
+                await ws.send_json({"type": "pong"})
+            except Exception:
+                await self.disconnect(client_id)
+
+
+ws_manager = ConnectionManager()
+
+
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(ws: WebSocket, client_id: str):
+    await ws_manager.connect(client_id, ws)
+    try:
+        while True:
+            data = await ws.receive_text()
+            await ws_manager.handle_message(client_id, ws, data)
+    except WebSocketDisconnect:
+        await ws_manager.disconnect(client_id)
+    except Exception:
+        await ws_manager.disconnect(client_id)
+
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
@@ -139,7 +205,7 @@ async def security_headers(request: Request, call_next):
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
     response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
-    response.headers.setdefault("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https:; frame-src 'self' https://accounts.google.com")
+    response.headers.setdefault("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: ws: wss:; frame-src 'self' https://accounts.google.com")
     return response
 
 
@@ -552,6 +618,10 @@ async def shutdown():
     if de:
         await de.close()
         logger.info("Discovery Engine client stopped")
+    # Cancel all WebSocket keepalive tasks
+    for client_id in list(ws_manager._tasks.keys()):
+        await ws_manager.disconnect(client_id)
+    logger.info("WebSocket connections cleaned up")
     # Dispose SQLAlchemy engine to avoid stale connections on reload
     try:
         from db import engine

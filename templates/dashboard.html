@@ -137,6 +137,33 @@
       animation: breathe 2s ease-in-out infinite;
     }
 
+    .ws-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.08em;
+      color: var(--sub2);
+      padding: 3px 8px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      transition: border-color 0.3s, color 0.3s;
+    }
+    .ws-pill.connected { border-color: var(--accent); color: var(--accent); }
+    .ws-pill.reconnecting { border-color: #f59e0b; color: #f59e0b; }
+    .ws-pill.disconnected { border-color: var(--danger); color: var(--danger); }
+    .ws-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--sub2);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .ws-pill.connected .ws-dot { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+    .ws-pill.reconnecting .ws-dot { background: #f59e0b; box-shadow: 0 0 5px #f59e0b; animation: breathe 1s ease-in-out infinite; }
+    .ws-pill.disconnected .ws-dot { background: var(--danger); }
+
     .clock {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.72rem;
@@ -720,6 +747,7 @@
       .topbar-center { padding: 0 10px; }
       .topbar-greeting { font-size: 0.7rem; }
       .live-pill { font-size: 0.5rem; padding: 3px 6px; }
+      .ws-pill { font-size: 0.45rem; padding: 2px 5px; gap: 3px; }
       .chat-msgs { max-height: 220px; }
       .chat-bubble { max-width: 90%; font-size: 0.75rem; }
       .chat-input-row { flex-direction: column; gap: 6px; }
@@ -916,6 +944,10 @@
         <div class="live-pill" id="live-pill">
           <div class="live-dot"></div>
           Checking
+        </div>
+        <div class="ws-pill" id="ws-pill" title="Dashboard connection status">
+          <div class="ws-dot" id="ws-dot"></div>
+          <span id="ws-label">Open</span>
         </div>
         <div class="clock" id="clock">--:--:--</div>
         <a class="top-btn top-btn-accent" href="/whatsapp-connect" id="whatsapp-btn">Connect</a>
@@ -1842,6 +1874,100 @@
     loadTemplates();
     loadCustomers();
     setInterval(fetchData, 10000);
+
+    /* ── WebSocket Keepalive & Reconnect ── */
+    (function() {
+      const wsPill  = document.getElementById('ws-pill');
+      const wsDot   = document.getElementById('ws-dot');
+      const wsLabel = document.getElementById('ws-label');
+      const clientId = 'dashboard_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      let ws = null;
+      let pingTimer = null;
+      let reconnectDelay = 1000;
+      let reconnectTimer = null;
+      let intentionalClose = false;
+
+      function setState(state) {
+        wsPill.className = 'ws-pill ' + state;
+        if (state === 'connected') {
+          wsLabel.textContent = 'Live';
+        } else if (state === 'reconnecting') {
+          wsLabel.textContent = '...';
+        } else {
+          wsLabel.textContent = 'Offline';
+        }
+      }
+
+      function connect() {
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
+        intentionalClose = false;
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const url = protocol + '//' + location.host + '/ws/' + clientId;
+        try {
+          ws = new WebSocket(url);
+        } catch (e) {
+          scheduleReconnect();
+          return;
+        }
+
+        ws.onopen = function() {
+          setState('connected');
+          reconnectDelay = 1000;
+          if (pingTimer) clearInterval(pingTimer);
+          pingTimer = setInterval(function() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'ping' }));
+            }
+          }, 30000);
+        };
+
+        ws.onmessage = function(e) {
+          try {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'pong') return;
+            if (msg.type === 'ping') {
+              ws.send(JSON.stringify({ type: 'pong' }));
+            }
+          } catch {}
+        };
+
+        ws.onclose = function() {
+          if (pingTimer) { clearInterval(pingTimer); pingTimer = null; }
+          if (!intentionalClose) {
+            setState('reconnecting');
+            scheduleReconnect();
+          }
+        };
+
+        ws.onerror = function() {
+          ws.close();
+        };
+      }
+
+      function scheduleReconnect() {
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        setState('reconnecting');
+        reconnectTimer = setTimeout(function() {
+          connect();
+          reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+        }, reconnectDelay);
+      }
+
+      function disconnect() {
+        intentionalClose = true;
+        if (pingTimer) { clearInterval(pingTimer); pingTimer = null; }
+        if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+        if (ws) { ws.close(); ws = null; }
+        setState('disconnected');
+      }
+
+      connect();
+
+      window.__wsDisconnect = disconnect;
+    })();
   </script>
   <div class="toast-container" id="toast-container"></div>
   <div class="kbd-hint" id="kbd-hint">Press <kbd>C</kbd> to chat</div>
