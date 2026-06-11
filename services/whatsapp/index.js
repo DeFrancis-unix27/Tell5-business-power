@@ -52,7 +52,7 @@ async function forwardToApi(body, socketForReply = null) {
             const resp = await fetch(url, {
                 method: "POST", headers,
                 body: JSON.stringify(body),
-                signal: AbortSignal.timeout(15000),
+                signal: AbortSignal.timeout(60000),
             });
             if (!resp.ok) {
                 const text = await resp.text().catch(() => "");
@@ -83,6 +83,7 @@ async function forwardToApi(body, socketForReply = null) {
             await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
         }
     }
+    console.error(`Failed to send reply to ${data.to} after 6 attempts`);
 }
 
 async function sendMessage(jid, text, socketForReply = null) {

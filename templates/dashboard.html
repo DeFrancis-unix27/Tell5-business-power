@@ -1637,8 +1637,9 @@
           el.innerHTML = '<div class="empty">No customers yet</div>';
           return;
         }
-        el.innerHTML = data.map(c =>
-          `<div style="display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);">
+        window._customerData = data;
+        el.innerHTML = data.map((c, i) =>
+          `<div onclick="openCustomerModal(${i})" style="display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
             <div style="width:28px;height:28px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:var(--accent);flex-shrink:0;">${esc((c.name || c.phone || '?')[0].toUpperCase())}</div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:0.72rem;font-weight:600;">${esc(c.name || c.phone || 'Unknown')}</div>
@@ -1647,6 +1648,74 @@
           </div>`
         ).join('');
       } catch {}
+    }
+
+    /* ── Customer Detail Modal ── */
+    let _currentCustomerIdx = -1;
+
+    function openCustomerModal(idx) {
+      const data = window._customerData;
+      if (!data || !data[idx]) return;
+      _currentCustomerIdx = idx;
+      const c = data[idx];
+      const initial = (c.name || c.phone || '?')[0].toUpperCase();
+      document.getElementById('customer-modal-avatar').textContent = initial;
+      document.getElementById('customer-modal-name').textContent = esc(c.name || 'Unknown');
+      document.getElementById('customer-modal-phone').textContent = esc(c.phone || '—');
+      document.getElementById('customer-modal-msgs').textContent = c.message_count || 0;
+      document.getElementById('customer-modal-last').textContent = c.last_message_at ? relTime(c.last_message_at) : '—';
+      document.getElementById('customer-notes-input').value = c.notes || '';
+      document.getElementById('customer-notes-save-btn').textContent = 'Save Notes';
+      document.getElementById('customer-notes-save-btn').disabled = false;
+
+      // Filter conversations for this customer by phone
+      const convsEl = document.getElementById('customer-convs');
+      const phone = c.phone || '';
+      const customerConvs = (convData || []).filter(conv => conv.phone && conv.phone.includes(phone.slice(-10)));
+      if (!customerConvs.length) {
+        convsEl.innerHTML = '<div class="empty">No conversations yet</div>';
+      } else {
+        convsEl.innerHTML = customerConvs.slice(0, 20).map(conv =>
+          `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+              <span class="cat-tag ${catClass(conv.category)}" style="font-size:0.55rem;">${esc(conv.category || 'other')}</span>
+              <span style="font-size:0.6rem;color:var(--sub);">${conv.timestamp ? relTime(conv.timestamp) : ''}</span>
+            </div>
+            <div style="margin-top:4px;color:var(--text2);line-height:1.4;">${esc(conv.message || '')}</div>
+            ${conv.ai_response ? `<div style="margin-top:3px;font-size:0.68rem;color:var(--accent);">→ ${esc(conv.ai_response.slice(0, 120))}</div>` : ''}
+          </div>`
+        ).join('');
+      }
+
+      document.getElementById('customer-modal').classList.add('open');
+    }
+
+    function closeCustomerModal() {
+      document.getElementById('customer-modal').classList.remove('open');
+      _currentCustomerIdx = -1;
+    }
+
+    async function saveCustomerNotes() {
+      const data = window._customerData;
+      if (!data || _currentCustomerIdx < 0) return;
+      const c = data[_currentCustomerIdx];
+      const notes = document.getElementById('customer-notes-input').value.trim();
+      const btn = document.getElementById('customer-notes-save-btn');
+      btn.textContent = 'Saving...';
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/api/customers/${c.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ notes }),
+        });
+        if (!res.ok) { showToast('Failed to save notes', 'error'); btn.textContent = 'Save Notes'; btn.disabled = false; return; }
+        c.notes = notes;
+        showToast('Notes saved', 'success');
+        btn.textContent = 'Saved ✓';
+        setTimeout(() => { btn.textContent = 'Save Notes'; btn.disabled = false; }, 2000);
+      } catch { showToast('Failed to save notes', 'error'); btn.textContent = 'Save Notes'; btn.disabled = false; }
     }
 
     /* ── AI Chat ── */
@@ -2040,6 +2109,46 @@
       <button class="modal-close" onclick="closeComplaintsModal()">✕</button>
       <div class="modal-title">Complaints</div>
       <div id="complaints-list" style="max-height:400px;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- ══ Customer Detail Modal ══ -->
+  <div class="modal-overlay" id="customer-modal" onclick="if(event.target===this)closeCustomerModal()">
+    <div class="modal" style="max-width:520px;">
+      <button class="modal-close" onclick="closeCustomerModal()">✕</button>
+      <div class="modal-title" id="customer-modal-title">Customer</div>
+
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
+        <div id="customer-modal-avatar" style="width:44px;height:44px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:var(--accent);flex-shrink:0;">?</div>
+        <div style="flex:1;min-width:0;">
+          <div id="customer-modal-name" style="font-size:1rem;font-weight:700;">—</div>
+          <div id="customer-modal-phone" style="font-size:0.72rem;color:var(--sub);word-break:break-all;">—</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;background:var(--surface);border-radius:8px;padding:10px;text-align:center;">
+          <div id="customer-modal-msgs" style="font-size:1.2rem;font-weight:700;">0</div>
+          <div style="font-size:0.6rem;color:var(--sub);text-transform:uppercase;letter-spacing:0.08em;">Messages</div>
+        </div>
+        <div style="flex:1;background:var(--surface);border-radius:8px;padding:10px;text-align:center;">
+          <div id="customer-modal-last" style="font-size:0.75rem;font-weight:600;word-break:break-word;">—</div>
+          <div style="font-size:0.6rem;color:var(--sub);text-transform:uppercase;letter-spacing:0.08em;">Last Seen</div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-label">Notes</div>
+        <textarea id="customer-notes-input" placeholder="Add private notes about this customer…" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.82rem;font-family:inherit;margin-top:4px;min-height:70px;resize:vertical;box-sizing:border-box;"></textarea>
+        <button id="customer-notes-save-btn" onclick="saveCustomerNotes()" style="margin-top:6px;padding:6px 14px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:0.72rem;font-weight:700;cursor:pointer;">Save Notes</button>
+      </div>
+
+      <div class="modal-divider"></div>
+
+      <div class="modal-label" style="margin-bottom:6px;">Recent Conversations</div>
+      <div id="customer-convs" style="max-height:260px;overflow-y:auto;font-size:0.72rem;">
+        <div class="empty">No conversations yet</div>
+      </div>
     </div>
   </div>
 
