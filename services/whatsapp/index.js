@@ -41,9 +41,11 @@ function clearAuthDir() {
     }
 }
 
-async function forwardToApi(body, socketForReply = null, retries = 2) {
+async function forwardToApi(body, socketForReply = null) {
     const url = `${API_BASE}/api/baileys/webhook`;
-    for (let attempt = 0; attempt <= retries; attempt++) {
+    // API call with retries (only on network/HTTP errors — never retries on success)
+    let data = null;
+    for (let attempt = 0; attempt <= 2; attempt++) {
         try {
             const headers = { "Content-Type": "application/json" };
             if (WEBHOOK_SECRET) headers["X-Baileys-Secret"] = WEBHOOK_SECRET;
@@ -55,26 +57,30 @@ async function forwardToApi(body, socketForReply = null, retries = 2) {
             if (!resp.ok) {
                 const text = await resp.text().catch(() => "");
                 console.error(`API returned ${resp.status}: ${text.slice(0, 200)}`);
-                if (attempt < retries) {
+                if (attempt < 2) {
                     await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
                     continue;
                 }
                 return;
             }
-            const data = await resp.json();
-            if (data.reply && data.to) {
-                const ok = await sendMessage(data.to, data.reply, socketForReply);
-                if (!ok && attempt < retries) {
-                    await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
-                    continue;
-                }
-            }
-            return;
+            data = await resp.json();
+            break;
         } catch (err) {
-            console.error(`forwardToApi attempt ${attempt + 1}/${retries + 1}:`, err.message);
-            if (attempt < retries) {
+            console.error(`API call attempt ${attempt + 1}/3:`, err.message);
+            if (attempt < 2) {
                 await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+            } else {
+                return;
             }
+        }
+    }
+    if (!data || !data.reply || !data.to) return;
+    // Send reply with retries (gives time for socket reconnection)
+    for (let attempt = 0; attempt <= 5; attempt++) {
+        const ok = await sendMessage(data.to, data.reply, socketForReply);
+        if (ok) return;
+        if (attempt < 5) {
+            await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
         }
     }
 }
