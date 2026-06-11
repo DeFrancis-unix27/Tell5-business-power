@@ -1,8 +1,9 @@
 import asyncio
 import json
 import logging
-import os
 from typing import Any, Optional
+
+from config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,8 @@ def _get_types():
 # Configuration
 # ==================================================================================================
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
-GEMINI_FALLBACK_MODEL = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash-lite")
+GEMINI_MODEL = Config.GEMINI_MODEL
+GEMINI_FALLBACK_MODEL = Config.GEMINI_FALLBACK_MODEL
 
 ALLOWED_CATEGORIES = {
     "order",
@@ -44,11 +45,11 @@ ALLOWED_CATEGORIES = {
 # ==================================================================================================
 
 def ai_configured() -> bool:
-    return bool(os.getenv("GEMINI_API_KEY"))
+    return bool(Config.GEMINI_API_KEY)
 
 
 def get_client():
-    return _get_genai().Client(api_key=os.getenv("GEMINI_API_KEY"))
+    return _get_genai().Client(api_key=Config.GEMINI_API_KEY)
 
 
 
@@ -256,7 +257,7 @@ Return JSON:
 # ==================================================================================================
 
 def _generate_content(prompt: str, model: Optional[str] = None, api_key: Optional[str] = None) -> str | None:
-    key = api_key or os.getenv("GEMINI_API_KEY")
+    key = api_key or Config.GEMINI_API_KEY
     if not key:
         return None
 

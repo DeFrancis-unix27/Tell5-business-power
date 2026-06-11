@@ -27,6 +27,16 @@ The dashboard also includes an AI chat sandbox for testing replies, a business p
 - **Deployment**: Single Render Web Service using a Dockerfile that installs both Python deps and Node.js, then `start.sh` supervises both processes.
 - **Auth**: Session-based with secure cookies, CSRF protection for form endpoints, and Google OAuth option.
 
+### Google Cloud Products Used
+
+| Product | What we use it for |
+|---------|-------------------|
+| **Gemini API** (`google-genai`) | Primary AI engine — handles message classification, reply generation, and confidence checking. Runs at temperature 0.7, max 300 tokens. First tier in our multi-provider pipeline. |
+| **Discovery Engine / Agent Builder** (`google-cloud-discoveryengine`) | Knowledge base search — businesses can upload product details, FAQ, and policies. Discovery Engine indexes them and the AI searches them during conversations to give accurate, business-specific answers. |
+| **ADK (Agent Development Kit)** (`google-adk`) | Builds a structured customer support agent with function-calling tools for business lookup, product listing, and conversation retrieval. |
+| **Google OAuth / Identity Platform** (via `authlib`) | Social login — users can sign in with their Google account. |
+| **Cloud IAM / Service Accounts** (`google-auth`) | Authenticates Discovery Engine API calls using a service account JSON key. Credentials can be provided as file path or raw JSON env var. |
+
 ## Challenges we ran into
 
 - **Baileys ESM on Node 20**: `@whiskeysockets/baileys` v7 is pure ESM, which crashes `require()`. We had to use dynamic `import()` throughout the bot, and handle the async initialization carefully before setting up event handlers.

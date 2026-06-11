@@ -210,6 +210,31 @@
   </div>
 
   <script>
+    
+    /* ── CSRF helper ── */
+    let _csrfToken = null;
+    async function _ensureCsrf() {
+      if (_csrfToken) return _csrfToken;
+      try {
+        const r = await fetch("/api/csrf-token", { credentials: "same-origin" });
+        const d = await r.json();
+        _csrfToken = { name: d.header_name, value: d.csrf_token };
+        return _csrfToken;
+      } catch { return null; }
+    }
+    const _origFetch = window.fetch;
+    window.fetch = async function(url, opts) {
+      opts = opts || {};
+      if (opts.method && opts.method !== "GET" && opts.method !== "HEAD") {
+        const csrf = await _ensureCsrf();
+        if (csrf) {
+          opts.headers = opts.headers || {};
+          opts.headers[csrf.name] = csrf.value;
+        }
+      }
+      return _origFetch(url, opts);
+    };
+
     let profileId = null;
     let logoDataUrl = '';
 
@@ -359,6 +384,18 @@
     function previewImage(event) {
       const file = event.target.files[0];
       if (!file) return;
+      const maxSize = 2 * 1024 * 1024; // 2 MB
+      const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+      if (!allowedTypes.includes(file.type)) {
+        showToast("Unsupported file type. Use PNG, JPEG, WebP, or SVG.", "error");
+        event.target.value = "";
+        return;
+      }
+      if (file.size > maxSize) {
+        showToast("File too large. Maximum size is 2 MB.", "error");
+        event.target.value = "";
+        return;
+      }
       const reader = new FileReader();
       reader.onload = function(e) {
         logoDataUrl = e.target.result;

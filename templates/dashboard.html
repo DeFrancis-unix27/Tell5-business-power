@@ -26,6 +26,7 @@
       --sub:      #5a7a94;
       --sub2:     #8aa0b4;
       --accent:   #00e5b0;
+      --accent2:  rgba(0,229,176,0.08);
       --blue:     #3b82f6;
       --orange:   #f97316;
       --danger:   #ef4444;
@@ -1066,6 +1067,7 @@
             </div>
             <div class="chart-inner">
               <canvas id="pieChart"></canvas>
+                          <div id="chart-empty-msg" style="display:none;text-align:center;padding:24px;color:var(--sub);font-size:.82rem;">No conversation data yet</div>
             </div>
           </div>
 
@@ -1279,6 +1281,15 @@
     const CHART_COLORS = ['#00e5b0','#3b82f6','#f97316','#ef4444','#a78bfa','#facc15'];
 
     function renderChart(categories = {}) {
+      const canvas = document.getElementById("pieChart");
+      if (!canvas) return;
+      const hasData = Object.keys(categories).length > 0;
+      const emptyMsg = document.getElementById("chart-empty-msg");
+      if (emptyMsg) emptyMsg.style.display = hasData ? "none" : "block";
+      if (!hasData) {
+        if (chartInst) { chartInst.destroy(); chartInst = null; }
+        return;
+      }
       const labels = Object.keys(categories);
       const data   = Object.values(categories);
       const ctx    = document.getElementById('pieChart').getContext('2d');
@@ -1748,6 +1759,7 @@
         }
         showToast('Marked as order!', 'success');
         btn.textContent = '✓ Done';
+        btn.disabled = false;
         btn.style.background = 'var(--accent)';
         document.getElementById('conv-category').textContent = 'order';
         fetchData();

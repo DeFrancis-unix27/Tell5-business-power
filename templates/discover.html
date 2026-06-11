@@ -2,14 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Discover Businesses — Tell5</title>
   <meta name="description" content="Browse African businesses on Tell5. Find products, services, and connect via WhatsApp."/>
   <meta name="theme-color" content="#060809"/>
   <link rel="icon" href="/static/tell5-icon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-</head>
-<body>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -172,7 +170,8 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);-webkit-font-s
   .skel{padding:16px;gap:12px}
 }
 </style>
-
+</head>
+<body>
 <div class="page">
 
   <nav class="nav">
@@ -344,3 +343,6 @@ fetch('/api/business/discover')
 </script>
 </body>
 </html>
+
+
+

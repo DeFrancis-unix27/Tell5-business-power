@@ -1,4 +1,3 @@
-import sentry_sdk
 import secrets
 from datetime import datetime, timezone, timedelta
 from fastapi import FastAPI, Request, Depends, HTTPException
@@ -40,27 +39,48 @@ from pathlib import Path
 from typing import Optional
 import csv
 import qrcode
-from twilio.rest import Client
-from twilio.request_validator import RequestValidator
 from starlette.middleware.sessions import SessionMiddleware
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+
+# Optional: Sentry error tracking
+try:
+    import sentry_sdk
+except ImportError:
+    sentry_sdk = None
+
+# Optional: Twilio
+try:
+    from twilio.rest import Client as _TwilioClient
+    from twilio.request_validator import RequestValidator
+except ImportError:
+    _TwilioClient = None
+    RequestValidator = None
+
+# Optional: Slowapi rate limiting
+try:
+    from slowapi import Limiter
+    from slowapi.util import get_remote_address
+    from slowapi.errors import RateLimitExceeded
+    _slowapi_available = True
+except ImportError:
+    Limiter = None
+    get_remote_address = None
+    RateLimitExceeded = None
+    _slowapi_available = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO if not Config.DEBUG else logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Twilio client initialization with validated config
-if Config.TWILIO_ACCOUNT_SID and Config.TWILIO_AUTH_TOKEN:
-    twilio_client = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
+if Config.TWILIO_ACCOUNT_SID and Config.TWILIO_AUTH_TOKEN and _TwilioClient:
+    twilio_client = _TwilioClient(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
     validator = RequestValidator(Config.TWILIO_AUTH_TOKEN)
 else:
     twilio_client = None
     validator = None
 
 # Sentry error tracking (only in production)
-if Config.SENTRY_DSN and Config.ENVIRONMENT == "production":
+if Config.SENTRY_DSN and Config.ENVIRONMENT == "production" and sentry_sdk:
     sentry_sdk.init(
         dsn=Config.SENTRY_DSN,
         environment=Config.ENVIRONMENT,
@@ -68,8 +88,16 @@ if Config.SENTRY_DSN and Config.ENVIRONMENT == "production":
         send_default_pii=False,
     )
 
-# Rate limiting setup
-limiter = Limiter(key_func=get_remote_address)
+# Rate limiting setup (no-op fallback if slowapi not installed)
+if _slowapi_available:
+    limiter = Limiter(key_func=get_remote_address)
+else:
+    class _NoopLimiter:
+        def limit(self, *args, **kwargs):
+            def deco(f):
+                return f
+            return deco
+    limiter = _NoopLimiter()
 
 is_production = Config.ENVIRONMENT == "production"
 app = FastAPI(
@@ -79,10 +107,11 @@ app = FastAPI(
 )
 app.add_middleware(SessionMiddleware, secret_key=Config.SESSION_SECRET)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
-    status_code=429,
-    content={"detail": "Rate limit exceeded. Too many requests."},
-))
+if RateLimitExceeded is not None:
+    app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
+        status_code=429,
+        content={"detail": "Rate limit exceeded. Too many requests."},
+    ))
 templates = Jinja2Templates(directory="templates")
 
 try:
