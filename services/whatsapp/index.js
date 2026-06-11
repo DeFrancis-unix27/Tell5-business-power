@@ -86,22 +86,13 @@ async function forwardToApi(body, socketForReply = null) {
 }
 
 async function sendMessage(jid, text, socketForReply = null) {
-    const s = socketForReply || sock;
+    // Prefer the latest global socket; fall back to the captured reference if null
+    const s = sock || socketForReply;
     if (!s) return false;
     try {
         await s.sendMessage(jid, { text });
         return true;
     } catch (err) {
-        // If the original socket failed and there's a newer global socket, try that
-        if (s !== sock && sock) {
-            try {
-                await sock.sendMessage(jid, { text });
-                return true;
-            } catch (err2) {
-                console.error("sendMessage: primary failed, fallback also failed:", err2.message);
-                return false;
-            }
-        }
         console.error("sendMessage error:", err.message);
         return false;
     }
