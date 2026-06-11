@@ -208,6 +208,15 @@ def build_prompt(message: str, category: str, context: Optional[dict] = None) ->
             "\n- Offer to check with the owner and get back to them"
             "\n- Keep the tone warm, human, and conversational"
             "\n- Remember what the customer said earlier in the conversation"
+            "\n\nEXAMPLE FLOW:"
+            "\nCustomer: 'I want a website'"
+            "\nYou: 'Nice! What kind of website are you thinking? An online store, a business site, or a personal portfolio?'"
+            "\nCustomer: 'Business site'"
+            "\nYou: 'Got it. What features should it have? Contact form, gallery, booking system?'"
+            "\nCustomer: 'Contact form and gallery'"
+            "\nYou: 'Perfect. I can recommend a 5-page business website with a gallery and contact form. That usually goes for around [PRICE_RANGE]. When would you like it ready?'"
+            "\nCustomer: 'In 2 weeks'"
+            "\nYou: 'Let me confirm with [OWNER_NAME] and get back to you with a full quote. Give me a bit!'"
         )
 
     kb = context.get("business_knowledge", []) if context else []
