@@ -76,12 +76,13 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
 
 async def get_user_by_phone(db: AsyncSession, phone: str) -> User | None:
     normalized = phone.replace("whatsapp:", "").replace(" ", "").strip()
-    q = await db.execute(select(User).where(User.phone.in_([phone, normalized])))
+    stripped = normalized.lstrip("+")
+    q = await db.execute(select(User).where(User.phone.in_([phone, normalized, stripped, f"+{stripped}"])))
     return q.scalar_one_or_none()
 
 
 async def get_first_user(db: AsyncSession) -> User | None:
-    q = await db.execute(select(User).where(User.is_active == True).limit(1))
+    q = await db.execute(select(User).where(User.is_active == True).order_by(User.id).limit(1))
     return q.scalar_one_or_none()
 
 
